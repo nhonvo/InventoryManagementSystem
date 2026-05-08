@@ -16,13 +16,34 @@ public class StockDataService(
     ICompanyNewsDynamoRepository companyNewsRepo,
     ILogger<StockDataService> logger) : IStockDataService
 {
-    private readonly IFinnhubClient _finnhub = finnhub;
     private readonly IDatabase _cache = redis.GetDatabase();
-    private readonly IUnitOfWork _unitOfWork = unitOfWork;
-    private readonly IMarketNewsDynamoRepository _marketNewsRepo = marketNewsRepo;
-    private readonly ICompanyNewsDynamoRepository _companyNewsRepo = companyNewsRepo;
     private readonly ILogger<StockDataService> _logger = logger;
     private static readonly JsonSerializerOptions _json = JsonOptions.Default;
+
+    // ── Stocks Catalog ────────────────────────────────────────────────────────
+
+    public async Task<PagedResult<StockProfileResponse>> GetCatalogAsync(int page, int pageSize, string? exchange, string? industry, CancellationToken ct = default)
+    {
+        var all = await unitOfWork.StockListings.GetAllAsync(ct);
+
+        if (!string.IsNullOrWhiteSpace(exchange))
+            all = all.Where(s => s.Exchange?.Equals(exchange, StringComparison.OrdinalIgnoreCase) == true);
+
+        if (!string.IsNullOrWhiteSpace(industry))
+            all = all.Where(s => s.Industry?.Contains(industry, StringComparison.OrdinalIgnoreCase) == true);
+
+        var totalItems = all.Count();
+        var paged = all.Skip((page - 1) * pageSize).Take(pageSize).Select(s => new StockProfileResponse(
+            s.TickerSymbol, s.Name, s.Exchange, s.Currency, s.Country, s.Industry, s.MarketCap, s.Ipo, s.WebUrl, s.Logo));
+
+        return new PagedResult<StockProfileResponse>
+        {
+            Items = paged,
+            TotalItems = totalItems,
+            PageNumber = page,
+            PageSize = pageSize
+        };
+    }
 
     // ── Quotes ────────────────────────────────────────────────────────────────
 
@@ -36,7 +57,7 @@ public class StockDataService(
         // Discovery: Ensure we have the listing first
         var listing = await EnsureListingAsync(symbol, ct);
 
-        var q = await _finnhub.GetQuoteAsync(symbol, ct);
+        var q = await finnhub.GetQuoteAsync(symbol, ct);
         if (q?.CurrentPrice is null or 0)
         {
             if (listing != null)
@@ -78,8 +99,8 @@ public class StockDataService(
 
         var listing = await EnsureListingAsync(symbol, ct);
         
-        var metric = await _unitOfWork.ExecuteSynchronizedAsync(
-            () => _unitOfWork.Metrics.GetBySymbolAsync(symbol, ct), ct);
+        var metric = await unitOfWork.ExecuteSynchronizedAsync(
+            () => unitOfWork.Metrics.GetBySymbolAsync(symbol, ct), ct);
         
         if (metric == null)
         {
@@ -103,8 +124,8 @@ public class StockDataService(
 
     public async Task<IEnumerable<EarningsSurpriseResponse>> GetEarningsAsync(string symbol, CancellationToken ct = default)
     {
-        var items = await _unitOfWork.ExecuteSynchronizedAsync(
-            () => _unitOfWork.Earnings.GetBySymbolAsync(symbol, ct), ct);
+        var items = await unitOfWork.ExecuteSynchronizedAsync(
+            () => unitOfWork.Earnings.GetBySymbolAsync(symbol, ct), ct);
             
         return items.Select(e => new EarningsSurpriseResponse(
             e.Period, e.ActualEps, e.EstimateEps, e.SurprisePercent, e.ReportDate));
@@ -114,8 +135,8 @@ public class StockDataService(
 
     public async Task<IEnumerable<RecommendationResponse>> GetRecommendationsAsync(string symbol, CancellationToken ct = default)
     {
-        var items = await _unitOfWork.ExecuteSynchronizedAsync(
-            () => _unitOfWork.Recommendations.GetBySymbolAsync(symbol, ct), ct);
+        var items = await unitOfWork.ExecuteSynchronizedAsync(
+            () => unitOfWork.Recommendations.GetBySymbolAsync(symbol, ct), ct);
             
         return items.Select(r => new RecommendationResponse(
             r.Period, r.StrongBuy, r.Buy, r.Hold, r.Sell, r.StrongSell));
@@ -125,8 +146,8 @@ public class StockDataService(
 
     public async Task<IEnumerable<InsiderTransactionResponse>> GetInsidersAsync(string symbol, CancellationToken ct = default)
     {
-        var items = await _unitOfWork.ExecuteSynchronizedAsync(
-            () => _unitOfWork.Insiders.GetBySymbolAsync(symbol, ct), ct);
+        var items = await unitOfWork.ExecuteSynchronizedAsync(
+            () => unitOfWork.Insiders.GetBySymbolAsync(symbol, ct), ct);
             
         return items.Select(i => new InsiderTransactionResponse(
             i.Name, i.Share, i.Value, i.TransactionDate, i.FilingDate, i.TransactionCode));
@@ -141,7 +162,7 @@ public class StockDataService(
         if (cached.HasValue)
             return JsonSerializer.Deserialize<PeersResponse>((string)cached!, _json);
 
-        var peers = await _finnhub.GetPeersAsync(symbol, ct);
+        var peers = await finnhub.GetPeersAsync(symbol, ct);
         var res = new PeersResponse(symbol, peers);
 
         await _cache.StringSetAsync(cacheKey, JsonSerializer.Serialize(res, _json), TimeSpan.FromDays(1));
@@ -152,7 +173,7 @@ public class StockDataService(
 
     public async Task<IEnumerable<NewsResponse>> GetCompanyNewsAsync(string symbol, int page = 1, int pageSize = 10, CancellationToken ct = default)
     {
-        var entries = await _companyNewsRepo.GetLatestBySymbolAsync(symbol.ToUpperInvariant(), page * pageSize, ct);
+        var entries = await companyNewsRepo.GetLatestBySymbolAsync(symbol.ToUpperInvariant(), page * pageSize, ct);
         return entries
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -164,7 +185,7 @@ public class StockDataService(
 
     public async Task<IEnumerable<NewsResponse>> GetMarketNewsAsync(string category, int page, int pageSize = 20, CancellationToken ct = default)
     {
-        var entries = await _marketNewsRepo.QueryAsync($"CATEGORY#{category.ToUpperInvariant()}", ct);
+        var entries = await marketNewsRepo.QueryAsync($"CATEGORY#{category.ToUpperInvariant()}", ct);
         return entries
             .OrderByDescending(x => x.PublishedAt)
             .Skip((page - 1) * pageSize)
@@ -184,7 +205,7 @@ public class StockDataService(
 
         foreach (var ex in exchanges)
         {
-            var status = await _finnhub.GetMarketStatusAsync(ex, ct);
+            var status = await finnhub.GetMarketStatusAsync(ex, ct);
             if (status != null)
             {
                 results.Add(new MarketStatusResponse(ex, status.IsOpen, status.Session, status.Holiday, status.Timezone));
@@ -196,7 +217,7 @@ public class StockDataService(
 
     public async Task<IEnumerable<MarketHolidayResponse>> GetMarketHolidaysAsync(string exchange, CancellationToken ct = default)
     {
-        var items = await _finnhub.GetMarketHolidaysAsync(exchange, ct);
+        var items = await finnhub.GetMarketHolidaysAsync(exchange, ct);
         return items.Select(h => new MarketHolidayResponse(
             exchange, h.EventName ?? "Holiday",
             DateOnly.TryParse(h.AtDate, out var d) ? d : DateOnly.MinValue,
@@ -205,7 +226,7 @@ public class StockDataService(
 
     public async Task<IEnumerable<EarningsCalendarResponse>> GetEarningsCalendarAsync(DateOnly from, DateOnly to, string? symbol = null, CancellationToken ct = default)
     {
-        var raw = await _finnhub.GetEarningsCalendarAsync(from.ToString("yyyy-MM-dd"), to.ToString("yyyy-MM-dd"), ct);
+        var raw = await finnhub.GetEarningsCalendarAsync(from.ToString("yyyy-MM-dd"), to.ToString("yyyy-MM-dd"), ct);
         var items = raw?.Earnings ?? [];
 
         if (!string.IsNullOrEmpty(symbol))
@@ -218,7 +239,7 @@ public class StockDataService(
 
     public async Task<IEnumerable<IpoCalendarResponse>> GetIpoCalendarAsync(DateOnly from, DateOnly to, CancellationToken ct = default)
     {
-        var raw = await _finnhub.GetIpoCalendarAsync(from.ToString("yyyy-MM-dd"), to.ToString("yyyy-MM-dd"), ct);
+        var raw = await finnhub.GetIpoCalendarAsync(from.ToString("yyyy-MM-dd"), to.ToString("yyyy-MM-dd"), ct);
         return (raw?.Items ?? []).Select(i => new IpoCalendarResponse(
             i.Symbol ?? "", i.Name ?? "Unknown",
             DateOnly.TryParse(i.Date, out var d) ? d : DateOnly.MinValue,
@@ -235,7 +256,7 @@ public class StockDataService(
         if (cached.HasValue)
             return JsonSerializer.Deserialize<IEnumerable<SymbolSearchResponse>>((string)cached!, _json) ?? [];
 
-        var raw = await _finnhub.SearchSymbolsAsync(query, ct);
+        var raw = await finnhub.SearchSymbolsAsync(query, ct);
         var res = (raw?.Result ?? []).Select(s => new SymbolSearchResponse(s.Symbol, s.Description, s.Type, ""));
 
         await _cache.StringSetAsync(cacheKey, JsonSerializer.Serialize(res, _json), TimeSpan.FromHours(4));
@@ -249,18 +270,18 @@ public class StockDataService(
         var normalized = symbol.ToUpperInvariant();
 
         // 1. Initial check (Synchronized)
-        var listing = await _unitOfWork.ExecuteSynchronizedAsync(
-            () => _unitOfWork.StockListings.FindBySymbolAsync(normalized, ct), ct);
+        var listing = await unitOfWork.ExecuteSynchronizedAsync(
+            () => unitOfWork.StockListings.FindBySymbolAsync(normalized, ct), ct);
         if (listing != null) return listing;
 
         // 2. Parallel API call
-        var profile = await _finnhub.GetProfileAsync(normalized, ct);
+        var profile = await finnhub.GetProfileAsync(normalized, ct);
         if (profile == null) return null;
 
         // 3. Save (Synchronized with double-check)
-        return await _unitOfWork.ExecuteSynchronizedAsync(async () =>
+        return await unitOfWork.ExecuteSynchronizedAsync(async () =>
         {
-            var existing = await _unitOfWork.StockListings.FindBySymbolAsync(normalized, ct);
+            var existing = await unitOfWork.StockListings.FindBySymbolAsync(normalized, ct);
             if (existing != null) return existing;
 
             var newListing = new StockListing
@@ -275,8 +296,8 @@ public class StockDataService(
                 WebUrl = profile.WebUrl?.Length > 1000 ? profile.WebUrl[..1000] : profile.WebUrl
             };
 
-            await _unitOfWork.StockListings.AddAsync(newListing, ct);
-            await _unitOfWork.SaveChangesAsync(ct);
+            await unitOfWork.StockListings.AddAsync(newListing, ct);
+            await unitOfWork.SaveChangesAsync(ct);
             return newListing;
         }, ct);
     }
