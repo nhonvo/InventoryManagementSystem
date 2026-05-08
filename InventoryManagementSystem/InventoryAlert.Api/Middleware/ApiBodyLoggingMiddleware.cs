@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using InventoryAlert.Api.Extensions;
 using InventoryAlert.Domain.Configuration;
 
 namespace InventoryAlert.Api.Middleware;
@@ -11,6 +12,7 @@ public class ApiBodyLoggingMiddleware(ILogger<ApiBodyLoggingMiddleware> logger, 
 {
     private readonly bool _enableBodyLogging = settings.Api?.EnableBodyLogging ?? false;
     private const int MaxBodyLength = 4096;
+    private static readonly JsonSerializerOptions _json = JsonOptions.Default;
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
@@ -48,7 +50,7 @@ public class ApiBodyLoggingMiddleware(ILogger<ApiBodyLoggingMiddleware> logger, 
             context.Response.Body = originalBodyStream;
 
             // 5. Log structured JSON
-            var correlationId = context.Items["X-Correlation-Id"]?.ToString() ?? "N/A";
+            var correlationId = context.GetCorrelationId();
             
             using var scope = logger.BeginScope(new Dictionary<string, object?>
             {
@@ -67,7 +69,7 @@ public class ApiBodyLoggingMiddleware(ILogger<ApiBodyLoggingMiddleware> logger, 
         if (string.IsNullOrWhiteSpace(text)) return null;
         try
         {
-            return JsonSerializer.Deserialize<object>(text);
+            return JsonSerializer.Deserialize<object>(text, _json);
         }
         catch
         {

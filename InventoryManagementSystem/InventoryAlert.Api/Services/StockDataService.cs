@@ -18,7 +18,6 @@ public class StockDataService(
 {
     private readonly IDatabase _cache = redis.GetDatabase();
     private readonly ILogger<StockDataService> _logger = logger;
-    private static readonly JsonSerializerOptions _json = JsonOptions.Default;
 
     // ── Stocks Catalog ────────────────────────────────────────────────────────
 
@@ -52,7 +51,12 @@ public class StockDataService(
         var cacheKey = $"quote:{symbol}";
         var cached = await _cache.StringGetAsync(cacheKey);
         if (cached.HasValue)
-            return JsonSerializer.Deserialize<StockQuoteResponse>((string)cached!, _json);
+        {
+            _logger.LogInformation("Cache Hit | Quote: {Symbol}", symbol);
+            return JsonSerializer.Deserialize<StockQuoteResponse>((string)cached!, JsonOptions.Default);
+        }
+
+        _logger.LogInformation("Cache Miss | Fetching Quote: {Symbol}", symbol);
 
         // Discovery: Ensure we have the listing first
         var listing = await EnsureListingAsync(symbol, ct);
@@ -60,6 +64,7 @@ public class StockDataService(
         var q = await finnhub.GetQuoteAsync(symbol, ct);
         if (q?.CurrentPrice is null or 0)
         {
+            _logger.LogWarning("Quote Not Found | Symbol: {Symbol}", symbol);
             if (listing != null)
             {
                 return new StockQuoteResponse(symbol, 0, 0, 0, 0, 0, 0, 0, DateTime.UtcNow);
@@ -72,7 +77,7 @@ public class StockDataService(
             q.HighPrice ?? 0, q.LowPrice ?? 0, q.OpenPrice ?? 0,
             q.PreviousClose ?? 0, DateTime.UtcNow);
 
-        await _cache.StringSetAsync(cacheKey, JsonSerializer.Serialize(res, _json), TimeSpan.FromSeconds(30));
+        await _cache.StringSetAsync(cacheKey, JsonSerializer.Serialize(res, JsonOptions.Default), TimeSpan.FromSeconds(30));
         return res;
     }
 
@@ -95,7 +100,7 @@ public class StockDataService(
         var cacheKey = $"metrics:{symbol}";
         var cached = await _cache.StringGetAsync(cacheKey);
         if (cached.HasValue)
-            return JsonSerializer.Deserialize<StockMetricResponse>((string)cached!, _json);
+            return JsonSerializer.Deserialize<StockMetricResponse>((string)cached!, JsonOptions.Default);
 
         var listing = await EnsureListingAsync(symbol, ct);
         
@@ -116,7 +121,7 @@ public class StockDataService(
             metric.DividendYield, metric.Week52High, metric.Week52Low,
             metric.RevenueGrowthTtm, metric.MarginNet, metric.LastSyncedAt);
 
-        await _cache.StringSetAsync(cacheKey, JsonSerializer.Serialize(res, _json), TimeSpan.FromHours(1));
+        await _cache.StringSetAsync(cacheKey, JsonSerializer.Serialize(res, JsonOptions.Default), TimeSpan.FromHours(1));
         return res;
     }
 
@@ -160,12 +165,12 @@ public class StockDataService(
         var cacheKey = CacheKeys.Peers(symbol);
         var cached = await _cache.StringGetAsync(cacheKey);
         if (cached.HasValue)
-            return JsonSerializer.Deserialize<PeersResponse>((string)cached!, _json);
+            return JsonSerializer.Deserialize<PeersResponse>((string)cached!, JsonOptions.Default);
 
         var peers = await finnhub.GetPeersAsync(symbol, ct);
         var res = new PeersResponse(symbol, peers);
 
-        await _cache.StringSetAsync(cacheKey, JsonSerializer.Serialize(res, _json), TimeSpan.FromDays(1));
+        await _cache.StringSetAsync(cacheKey, JsonSerializer.Serialize(res, JsonOptions.Default), TimeSpan.FromDays(1));
         return res;
     }
 
@@ -254,12 +259,12 @@ public class StockDataService(
         var cacheKey = $"search:{query}";
         var cached = await _cache.StringGetAsync(cacheKey);
         if (cached.HasValue)
-            return JsonSerializer.Deserialize<IEnumerable<SymbolSearchResponse>>((string)cached!, _json) ?? [];
+            return JsonSerializer.Deserialize<IEnumerable<SymbolSearchResponse>>((string)cached!, JsonOptions.Default) ?? [];
 
         var raw = await finnhub.SearchSymbolsAsync(query, ct);
         var res = (raw?.Result ?? []).Select(s => new SymbolSearchResponse(s.Symbol, s.Description, s.Type, ""));
 
-        await _cache.StringSetAsync(cacheKey, JsonSerializer.Serialize(res, _json), TimeSpan.FromHours(4));
+        await _cache.StringSetAsync(cacheKey, JsonSerializer.Serialize(res, JsonOptions.Default), TimeSpan.FromHours(4));
         return res;
     }
 
@@ -274,15 +279,23 @@ public class StockDataService(
             () => unitOfWork.StockListings.FindBySymbolAsync(normalized, ct), ct);
         if (listing != null) return listing;
 
+        _logger.LogInformation("Discovery Triggered | Symbol: {Symbol} not found in DB. Fetching from API.", normalized);
+
         // 2. Parallel API call
         var profile = await finnhub.GetProfileAsync(normalized, ct);
-        if (profile == null) return null;
+        if (profile == null)
+        {
+            _logger.LogWarning("Discovery Failed | Symbol: {Symbol} not found in external API.", normalized);
+            return null;
+        }
 
         // 3. Save (Synchronized with double-check)
         return await unitOfWork.ExecuteSynchronizedAsync(async () =>
         {
             var existing = await unitOfWork.StockListings.FindBySymbolAsync(normalized, ct);
             if (existing != null) return existing;
+
+            _logger.LogInformation("Discovery Success | Saving new StockListing: {Symbol} ({Name})", normalized, profile.Name);
 
             var newListing = new StockListing
             {

@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Security.Claims;
-using InventoryAlert.Domain.Configuration;
+using InventoryAlert.Api.Extensions;
 
 namespace InventoryAlert.Api.Middleware;
 
@@ -23,7 +23,7 @@ public class PerformanceMiddleware(ILogger<PerformanceMiddleware> logger) : IMid
             var elapsedMs = stopwatch.Elapsed.TotalMilliseconds;
             var statusCode = context.Response.StatusCode;
             var userId = context.User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "Anonymous";
-            var correlationId = context.Items["X-Correlation-Id"]?.ToString() ?? "N/A";
+            var correlationId = context.GetCorrelationId();
 
             var level = statusCode >= 500 ? LogLevel.Error : (elapsedMs > 500 ? LogLevel.Warning : LogLevel.Information);
             
