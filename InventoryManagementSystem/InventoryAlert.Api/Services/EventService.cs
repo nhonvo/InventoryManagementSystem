@@ -1,5 +1,4 @@
 using System.Text.Json;
-using InventoryAlert.Domain.DTOs;
 using InventoryAlert.Domain.Events;
 using InventoryAlert.Domain.Interfaces;
 

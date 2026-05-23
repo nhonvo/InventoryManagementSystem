@@ -1,7 +1,6 @@
 using FluentAssertions;
 using InventoryAlert.IntegrationTests.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit;
 
 namespace InventoryAlert.IntegrationTests.Abstractions;
 

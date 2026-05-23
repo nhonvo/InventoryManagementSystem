@@ -2,19 +2,16 @@ using System.Net;
 using FluentAssertions;
 using InventoryAlert.Domain.DTOs;
 using InventoryAlert.Domain.Entities.Postgres;
+using InventoryAlert.Domain.Events.Payloads;
 using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.IntegrationTests.Abstractions;
 using InventoryAlert.IntegrationTests.Infrastructure;
+using InventoryAlert.Worker.IntegrationEvents.Handlers;
+using InventoryAlert.Worker.ScheduledJobs;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using RestSharp;
 using Xunit.Abstractions;
-using Newtonsoft.Json;
-using WireMock.RequestBuilders;
-using WireMock.ResponseBuilders;
-using Xunit;
-using InventoryAlert.Worker.ScheduledJobs;
-using InventoryAlert.Worker.IntegrationEvents.Handlers;
-using InventoryAlert.Domain.Events.Payloads;
 
 namespace InventoryAlert.IntegrationTests.Tests.Jobs;
 
@@ -87,13 +84,13 @@ public class WholeFlowTests : Tier2TestBase
         var symbol = "SYNC_" + Guid.NewGuid().ToString().Substring(0, 4);
 
         await uow.StockListings.AddAsync(new StockListing { TickerSymbol = symbol, Name = "Apple" }, ct);
-        await uow.AlertRules.AddAsync(new AlertRule 
-        { 
-            UserId = user!.Id, 
-            TickerSymbol = symbol, 
-            Condition = AlertCondition.PriceAbove, 
-            TargetValue = 180, 
-            IsActive = true 
+        await uow.AlertRules.AddAsync(new AlertRule
+        {
+            UserId = user!.Id,
+            TickerSymbol = symbol,
+            Condition = AlertCondition.PriceAbove,
+            TargetValue = 180,
+            IsActive = true
         }, ct);
         await uow.SaveChangesAsync(ct);
 

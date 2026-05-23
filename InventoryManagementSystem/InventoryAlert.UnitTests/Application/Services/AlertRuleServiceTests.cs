@@ -63,7 +63,10 @@ public class AlertRuleServiceTests
         var id = Guid.NewGuid();
         var existing = new AlertRule
         {
-            Id = id, UserId = Guid.Parse(TestUserId), TickerSymbol = "OLD", TargetValue = 100m
+            Id = id,
+            UserId = Guid.Parse(TestUserId),
+            TickerSymbol = "OLD",
+            TargetValue = 100m
         };
         var request = new AlertRuleRequest("NEW", AlertCondition.PriceBelow, 200m, false);
 

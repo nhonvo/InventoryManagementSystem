@@ -2,7 +2,6 @@ using InventoryAlert.Domain.Common.Constants;
 using InventoryAlert.Domain.Entities.Postgres;
 using InventoryAlert.Domain.Events.Payloads;
 using InventoryAlert.Domain.Interfaces;
-using Microsoft.Extensions.Logging;
 
 namespace InventoryAlert.Worker.IntegrationEvents.Handlers;
 

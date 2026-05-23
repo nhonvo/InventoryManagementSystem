@@ -2,10 +2,7 @@ using System.Net;
 using FluentAssertions;
 using InventoryAlert.IntegrationTests.Abstractions;
 using InventoryAlert.IntegrationTests.Clients;
-using InventoryAlert.IntegrationTests.Fixtures;
 using InventoryAlert.IntegrationTests.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using RestSharp;
 using Xunit.Abstractions;
 
 namespace InventoryAlert.IntegrationTests.Tests.Api;
@@ -22,7 +19,7 @@ public class MarketApiTest : BaseIntegrationTest
         _authClient = new AuthClient(Client);
     }
     [Fact]
-    
+
     public async Task GetMarketStatus_ShouldReturnMarketStatus_Always()
     {
         // Arrange
@@ -37,7 +34,7 @@ public class MarketApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task GetMarketNews_ShouldReturnMarketNews_WhenTokenIsValid()
     {
         // Arrange
@@ -54,7 +51,7 @@ public class MarketApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task GetMarketNews_ShouldReturnUnauthorized_WhenTokenIsInvalid()
     {
         // Arrange

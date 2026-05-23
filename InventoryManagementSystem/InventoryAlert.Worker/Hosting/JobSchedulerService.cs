@@ -1,6 +1,5 @@
 using Hangfire;
 using InventoryAlert.Worker.Configuration;
-using InventoryAlert.Worker.IntegrationEvents.Handlers;
 using InventoryAlert.Worker.ScheduledJobs;
 
 namespace InventoryAlert.Worker.Hosting;

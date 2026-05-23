@@ -1,4 +1,3 @@
-using InventoryAlert.Domain.Common.Constants;
 using InventoryAlert.Domain.Constants;
 using InventoryAlert.Domain.Entities.Postgres;
 using InventoryAlert.Domain.Interfaces;

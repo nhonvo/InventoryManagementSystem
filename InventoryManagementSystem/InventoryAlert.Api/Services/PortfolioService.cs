@@ -16,7 +16,7 @@ public class PortfolioService(
     public async Task<PagedResult<PortfolioPositionResponse>> GetPositionsPagedAsync(PortfolioQueryParams query, string userId, CancellationToken ct)
     {
         var userGuid = Guid.Parse(userId);
-        
+
         var (pagedItems, totalItems) = await _unitOfWork.WatchlistItems.GetPagedByUserIdAsync(
             userId, query.PageNumber, query.PageSize, query.Search, ct);
 
@@ -27,7 +27,7 @@ public class PortfolioService(
         {
             var tradesList = await _unitOfWork.ExecuteSynchronizedAsync(
                 () => _unitOfWork.Trades.GetByUserAndSymbolsAsync(userGuid, symbols, ct), ct);
-                
+
             var listingsList = await _unitOfWork.ExecuteSynchronizedAsync(
                 () => _unitOfWork.StockListings.FindBySymbolsAsync(symbols, ct), ct);
 
@@ -46,7 +46,7 @@ public class PortfolioService(
 
                 var quote = quotesDict.GetValueOrDefault(symbol);
                 var trades = tradesBySymbol.GetValueOrDefault(symbol) ?? [];
-                
+
                 var currentPrice = quote?.Price ?? 0;
 
                 var netHoldings = trades
@@ -98,7 +98,7 @@ public class PortfolioService(
     public async Task<PortfolioPositionResponse?> GetPositionBySymbolAsync(string symbol, string userId, CancellationToken ct)
     {
         var userGuid = Guid.Parse(userId);
-        
+
         var trades = await _unitOfWork.ExecuteSynchronizedAsync(
             () => _unitOfWork.Trades.GetByUserAndSymbolAsync(userGuid, symbol, ct), ct);
 
@@ -169,7 +169,7 @@ public class PortfolioService(
             {
                 AlertCondition.PriceAbove => quote.Price > rule.TargetValue,
                 AlertCondition.PriceBelow => quote.Price < rule.TargetValue,
-                _ => false 
+                _ => false
             };
 
             if (breached)
@@ -178,7 +178,7 @@ public class PortfolioService(
                     rule.TickerSymbol,
                     quote.Price,
                     rule.TargetValue,
-                    0, 
+                    0,
                     DateTime.UtcNow));
             }
         }
@@ -186,58 +186,67 @@ public class PortfolioService(
         return alerts;
     }
 
+    public async Task BulkImportPositionsAsync(IEnumerable<CreatePositionRequest> requests, string userId, CancellationToken ct)
+    {
+        await _unitOfWork.ExecuteTransactionAsync(async () =>
+        {
+            foreach (var req in requests)
+            {
+                try
+                {
+                    await OpenPositionAsyncInternal(req, userId, ct);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "[Portfolio] Failed to import position for {Symbol} in batch.", req.TickerSymbol);
+                }
+            }
+        }, ct);
+    }
+
     public async Task<PortfolioPositionResponse> OpenPositionAsync(CreatePositionRequest request, string userId, CancellationToken ct)
+    {
+        PortfolioPositionResponse result = null!;
+        await _unitOfWork.ExecuteTransactionAsync(async () =>
+        {
+            await OpenPositionAsyncInternal(request, userId, ct);
+            result = await GetPositionBySymbolAsync(request.TickerSymbol, userId, ct)
+                ?? throw new InvalidOperationException("Failed to retrieve newly created position.");
+        }, ct);
+
+        return result;
+    }
+
+    private async Task OpenPositionAsyncInternal(CreatePositionRequest request, string userId, CancellationToken ct)
     {
         var userGuid = Guid.Parse(userId);
 
-        await _unitOfWork.ExecuteTransactionAsync(async () =>
+        var listing = await _unitOfWork.StockListings.FindBySymbolAsync(request.TickerSymbol, ct);
+        if (listing == null)
         {
-            var listing = await _unitOfWork.StockListings.FindBySymbolAsync(request.TickerSymbol, ct);
-            if (listing == null)
-            {
-                throw new InvalidOperationException($"Symbol {request.TickerSymbol} must be resolved before opening a position.");
-            }
+            throw new InvalidOperationException($"Symbol {request.TickerSymbol} must be resolved before opening a position.");
+        }
 
-            var existingWatch = await _unitOfWork.WatchlistItems.GetByUserAndSymbolAsync(userId, request.TickerSymbol, ct);
-            if (existingWatch == null)
-            {
-                await _unitOfWork.WatchlistItems.AddAsync(new WatchlistItem
-                {
-                    UserId = userGuid,
-                    TickerSymbol = request.TickerSymbol,
-                    CreatedAt = DateTime.UtcNow
-                }, ct);
-            }
-
-            await _unitOfWork.Trades.AddAsync(new Trade
+        var existingWatch = await _unitOfWork.WatchlistItems.GetByUserAndSymbolAsync(userId, request.TickerSymbol, ct);
+        if (existingWatch == null)
+        {
+            await _unitOfWork.WatchlistItems.AddAsync(new WatchlistItem
             {
                 UserId = userGuid,
                 TickerSymbol = request.TickerSymbol,
-                Type = TradeType.Buy,
-                Quantity = request.Quantity,
-                UnitPrice = request.UnitPrice,
-                TradedAt = request.TradedAt ?? DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow
             }, ct);
-
-        }, ct);
-
-        return await GetPositionBySymbolAsync(request.TickerSymbol, userId, ct)
-            ?? throw new InvalidOperationException("Failed to retrieve newly created position.");
-    }
-
-    public async Task BulkImportPositionsAsync(IEnumerable<CreatePositionRequest> requests, string userId, CancellationToken ct)
-    {
-        foreach (var req in requests)
-        {
-            try
-            {
-                await OpenPositionAsync(req, userId, ct);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to import position for {Symbol}", req.TickerSymbol);
-            }
         }
+
+        await _unitOfWork.Trades.AddAsync(new Trade
+        {
+            UserId = userGuid,
+            TickerSymbol = request.TickerSymbol,
+            Type = TradeType.Buy,
+            Quantity = request.Quantity,
+            UnitPrice = request.UnitPrice,
+            TradedAt = request.TradedAt ?? DateTime.UtcNow
+        }, ct);
     }
 
     public async Task<PortfolioPositionResponse> RecordTradeAsync(string symbol, TradeRequest request, string userId, CancellationToken ct)

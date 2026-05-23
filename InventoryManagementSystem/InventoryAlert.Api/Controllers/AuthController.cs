@@ -1,6 +1,5 @@
 using InventoryAlert.Domain.DTOs;
 using InventoryAlert.Domain.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,12 +20,13 @@ public class AuthController(IAuthService authService, IHttpContextAccessor httpC
         // For localhost/dev, browsers allow Secure cookies over HTTP.
         var isHttps = httpContext.Request.IsHttps;
         var isLocal = httpContext.Request.Host.Host == "localhost" || httpContext.Request.Host.Host == "127.0.0.1";
+        var sameSiteNone = isHttps || isLocal;
 
         return new CookieOptions
         {
             HttpOnly = true,
-            Secure = isHttps, // Only secure if actually HTTPS
-            SameSite = (isHttps || isLocal) ? SameSiteMode.None : SameSiteMode.Lax,
+            Secure = isHttps || sameSiteNone, // Force secure if SameSite=None
+            SameSite = sameSiteNone ? SameSiteMode.None : SameSiteMode.Lax,
             Path = "/",
             Expires = expiresAt
         };
@@ -73,7 +73,7 @@ public class AuthController(IAuthService authService, IHttpContextAccessor httpC
                 }
             }
         }
-        
+
         if (string.IsNullOrEmpty(refreshToken))
             return Unauthorized(new { Message = "Refresh token is missing." });
 

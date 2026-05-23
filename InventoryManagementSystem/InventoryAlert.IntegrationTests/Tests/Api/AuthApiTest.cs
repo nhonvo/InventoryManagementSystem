@@ -1,14 +1,13 @@
 using System.Net;
 using FluentAssertions;
-using InventoryAlert.IntegrationTests.Abstractions;
-using InventoryAlert.IntegrationTests.Infrastructure;
 using InventoryAlert.Domain.DTOs;
 using InventoryAlert.Domain.Entities.Postgres;
 using InventoryAlert.Domain.Interfaces;
+using InventoryAlert.IntegrationTests.Abstractions;
+using InventoryAlert.IntegrationTests.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using RestSharp;
 using Xunit.Abstractions;
-using Xunit;
 
 namespace InventoryAlert.IntegrationTests.Tests.Api;
 
@@ -20,7 +19,7 @@ public class AuthApiTest : Tier2TestBase
     }
 
     [Fact]
-    
+
     public async Task Login_ShouldReturnAccessToken_AndLogSuccess()
     {
         // Arrange
@@ -40,7 +39,8 @@ public class AuthApiTest : Tier2TestBase
         await uow.SaveChangesAsync(CancellationToken.None);
 
         // Act
-        var result = await RunAction(async () => {
+        var result = await RunAction(async () =>
+        {
             var request = new RestRequest("auth/login", Method.Post);
             request.AddJsonBody(new { username, password });
             return await Client.ExecuteAsync<AuthResponse>(request);
@@ -49,7 +49,7 @@ public class AuthApiTest : Tier2TestBase
         // Assert
         result.Response.StatusCode.Should().Be(HttpStatusCode.OK);
         result.Response.Data.Should().NotBeNull();
-        
+
         // Log Verification (Seq provides robust filtering)
         result.Logs.Should().Contain(l => l.Contains(username), because: "Successful login should be logged with the username in Seq.");
     }

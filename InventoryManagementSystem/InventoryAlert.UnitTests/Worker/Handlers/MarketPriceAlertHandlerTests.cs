@@ -50,7 +50,7 @@ public class MarketPriceAlertHandlerTests
 
         _ruleRepoMock.Setup(r => r.GetBySymbolAsync(symbol, Ct))
             .ReturnsAsync(new List<AlertRule> { rule });
-        
+
         _evaluatorMock.Setup(e => e.EvaluateAsync(rule, price, Ct))
             .ReturnsAsync((true, "Price alert: reached..."));
 
@@ -60,10 +60,10 @@ public class MarketPriceAlertHandlerTests
         // Assert
         _noteRepoMock.Verify(r => r.AddAsync(It.Is<Notification>(n =>
             n.UserId == userId && n.TickerSymbol == symbol && n.Message.Contains("Price alert")), Ct), Times.Once);
-        
-        _ruleRepoMock.Verify(r => r.UpdateAsync(It.Is<AlertRule>(rule => 
+
+        _ruleRepoMock.Verify(r => r.UpdateAsync(It.Is<AlertRule>(rule =>
             rule.TickerSymbol == symbol && rule.IsActive == false && rule.LastTriggeredAt != null), Ct), Times.Once);
-        
+
         _uowMock.Verify(u => u.SaveChangesAsync(Ct), Times.Once);
         _notifierMock.Verify(n => n.NotifyAsync(It.IsAny<Notification>(), Ct), Times.Once);
     }

@@ -51,7 +51,7 @@ public class SqsQueueService(
             // Simple validation to prevent empty URL failures
             if (string.IsNullOrEmpty(queueUrl))
             {
-                _logger.LogWarning("[SqsQueueService] Skipping message: SQS Queue URL is empty.");
+                _logger.LogWarning("[SQS] Skipping message: SQS Queue URL is empty.");
                 return;
             }
 
@@ -65,7 +65,7 @@ public class SqsQueueService(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[SqsQueueService] Failed to send message to queue.");
+            _logger.LogError(ex, "[SQS] Failed to send message to queue.");
             // Do not throw to prevent critical worker failure on infra blips
         }
     }
@@ -79,7 +79,7 @@ public class SqsQueueService(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[SqsQueueService] Could not resolve URL for queue: {QueueName}", queueName);
+            _logger.LogError(ex, "[SQS] Could not resolve URL for queue: {QueueName}", queueName);
             return string.Empty;
         }
     }

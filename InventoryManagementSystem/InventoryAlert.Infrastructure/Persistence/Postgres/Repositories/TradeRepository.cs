@@ -24,14 +24,8 @@ public class TradeRepository(AppDbContext context)
 
     public async Task<decimal> GetNetHoldingsAsync(Guid userId, string symbol, CancellationToken ct)
     {
-        var buySum = await _dbSet.AsNoTracking()
-            .Where(x => x.UserId == userId && x.TickerSymbol == symbol && x.Type == TradeType.Buy)
-            .SumAsync(x => x.Quantity, ct);
-
-        var sellSum = await _dbSet.AsNoTracking()
-            .Where(x => x.UserId == userId && x.TickerSymbol == symbol && x.Type == TradeType.Sell)
-            .SumAsync(x => x.Quantity, ct);
-
-        return buySum - sellSum;
+        return await _dbSet.AsNoTracking()
+            .Where(x => x.UserId == userId && x.TickerSymbol == symbol)
+            .SumAsync(x => x.Type == TradeType.Buy ? x.Quantity : -x.Quantity, ct);
     }
 }

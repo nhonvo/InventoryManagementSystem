@@ -1,10 +1,9 @@
+using FluentAssertions;
 using InventoryAlert.Domain.DTOs;
 using InventoryAlert.Domain.Entities.Postgres;
 using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.IntegrationTests.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit;
-using FluentAssertions;
 
 namespace InventoryAlert.IntegrationTests.Tests.Services;
 
@@ -26,7 +25,7 @@ public class PortfolioServiceTests : IAsyncLifetime
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    
+
     public async Task RecordTradeAsync_UpdatesHoldings_AndReturnsCorrectResponse()
     {
         // Arrange
@@ -36,7 +35,7 @@ public class PortfolioServiceTests : IAsyncLifetime
 
         var userId = Guid.NewGuid();
         var symbol = "AAPL";
-        
+
         await unitOfWork.Users.AddAsync(new User { Id = userId, Username = "portfoliouser", Email = "p@test.com", PasswordHash = "..." }, ct);
         await unitOfWork.StockListings.AddAsync(new StockListing { TickerSymbol = symbol, Name = "Apple" }, ct);
         await unitOfWork.SaveChangesAsync(ct);
@@ -49,13 +48,13 @@ public class PortfolioServiceTests : IAsyncLifetime
         // Assert
         response.Symbol.Should().Be(symbol);
         response.HoldingsCount.Should().Be(10);
-        
+
         var trades = await unitOfWork.Trades.GetByUserAndSymbolAsync(userId, symbol, ct);
         trades.Should().ContainSingle(t => t.Quantity == 10 && t.UnitPrice == 150m);
     }
 
     [Fact]
-    
+
     public async Task RecordTradeAsync_SellWithInsufficientHoldings_ThrowsException()
     {
         // Arrange

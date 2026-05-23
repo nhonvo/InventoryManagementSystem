@@ -16,7 +16,7 @@ public class RedisHelper(IConnectionMultiplexer redis, ILogger<RedisHelper> logg
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "[RedisHelper] Error acquiring best-effort lock for {Key}", key);
+            logger.LogWarning(ex, "[Redis] Error acquiring best-effort lock for {Key}", key);
             return true; // Fail-open
         }
     }
@@ -29,7 +29,7 @@ public class RedisHelper(IConnectionMultiplexer redis, ILogger<RedisHelper> logg
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "[RedisHelper] Critical error acquiring strict lock for {Key}", key);
+            logger.LogError(ex, "[Redis] Critical error acquiring strict lock for {Key}", key);
             return false; // Fail-closed
         }
     }
@@ -42,7 +42,7 @@ public class RedisHelper(IConnectionMultiplexer redis, ILogger<RedisHelper> logg
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Failed to set expiry for key {Key}", key);
+            logger.LogWarning(ex, "[Redis] Failed to set expiry for key {Key}", key);
         }
     }
 

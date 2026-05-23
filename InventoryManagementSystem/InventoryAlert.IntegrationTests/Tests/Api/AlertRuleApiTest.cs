@@ -5,11 +5,9 @@ using InventoryAlert.Domain.Entities.Postgres;
 using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.IntegrationTests.Abstractions;
 using InventoryAlert.IntegrationTests.Clients;
-using InventoryAlert.IntegrationTests.Fixtures;
-using InventoryAlert.IntegrationTests.TestUtils.Assertions;
 using InventoryAlert.IntegrationTests.Infrastructure;
+using InventoryAlert.IntegrationTests.TestUtils.Assertions;
 using Microsoft.Extensions.DependencyInjection;
-using RestSharp;
 using Xunit.Abstractions;
 
 namespace InventoryAlert.IntegrationTests.Tests.Api;
@@ -19,7 +17,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
 {
     private readonly AlertRuleClient _alertRuleClient;
     private readonly AuthClient _authClient;
-    
+
     public AlertRuleApiTest(TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
         _alertRuleClient = new AlertRuleClient(Client);
@@ -27,7 +25,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task GetAlertRules_ShouldReturnAlertRules_WhenUserIsAuthenticated()
     {
         // Arrange
@@ -44,7 +42,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task GetAlertRules_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
     {
         // Arrange
@@ -58,7 +56,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task CreateAlertRules_ShouldReturnAlertRule_WhenUserIsAuthenticated()
     {
         // Arrange
@@ -66,7 +64,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
         var accessToken = loginResponse.Data!.AccessToken;
 
         var tickerSymbol = "TSLA";
-        
+
         // Seed StockListing
         using (var scope = Fixture.Services.CreateScope())
         {
@@ -108,7 +106,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task CreateAlertRules_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
     {
         // Arrange
@@ -129,7 +127,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task DeleteAlertRules_ShouldReturnOk_WhenUserIsAuthenticated()
     {
         // Arrange
@@ -137,7 +135,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
         var accessToken = loginResponse.Data!.AccessToken;
 
         var tickerSymbol = "TSLA";
-        
+
         // Seed StockListing
         using (var scope = Fixture.Services.CreateScope())
         {
@@ -166,7 +164,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task DeleteAlertRules_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
     {
         // Arrange
@@ -181,7 +179,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task DeleteAlertRules_ShouldReturnNotFound_WhenAlertRuleIdIsInvalid()
     {
         // Arrange
@@ -199,7 +197,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task ToggleAlertRule_ShouldReturnAlertRule_WhenUserIsAuthenticated()
     {
         // Arrange
@@ -207,7 +205,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
         var accessToken = loginResponse.Data!.AccessToken;
 
         var tickerSymbol = "TSLA";
-        
+
         // Seed StockListing
         using (var scope = Fixture.Services.CreateScope())
         {
@@ -229,7 +227,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
         createResponse.Data.Should().NotBeNull();
         var id = createResponse.Data!.Id;
         var isActive = false;
-        
+
         try
         {
             // Act
@@ -250,7 +248,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task ToggleAlertRule_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
     {
         // Arrange
@@ -266,7 +264,7 @@ public class AlertRuleApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task ToggleAlertRule_ShouldReturnNotFound_WhenAlertRuleIsNotExist()
     {
         // Arrange

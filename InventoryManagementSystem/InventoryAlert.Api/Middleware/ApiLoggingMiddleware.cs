@@ -2,8 +2,8 @@ using System.Diagnostics;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using InventoryAlert.Api.Extensions;
 using InventoryAlert.Domain.Configuration;
+using InventoryAlert.Infrastructure.Utilities;
 
 namespace InventoryAlert.Api.Middleware;
 
@@ -54,7 +54,7 @@ public class ApiLoggingMiddleware(ILogger<ApiLoggingMiddleware> logger, AppSetti
             // 3. Read Response Body
             responseBodyWrapper.Position = 0;
             var responseBodyText = await ReadStreamAsync(responseBodyWrapper);
-            
+
             // 4. Restore original stream
             responseBodyWrapper.Position = 0;
             await responseBodyWrapper.CopyToAsync(originalBodyStream);
@@ -69,33 +69,30 @@ public class ApiLoggingMiddleware(ILogger<ApiLoggingMiddleware> logger, AppSetti
     {
         var statusCode = context.Response.StatusCode;
         var userId = context.User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "Anonymous";
-        var correlationId = context.GetCorrelationId();
-        
+
         var level = statusCode >= 500 ? LogLevel.Error : (elapsedMs > 500 ? LogLevel.Warning : LogLevel.Information);
 
-        logger.Log(level, 
-            "HTTP {Method} {Path} responded {StatusCode} in {ElapsedMs:F3}ms | User: {UserId} | CID: {CorrelationId}",
-            context.Request.Method, context.Request.Path, statusCode, elapsedMs, userId, correlationId);
+        logger.Log(level,
+            LoggingConfiguration.Templates.ApiRequestMinimal,
+            context.Request.Method, context.Request.Path, statusCode, elapsedMs, userId);
     }
 
     private void LogFull(HttpContext context, double elapsedMs, string reqBody, string resBody)
     {
         var statusCode = context.Response.StatusCode;
         var userId = context.User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "Anonymous";
-        var correlationId = context.GetCorrelationId();
-        
+
         var level = statusCode >= 500 ? LogLevel.Error : (elapsedMs > 500 ? LogLevel.Warning : LogLevel.Information);
 
         // We pass the parsed objects directly to Serilog. 
         // By using Dictionary<string, object>, Serilog destructures correctly for Seq.
-        logger.Log(level, 
-            "HTTP {Method} {Path} responded {StatusCode} in {ElapsedMs:F3}ms | User: {UserId} | CID: {CorrelationId} | Req: {@RequestBody} | Res: {@ResponseBody}",
-            context.Request.Method, 
-            context.Request.Path, 
-            statusCode, 
-            elapsedMs, 
-            userId, 
-            correlationId,
+        logger.Log(level,
+            LoggingConfiguration.Templates.ApiRequest,
+            context.Request.Method,
+            context.Request.Path,
+            statusCode,
+            elapsedMs,
+            userId,
             TryParseJson(reqBody) ?? "N/A",
             TryParseJson(resBody) ?? "N/A");
     }
@@ -134,7 +131,7 @@ public class ApiLoggingMiddleware(ILogger<ApiLoggingMiddleware> logger, AppSetti
         if (stream.Length == 0) return string.Empty;
         using var reader = new StreamReader(stream, Encoding.UTF8, true, 1024, true);
         var body = await reader.ReadToEndAsync();
-        
+
         if (body.Length > MaxBodyLength) body = body[..MaxBodyLength] + "... [TRUNCATED]";
         if (body.Contains("password", StringComparison.OrdinalIgnoreCase)) return "[REDACTED]";
 

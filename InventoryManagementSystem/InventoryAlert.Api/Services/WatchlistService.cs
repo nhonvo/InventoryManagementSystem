@@ -55,15 +55,18 @@ public class WatchlistService(
                 throw new KeyNotFoundException($"Symbol '{symbol}' is not recognized.");
         }
 
-        var watchlistItem = new WatchlistItem
+        await _unitOfWork.ExecuteTransactionAsync(async () =>
         {
-            UserId = Guid.Parse(userId),
-            TickerSymbol = symbol.ToUpperInvariant(),
-            CreatedAt = DateTime.UtcNow
-        };
+            var watchlistItem = new WatchlistItem
+            {
+                UserId = Guid.Parse(userId),
+                TickerSymbol = symbol.ToUpperInvariant(),
+                CreatedAt = DateTime.UtcNow
+            };
 
-        await _unitOfWork.WatchlistItems.AddAsync(watchlistItem, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+            await _unitOfWork.WatchlistItems.AddAsync(watchlistItem, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }, ct);
 
         _logger.LogInformation("[Watchlist] User {UserId} added {Symbol}", userId, symbol);
 
@@ -73,12 +76,15 @@ public class WatchlistService(
 
     public async Task RemoveFromWatchlistAsync(string symbol, string userId, CancellationToken ct)
     {
-        var item = await _unitOfWork.WatchlistItems.GetByUserAndSymbolAsync(userId, symbol, ct);
-        if (item == null)
-            throw new KeyNotFoundException($"Symbol '{symbol}' is not on your watchlist.");
+        await _unitOfWork.ExecuteTransactionAsync(async () =>
+        {
+            var item = await _unitOfWork.WatchlistItems.GetByUserAndSymbolAsync(userId, symbol, ct);
+            if (item == null)
+                throw new KeyNotFoundException($"Symbol '{symbol}' is not on your watchlist.");
 
-        await _unitOfWork.WatchlistItems.DeleteAsync(item, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+            await _unitOfWork.WatchlistItems.DeleteAsync(item, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }, ct);
 
         _logger.LogInformation("[Watchlist] User {UserId} removed {Symbol}", userId, symbol);
     }

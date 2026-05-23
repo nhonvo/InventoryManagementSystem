@@ -39,7 +39,7 @@ public abstract class BaseE2ETest : IDisposable
 
         var response = await Client.ExecuteAsync<AuthResponse>(request);
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK, 
+        response.StatusCode.Should().Be(HttpStatusCode.OK,
             $"Login should succeed for default admin. Response: {response.Content}");
         response.Data.Should().NotBeNull();
 

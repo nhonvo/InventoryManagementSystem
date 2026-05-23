@@ -2,7 +2,6 @@ using InventoryAlert.Domain.Entities.Dynamodb;
 using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.Worker.Configuration;
 using InventoryAlert.Worker.Models;
-using Microsoft.Extensions.Logging;
 
 namespace InventoryAlert.Worker.ScheduledJobs;
 
@@ -36,7 +35,7 @@ public class NewsSyncJob(
             // 2. Sync Company News (Symbol-Specific)
             int companyArticlesSaved = await SyncCompanyNewsInternalAsync(ct);
 
-            return new JobResult(JobStatus.Success, 
+            return new JobResult(JobStatus.Success,
                 $"Sync complete. Saved {marketArticlesSaved} market articles and {companyArticlesSaved} company articles.");
         }
         catch (Exception ex)
@@ -89,7 +88,7 @@ public class NewsSyncJob(
 
         // Using Parallel fetching for company news to speed up execution for many symbols
         var options = new ParallelOptions { MaxDegreeOfParallelism = _settings.MaxDegreeOfParallelism, CancellationToken = ct };
-        
+
         await Parallel.ForEachAsync(listings, options, async (listing, token) =>
         {
             try

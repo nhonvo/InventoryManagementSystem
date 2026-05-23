@@ -1,9 +1,4 @@
-using System.Text.Json;
 using Amazon.SQS.Model;
-using InventoryAlert.Domain.Configuration;
-using InventoryAlert.Domain.Constants;
-using InventoryAlert.Domain.Events;
-using InventoryAlert.Domain.Events.Payloads;
 using InventoryAlert.Worker.Configuration;
 using InventoryAlert.Worker.Interfaces;
 using StackExchange.Redis;
@@ -83,13 +78,13 @@ public class ProcessQueueJob(
         {
             // Note: IntegrationMessageRouter now handles SNS unwrapping and deserialization
             var success = await _router.ProcessAndAcknowledgeAsync(message, ct);
-            
+
             if (success)
             {
                 // Mark as processed only on success
                 await _redisDb.StringSetAsync(dedupKey, "1", TimeSpan.FromHours(24));
             }
-            
+
             return success;
         }
         catch (Exception ex)

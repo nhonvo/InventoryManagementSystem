@@ -10,7 +10,7 @@ public class GenericRepository<T>(AppDbContext context) : IGenericRepository<T> 
 
     public virtual async Task<T?> GetByIdAsync(object id, CancellationToken ct)
     {
-        return await _dbSet.FindAsync([id], cancellationToken: ct);
+        return await _dbSet.FindAsync([id], ct);
     }
 
     public virtual async Task<IEnumerable<T>> GetAllAsync(CancellationToken ct)
@@ -31,7 +31,11 @@ public class GenericRepository<T>(AppDbContext context) : IGenericRepository<T> 
 
     public virtual Task UpdateAsync(T entity, CancellationToken ct)
     {
-        _dbSet.Update(entity);
+        var entry = _context.Entry(entity);
+        if (entry.State == EntityState.Detached)
+        {
+            _dbSet.Update(entity);
+        }
         return Task.CompletedTask;
     }
 

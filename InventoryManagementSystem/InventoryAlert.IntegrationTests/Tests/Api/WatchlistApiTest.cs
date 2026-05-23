@@ -2,11 +2,7 @@ using System.Net;
 using FluentAssertions;
 using InventoryAlert.IntegrationTests.Abstractions;
 using InventoryAlert.IntegrationTests.Clients;
-using InventoryAlert.IntegrationTests.Fixtures;
-using InventoryAlert.IntegrationTests.TestUtils.Assertions;
 using InventoryAlert.IntegrationTests.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using RestSharp;
 using Xunit.Abstractions;
 
 namespace InventoryAlert.IntegrationTests.Tests.Api;
@@ -39,7 +35,7 @@ public class WatchlistApiTest : BaseIntegrationTest
     //}
 
     [Fact]
-    
+
     public async Task GetWatchlist_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
     {
         // Arrange
@@ -80,7 +76,7 @@ public class WatchlistApiTest : BaseIntegrationTest
     //}
 
     [Fact]
-    
+
     public async Task GetSingleWatchlistItem_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
     {
         // Arrange
@@ -93,7 +89,7 @@ public class WatchlistApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task GetSingleWatchlistItem_ShouldReturnNotFound_WhenItemDoesNotExist()
     {
         // Arrange
@@ -108,7 +104,7 @@ public class WatchlistApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task AddToWatchlist_ShouldAddItem_WhenUserIsAuthenticated()
     {
         // Arrange
@@ -135,7 +131,7 @@ public class WatchlistApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task AddToWatchlist_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
     {
         // Arrange
@@ -172,7 +168,7 @@ public class WatchlistApiTest : BaseIntegrationTest
     //}
 
     [Fact]
-    
+
     public async Task AddToWatchlist_ShouldReturnBadRequest_WhenItemIsAlreadyInWatchlist()
     {
         // Arrange
@@ -198,7 +194,7 @@ public class WatchlistApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task RemoveFromWatchlist_ShouldRemoveItem_WhenUserIsAuthenticated()
     {
         // Arrange
@@ -218,7 +214,7 @@ public class WatchlistApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task RemoveFromWatchlist_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
     {
         // Arrange
@@ -232,7 +228,7 @@ public class WatchlistApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task RemoveFromWatchlist_ShouldReturnNotFound_WhenItemIsNotInWatchlist()
     {
         // Arrange

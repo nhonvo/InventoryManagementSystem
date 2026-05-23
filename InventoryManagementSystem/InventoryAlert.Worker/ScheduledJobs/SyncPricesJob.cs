@@ -73,7 +73,7 @@ public class SyncPricesJob(
             var symbolsToProcess = fetchedQuotes.Keys.ToList();
             var allActiveRules = await _unitOfWork.AlertRules.GetBySymbolsAsync(symbolsToProcess, ct);
             var rulesBySymbol = allActiveRules.GroupBy(r => r.TickerSymbol).ToDictionary(g => g.Key, g => g.ToList());
-            
+
             foreach (var kvp in fetchedQuotes)
             {
                 var symbol = kvp.Key;
@@ -111,7 +111,7 @@ public class SyncPricesJob(
             if (pendingNotifications.Count > 0)
             {
                 await _unitOfWork.Notifications.AddRangeAsync(pendingNotifications, ct);
-                
+
                 foreach (var notification in pendingNotifications)
                 {
                     await _notifier.NotifyAsync(notification, ct);

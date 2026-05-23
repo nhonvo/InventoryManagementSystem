@@ -10,12 +10,12 @@ public class NotificationService(IUnitOfWork unitOfWork) : INotificationService
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<NotificationResponse> CreateAsync(
-        Guid userId, 
-        string message, 
+        Guid userId,
+        string message,
         NotificationType type = NotificationType.System,
         NotificationSeverity severity = NotificationSeverity.Info,
-        string? symbol = null, 
-        Guid? alertRuleId = null, 
+        string? symbol = null,
+        Guid? alertRuleId = null,
         CancellationToken ct = default)
     {
         var notification = new Notification
@@ -49,12 +49,12 @@ public class NotificationService(IUnitOfWork unitOfWork) : INotificationService
         return new PagedResult<NotificationResponse>
         {
             Items = result.Items.Select(n => new NotificationResponse(
-                n.Id, 
-                n.Message, 
-                n.TickerSymbol, 
-                n.Type, 
-                n.Severity, 
-                n.IsRead, 
+                n.Id,
+                n.Message,
+                n.TickerSymbol,
+                n.Type,
+                n.Severity,
+                n.IsRead,
                 n.CreatedAt)),
             TotalItems = result.TotalItems,
             PageNumber = result.PageNumber,

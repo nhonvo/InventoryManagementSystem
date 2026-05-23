@@ -10,7 +10,7 @@ public class AlertRuleRepository(AppDbContext context)
     public async Task<IEnumerable<AlertRule>> GetByUserIdAsync(string userId, CancellationToken ct = default)
     {
         var userGuid = Guid.Parse(userId);
-        return await _dbSet.AsNoTracking()
+        return await _dbSet
             .Where(x => x.UserId == userGuid)
             .ToListAsync(ct);
     }

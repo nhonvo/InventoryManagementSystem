@@ -1,10 +1,9 @@
+using FluentAssertions;
 using InventoryAlert.Domain.Entities.Postgres;
 using InventoryAlert.Domain.Events.Payloads;
 using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.IntegrationTests.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit;
-using FluentAssertions;
 
 namespace InventoryAlert.IntegrationTests.Tests.Handlers;
 
@@ -25,7 +24,7 @@ public class MarketPriceAlertHandlerTests : IAsyncLifetime
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    
+
     public async Task HandleAsync_WhenRuleBreached_CreatesNotificationAndLogs()
     {
         // Arrange
@@ -67,7 +66,7 @@ public class MarketPriceAlertHandlerTests : IAsyncLifetime
     }
 
     [Fact]
-    
+
     public async Task HandleAsync_WhenRuleNotBreached_DoesNothing()
     {
         // Arrange

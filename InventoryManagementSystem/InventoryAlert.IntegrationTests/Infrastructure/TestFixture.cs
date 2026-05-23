@@ -1,26 +1,24 @@
 using System.Data.Common;
+using Hangfire;
 using InventoryAlert.Api.Configuration;
 using InventoryAlert.Domain.Entities.Postgres;
 using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.Infrastructure.Persistence.Postgres;
+using InventoryAlert.Worker.Configuration;
+using InventoryAlert.Worker.IntegrationEvents.Handlers;
+using InventoryAlert.Worker.IntegrationEvents.Routing;
+using InventoryAlert.Worker.Interfaces;
+using InventoryAlert.Worker.ScheduledJobs;
+using InventoryAlert.Worker.Utilities;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Moq;
 using Npgsql;
 using Respawn;
 using WireMock.Server;
-using InventoryAlert.Worker.ScheduledJobs;
-using InventoryAlert.Worker.IntegrationEvents.Handlers;
-using InventoryAlert.Worker.IntegrationEvents.Routing;
-using InventoryAlert.Worker.Interfaces;
-using InventoryAlert.Worker.Configuration;
-using InventoryAlert.Worker.Utilities;
-using Moq;
-using Hangfire;
-using Serilog;
 
 namespace InventoryAlert.IntegrationTests.Infrastructure;
 
@@ -49,7 +47,7 @@ public class TestFixture : WebApplicationFactory<InventoryAlert.Api.Program>, IA
 
         // ── WireMock Setup ──
         WireMock = WireMockServer.Start();
-        
+
         // ── Set Environment Variables for API Bootstrap ──
         Environment.SetEnvironmentVariable("Database__DefaultConnection", Configuration["Database:DefaultConnection"]);
         Environment.SetEnvironmentVariable("Redis__ConnectionString", Configuration["Redis:ConnectionString"]);
@@ -70,14 +68,14 @@ public class TestFixture : WebApplicationFactory<InventoryAlert.Api.Program>, IA
         {
             builder.ConfigureServices(services =>
             {
-                services.AddLogging(lb => 
+                services.AddLogging(lb =>
                 {
                     lb.ClearProviders();
                     lb.AddProvider(LoggerProvider);
                 });
 
                 services.AddSingleton<ILoggerProvider>(LoggerProvider);
-                
+
                 // ── Mocks for Hangfire ──
                 services.AddSingleton(new Mock<IBackgroundJobClient>().Object);
                 services.AddSingleton(new Mock<IRecurringJobManager>().Object);
@@ -113,15 +111,20 @@ public class TestFixture : WebApplicationFactory<InventoryAlert.Api.Program>, IA
 
         // ── DB Cleanup Setup (Respawn) ──
         var connectionString = settings.Database.DefaultConnection;
-        
+
         // Robust connection with retries (Postgres might be slow to initialize DBs)
-        await ExecuteWithRetry(async () => 
+        await ExecuteWithRetry(async () =>
         {
             if (_dbConnection != null) await _dbConnection.DisposeAsync();
             _dbConnection = new NpgsqlConnection(connectionString);
             await _dbConnection.OpenAsync();
+
+            // Ensure database and schema exist for the isolated integration test DB
+            using var scope = Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            await db.Database.MigrateAsync();
         }, 5, TimeSpan.FromSeconds(2));
-        
+
         _respawner = await Respawner.CreateAsync(_dbConnection, new RespawnerOptions
         {
             DbAdapter = DbAdapter.Postgres,
@@ -141,6 +144,11 @@ public class TestFixture : WebApplicationFactory<InventoryAlert.Api.Program>, IA
                 await action();
                 return;
             }
+            catch (PostgresException ex) when (ex.SqlState == "3D000" && i < maxRetries - 1)
+            {
+                // Database does not exist - create it
+                await CreateDatabaseAsync();
+            }
             catch (Exception ex) when (i < maxRetries - 1)
             {
                 Console.WriteLine($"[TestFixture] Connection attempt {i + 1} failed: {ex.Message}. Retrying in {delay.TotalSeconds}s...");
@@ -149,11 +157,33 @@ public class TestFixture : WebApplicationFactory<InventoryAlert.Api.Program>, IA
         }
     }
 
+    private async Task CreateDatabaseAsync()
+    {
+        var builder = new NpgsqlConnectionStringBuilder(Configuration["Database:DefaultConnection"])
+        {
+            Database = "postgres"
+        };
+
+        using var connection = new NpgsqlConnection(builder.ConnectionString);
+        await connection.OpenAsync();
+
+        var targetDb = new NpgsqlConnectionStringBuilder(Configuration["Database:DefaultConnection"]).Database;
+        using var command = new NpgsqlCommand($"CREATE DATABASE \"{targetDb}\"", connection);
+        try
+        {
+            await command.ExecuteNonQueryAsync();
+        }
+        catch (PostgresException ex) when (ex.SqlState == "42P04") // Already exists
+        {
+            // Ignore
+        }
+    }
+
     public async Task ResetStateAsync()
     {
         await _respawner.ResetAsync(_dbConnection);
         WireMock.Reset();
-        
+
         // ── Reset Redis ──
         using (var redisScope = Services.CreateScope())
         {
@@ -164,7 +194,7 @@ public class TestFixture : WebApplicationFactory<InventoryAlert.Api.Program>, IA
         // ── Reset Container WireMock (for Tier 2/3) ──
         var containerWireMockUrl = Configuration["WiremockSettings:BaseUrl"] ?? "http://localhost:9091";
         using var client = new HttpClient();
-        try 
+        try
         {
             await client.PostAsync($"{containerWireMockUrl}/__admin/reset", null);
         }

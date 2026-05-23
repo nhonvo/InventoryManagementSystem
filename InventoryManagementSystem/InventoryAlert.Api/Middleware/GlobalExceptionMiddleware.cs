@@ -3,6 +3,7 @@ using InventoryAlert.Api.Extensions;
 using InventoryAlert.Api.Models;
 using InventoryAlert.Domain.Common.Constants;
 using InventoryAlert.Domain.Common.Exceptions;
+using InventoryAlert.Infrastructure.Utilities;
 
 namespace InventoryAlert.Api.Middleware;
 
@@ -19,7 +20,7 @@ public class GlobalExceptionMiddleware(ILoggerFactory loggerFactory) : IMiddlewa
         catch (Exception ex)
         {
             var correlationId = context.GetCorrelationId();
-            _logger.LogError(ex, "An unhandled exception has occurred while executing the request. | CID: {CorrelationId}", correlationId);
+            _logger.LogError(ex, LoggingConfiguration.Templates.UnhandledException);
             await HandleExceptionAsync(context, ex, correlationId);
         }
     }
@@ -27,7 +28,7 @@ public class GlobalExceptionMiddleware(ILoggerFactory loggerFactory) : IMiddlewa
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception, string correlationId)
     {
         context.Response.ContentType = "application/json";
-        
+
         var (statusCode, respondCode) = exception switch
         {
             UserFriendlyException ex => (MapStatusCode(ex.ErrorCode), MapErrorCode(ex.ErrorCode)),
@@ -47,7 +48,7 @@ public class GlobalExceptionMiddleware(ILoggerFactory loggerFactory) : IMiddlewa
         };
 
         context.Response.StatusCode = (int)statusCode;
-        
+
         var errorResponse = new ErrorResponse(
             new Error(errorCode, errorMessage),
             correlationId

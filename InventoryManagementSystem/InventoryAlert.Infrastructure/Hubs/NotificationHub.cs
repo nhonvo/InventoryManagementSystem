@@ -23,9 +23,9 @@ public class NotificationHub : Hub<INotificationHub>
     public override async Task OnConnectedAsync()
     {
         var userId = Context.UserIdentifier;
-        _logger.LogInformation("User {UserId} connected to NotificationHub (ConnectionId: {ConnectionId})", 
+        _logger.LogInformation("User {UserId} connected to NotificationHub (ConnectionId: {ConnectionId})",
             userId, Context.ConnectionId);
-        
+
         await base.OnConnectedAsync();
     }
 
@@ -33,7 +33,7 @@ public class NotificationHub : Hub<INotificationHub>
     {
         var userId = Context.UserIdentifier;
         _logger.LogInformation("User {UserId} disconnected from NotificationHub", userId);
-        
+
         await base.OnDisconnectedAsync(exception);
     }
 }

@@ -52,11 +52,11 @@ public class StockDataService(
         var cached = await _cache.StringGetAsync(cacheKey);
         if (cached.HasValue)
         {
-            _logger.LogInformation("Cache Hit | Quote: {Symbol}", symbol);
+            _logger.LogInformation("[Cache] Hit: {Symbol}", symbol);
             return JsonSerializer.Deserialize<StockQuoteResponse>((string)cached!, JsonOptions.Default);
         }
 
-        _logger.LogInformation("Cache Miss | Fetching Quote: {Symbol}", symbol);
+        _logger.LogInformation("[Cache] Miss: Fetching {Symbol}", symbol);
 
         // Discovery: Ensure we have the listing first
         var listing = await EnsureListingAsync(symbol, ct);
@@ -64,7 +64,7 @@ public class StockDataService(
         var q = await finnhub.GetQuoteAsync(symbol, ct);
         if (q?.CurrentPrice is null or 0)
         {
-            _logger.LogWarning("Quote Not Found | Symbol: {Symbol}", symbol);
+            _logger.LogWarning("[Quote] Not Found: {Symbol}", symbol);
             if (listing != null)
             {
                 return new StockQuoteResponse(symbol, 0, 0, 0, 0, 0, 0, 0, DateTime.UtcNow);
@@ -103,10 +103,10 @@ public class StockDataService(
             return JsonSerializer.Deserialize<StockMetricResponse>((string)cached!, JsonOptions.Default);
 
         var listing = await EnsureListingAsync(symbol, ct);
-        
+
         var metric = await unitOfWork.ExecuteSynchronizedAsync(
             () => unitOfWork.Metrics.GetBySymbolAsync(symbol, ct), ct);
-        
+
         if (metric == null)
         {
             if (listing != null)
@@ -131,7 +131,7 @@ public class StockDataService(
     {
         var items = await unitOfWork.ExecuteSynchronizedAsync(
             () => unitOfWork.Earnings.GetBySymbolAsync(symbol, ct), ct);
-            
+
         return items.Select(e => new EarningsSurpriseResponse(
             e.Period, e.ActualEps, e.EstimateEps, e.SurprisePercent, e.ReportDate));
     }
@@ -142,7 +142,7 @@ public class StockDataService(
     {
         var items = await unitOfWork.ExecuteSynchronizedAsync(
             () => unitOfWork.Recommendations.GetBySymbolAsync(symbol, ct), ct);
-            
+
         return items.Select(r => new RecommendationResponse(
             r.Period, r.StrongBuy, r.Buy, r.Hold, r.Sell, r.StrongSell));
     }
@@ -153,7 +153,7 @@ public class StockDataService(
     {
         var items = await unitOfWork.ExecuteSynchronizedAsync(
             () => unitOfWork.Insiders.GetBySymbolAsync(symbol, ct), ct);
-            
+
         return items.Select(i => new InsiderTransactionResponse(
             i.Name, i.Share, i.Value, i.TransactionDate, i.FilingDate, i.TransactionCode));
     }
@@ -279,13 +279,13 @@ public class StockDataService(
             () => unitOfWork.StockListings.FindBySymbolAsync(normalized, ct), ct);
         if (listing != null) return listing;
 
-        _logger.LogInformation("Discovery Triggered | Symbol: {Symbol} not found in DB. Fetching from API.", normalized);
+        _logger.LogInformation("[Discovery] Triggered for {Symbol}: not found in DB. Fetching from API.", normalized);
 
         // 2. Parallel API call
         var profile = await finnhub.GetProfileAsync(normalized, ct);
         if (profile == null)
         {
-            _logger.LogWarning("Discovery Failed | Symbol: {Symbol} not found in external API.", normalized);
+            _logger.LogWarning("[Discovery] Failed: {Symbol} not found in external API.", normalized);
             return null;
         }
 
@@ -295,7 +295,7 @@ public class StockDataService(
             var existing = await unitOfWork.StockListings.FindBySymbolAsync(normalized, ct);
             if (existing != null) return existing;
 
-            _logger.LogInformation("Discovery Success | Saving new StockListing: {Symbol} ({Name})", normalized, profile.Name);
+            _logger.LogInformation("[Discovery] Success: Saving new StockListing: {Symbol} ({Name})", normalized, profile.Name);
 
             var newListing = new StockListing
             {

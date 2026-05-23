@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
-using FluentAssertions;
 
 namespace InventoryAlert.UnitTests.Web.Middleware;
 
@@ -79,7 +78,7 @@ public class ApiLoggingMiddlewareTests
         context.Request.Method = "POST";
         var body = "{\"name\":\"test-item\"}";
         context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(body));
-        
+
         RequestDelegate next = (ctx) => Task.CompletedTask;
 
         // Act
@@ -95,7 +94,7 @@ public class ApiLoggingMiddlewareTests
         // Arrange
         var context = new DefaultHttpContext();
         context.Request.Path = "/api/test";
-        
+
         RequestDelegate next = async (ctx) =>
         {
             var responseBody = "{\"status\":\"success\"}";
@@ -117,7 +116,7 @@ public class ApiLoggingMiddlewareTests
         context.Request.Path = "/api/test";
         var body = "{\"username\":\"admin\",\"password\":\"secret123\"}";
         context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(body));
-        
+
         RequestDelegate next = (ctx) => Task.CompletedTask;
 
         // Act
@@ -135,7 +134,7 @@ public class ApiLoggingMiddlewareTests
         context.Request.Path = "/api/test";
         var longBody = new string('a', 5000);
         context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(longBody));
-        
+
         RequestDelegate next = (ctx) => Task.CompletedTask;
 
         // Act
@@ -151,12 +150,12 @@ public class ApiLoggingMiddlewareTests
         // Arrange
         _settings.Api = new AppSettings.ApiOptions { EnableBodyLogging = false };
         var sut = new ApiLoggingMiddleware(_logger.Object, _settings);
-        
+
         var context = new DefaultHttpContext();
         context.Request.Path = "/api/test";
         var body = "{\"name\":\"test\"}";
         context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(body));
-        
+
         RequestDelegate next = (ctx) => Task.CompletedTask;
 
         // Act

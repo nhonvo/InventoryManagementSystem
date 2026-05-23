@@ -1,5 +1,3 @@
-using Xunit;
-
 namespace InventoryAlert.IntegrationTests.Infrastructure;
 
 [CollectionDefinition("IntegrationTests")]
