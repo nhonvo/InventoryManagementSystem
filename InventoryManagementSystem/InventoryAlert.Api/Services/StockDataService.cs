@@ -59,8 +59,6 @@ public class StockDataService(
             return JsonSerializer.Deserialize<StockQuoteResponse>((string)cached!, JsonOptions.Default);
         }
 
-        _logger.LogInformation("[Cache] Miss: Fetching {Symbol}", symbol);
-
         var q = await _finnhub.GetQuoteAsync(symbol, ct);
         if (q?.CurrentPrice is null or 0)
         {
