@@ -1,5 +1,4 @@
 using FluentAssertions;
-using InventoryAlert.Domain.Common.Constants;
 using InventoryAlert.Domain.Entities.Postgres;
 using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.Infrastructure.Utilities;
@@ -83,7 +82,7 @@ public class AlertRuleEvaluatorTests
             TargetValue = 10m, // 10% drop
             IsActive = true
         };
-        
+
         var trades = new List<Trade>
         {
             new() { UserId = UserId, TickerSymbol = "TSLA", Type = TradeType.Buy, Quantity = 1, UnitPrice = 100m }

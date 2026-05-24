@@ -1,8 +1,6 @@
 using InventoryAlert.Domain.Common.Constants;
 using InventoryAlert.Domain.Configuration;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.DependencyInjection;
-using HealthChecks.NpgSql;
 
 namespace InventoryAlert.Worker.Extensions;
 

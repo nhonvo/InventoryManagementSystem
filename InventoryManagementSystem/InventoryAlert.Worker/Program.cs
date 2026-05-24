@@ -1,18 +1,16 @@
 using Hangfire;
 using Hangfire.PostgreSql;
-using InventoryAlert.Domain.Configuration;
-using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.Infrastructure;
 using InventoryAlert.Infrastructure.Utilities;
 using InventoryAlert.Worker;
 using InventoryAlert.Worker.Configuration;
+using InventoryAlert.Worker.Extensions;
 using InventoryAlert.Worker.Hosting;
 using InventoryAlert.Worker.IntegrationEvents.Handlers;
 using InventoryAlert.Worker.IntegrationEvents.Routing;
 using InventoryAlert.Worker.Interfaces;
 using InventoryAlert.Worker.ScheduledJobs;
 using InventoryAlert.Worker.Utilities;
-using InventoryAlert.Worker.Extensions;
 using Serilog;
 
 var configuration = new ConfigurationBuilder()
@@ -63,7 +61,8 @@ try
 
     // ─── SignalR with Redis Backplane ─────────────────────────────────────────
     builder.Services.AddSignalR()
-        .AddStackExchangeRedis(settings.Redis.ConnectionString, options => {
+        .AddStackExchangeRedis(settings.Redis.ConnectionString, options =>
+        {
             options.Configuration.ChannelPrefix = StackExchange.Redis.RedisChannel.Literal("InventoryAlert_SignalR");
         });
 

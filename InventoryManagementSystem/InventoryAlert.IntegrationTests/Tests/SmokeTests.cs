@@ -22,7 +22,7 @@ public class SmokeTests(TestFixture fixture) : IAsyncLifetime
         // Arrange
         using var client = new HttpClient();
         var wireMockUrl = fixture.WireMock.Urls[0];
-        
+
         fixture.WireMock.Given(WireMock.RequestBuilders.Request.Create().WithPath("/ping").UsingGet())
             .RespondWith(WireMock.ResponseBuilders.Response.Create().WithStatusCode(200).WithBody("pong"));
 

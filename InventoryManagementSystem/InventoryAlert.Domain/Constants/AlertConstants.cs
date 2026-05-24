@@ -26,7 +26,7 @@ public static class CacheKeys
     public static string Quote(string symbol) => $"inventoryalert:api:quote30s:v1:{symbol.ToUpperInvariant()}";
     public static string Metrics(string symbol) => $"inventoryalert:api:metrics1h:v1:{symbol.ToUpperInvariant()}";
     public static string Peers(string symbol) => $"inventoryalert:api:peers1d:v1:{symbol.ToUpperInvariant()}";
-    
+
     public static string Search(string query)
     {
         using var sha256 = System.Security.Cryptography.SHA256.Create();

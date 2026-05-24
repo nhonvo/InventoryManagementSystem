@@ -1,6 +1,6 @@
-using RestSharp;
 using InventoryAlert.Domain.DTOs;
 using InventoryAlert.IntegrationTests.Abstractions;
+using RestSharp;
 
 namespace InventoryAlert.IntegrationTests.Clients;
 

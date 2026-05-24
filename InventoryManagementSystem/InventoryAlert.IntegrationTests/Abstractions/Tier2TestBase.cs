@@ -1,11 +1,10 @@
-using InventoryAlert.IntegrationTests.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using Xunit.Abstractions;
-using RestSharp;
-using RestSharp.Serializers.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Xunit;
+using InventoryAlert.IntegrationTests.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
+using RestSharp;
+using RestSharp.Serializers.Json;
+using Xunit.Abstractions;
 
 namespace InventoryAlert.IntegrationTests.Abstractions;
 
@@ -22,16 +21,16 @@ public abstract class Tier2TestBase : IAsyncLifetime
     {
         Fixture = fixture;
         Output = output;
-        
+
         // Use the in-process HttpClient from the factory
         var httpClient = Fixture.CreateTestClient();
-        
+
         // Wrap it in RestClient for the tests that use RestSharp
         var options = new RestClientOptions
         {
             BaseUrl = new Uri(httpClient.BaseAddress!, "api/v1/")
         };
-        
+
         Client = new RestClient(httpClient, options, configureSerialization: s => s.UseSystemTextJson(new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,

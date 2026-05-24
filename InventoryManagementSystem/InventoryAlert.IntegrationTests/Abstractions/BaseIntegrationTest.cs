@@ -1,13 +1,11 @@
-using InventoryAlert.IntegrationTests.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Xunit.Abstractions;
-using RestSharp;
-using RestSharp.Serializers.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using InventoryAlert.IntegrationTests.Config;
-using Xunit;
+using InventoryAlert.IntegrationTests.Infrastructure;
+using Microsoft.Extensions.Configuration;
+using RestSharp;
+using RestSharp.Serializers.Json;
+using Xunit.Abstractions;
 
 namespace InventoryAlert.IntegrationTests.Abstractions;
 
@@ -23,9 +21,9 @@ public abstract class BaseIntegrationTest : IAsyncLifetime
     {
         Fixture = fixture;
         Output = output;
-        
+
         var baseUrl = Fixture.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:8080/api/v1";
-        
+
         var options = new RestClientOptions(baseUrl);
         Client = new RestClient(options, configureSerialization: s => s.UseSystemTextJson(new JsonSerializerOptions
         {
@@ -33,7 +31,7 @@ public abstract class BaseIntegrationTest : IAsyncLifetime
             PropertyNameCaseInsensitive = true,
             Converters = { new JsonStringEnumConverter() }
         }));
-        
+
         var appSettings = Fixture.Configuration.Get<AppSettings>();
         _testUser = appSettings?.TestUser ?? new TestUser { Username = "admin", Password = "password" };
     }

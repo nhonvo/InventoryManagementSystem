@@ -6,7 +6,6 @@ using InventoryAlert.Domain.DTOs;
 using InventoryAlert.Domain.Events;
 using InventoryAlert.E2ETests.Abstractions;
 using RestSharp;
-using Xunit;
 
 namespace InventoryAlert.E2ETests;
 
@@ -36,7 +35,7 @@ public class SqsRetryE2ETests : BaseE2ETest
         // Ensure queues are clean before starting
         await _sqs.PurgeQueueAsync(QueueUrl);
         await _sqs.PurgeQueueAsync(DlqUrl);
-        
+
         // Wait a bit for purge to settle in Moto
         await Task.Delay(2000);
 
@@ -56,7 +55,7 @@ public class SqsRetryE2ETests : BaseE2ETest
         // So we wait for it to transition.
         bool foundInDlq = false;
         var retryCount = 0;
-        
+
         while (retryCount < 50) // 50 attempts * 3s = 150s max wait
         {
             var receiveResponse = await _sqs.ReceiveMessageAsync(new ReceiveMessageRequest

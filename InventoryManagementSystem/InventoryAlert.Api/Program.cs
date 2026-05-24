@@ -45,10 +45,9 @@ try
     builder.Services.AddSingleton<AppSettings>(settings);
     builder.Services.AddCorrelationEnricher();
     builder.Services.AddHttpContextAccessor();
-    
+
     builder.Services.AddTransient<GlobalExceptionMiddleware>();
-    builder.Services.AddTransient<PerformanceMiddleware>();
-    builder.Services.AddTransient<ApiBodyLoggingMiddleware>();
+    builder.Services.AddTransient<ApiLoggingMiddleware>();
     builder.Services.AddTransient<CorrelationIdMiddleware>();
 
     // ─── Security / Auth / CORS ───────────────────────────────────────────────
@@ -106,7 +105,7 @@ try
                 {
                     var accessToken = context.Request.Query["access_token"];
                     var path = context.HttpContext.Request.Path;
-                    if (!string.IsNullOrEmpty(accessToken) && 
+                    if (!string.IsNullOrEmpty(accessToken) &&
                         path.StartsWithSegments(InventoryAlert.Domain.Interfaces.SignalRConstants.NotificationHubRoute))
                     {
                         context.Token = accessToken;
@@ -118,7 +117,8 @@ try
     builder.Services.AddAuthorization();
 
     builder.Services.AddSignalR()
-        .AddStackExchangeRedis(settings.Redis.ConnectionString, options => {
+        .AddStackExchangeRedis(settings.Redis.ConnectionString, options =>
+        {
             options.Configuration.ChannelPrefix = StackExchange.Redis.RedisChannel.Literal("InventoryAlert_SignalR");
         });
 
@@ -156,21 +156,20 @@ try
     }
 
     // ─── Pipeline ─────────────────────────────────────────────────────────────
-    app.UseMiddleware<GlobalExceptionMiddleware>(); 
     app.UseMiddleware<CorrelationIdMiddleware>();
-    app.UseMiddleware<PerformanceMiddleware>(); 
+    app.UseMiddleware<GlobalExceptionMiddleware>();
 
     app.UseResponseCompression();
     app.UseStaticFiles();
-    
+
     app.UseRouting();
     app.UseCors("AllowAll");
-    
+
     app.UseAuthentication();
     app.UseAuthorization();
 
-    app.UseMiddleware<ApiBodyLoggingMiddleware>();
-    
+    app.UseMiddleware<ApiLoggingMiddleware>();
+
     app.UseResponseCaching();
 
     if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))

@@ -1,7 +1,9 @@
 using System.Net;
+using InventoryAlert.Api.Extensions;
 using InventoryAlert.Api.Models;
 using InventoryAlert.Domain.Common.Constants;
 using InventoryAlert.Domain.Common.Exceptions;
+using InventoryAlert.Infrastructure.Utilities;
 
 namespace InventoryAlert.Api.Middleware;
 
@@ -17,8 +19,8 @@ public class GlobalExceptionMiddleware(ILoggerFactory loggerFactory) : IMiddlewa
         }
         catch (Exception ex)
         {
-            var correlationId = context.Items["X-Correlation-Id"]?.ToString() ?? "N/A";
-            _logger.LogError(ex, "An unhandled exception has occurred while executing the request. | CID: {CorrelationId}", correlationId);
+            var correlationId = context.GetCorrelationId();
+            _logger.LogError(ex, LoggingConfiguration.Templates.UnhandledException);
             await HandleExceptionAsync(context, ex, correlationId);
         }
     }
@@ -26,12 +28,12 @@ public class GlobalExceptionMiddleware(ILoggerFactory loggerFactory) : IMiddlewa
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception, string correlationId)
     {
         context.Response.ContentType = "application/json";
-        
+
         var (statusCode, respondCode) = exception switch
         {
             UserFriendlyException ex => (MapStatusCode(ex.ErrorCode), MapErrorCode(ex.ErrorCode)),
             KeyNotFoundException or NotFoundException => (HttpStatusCode.NotFound, ErrorRespondCode.NOT_FOUND),
-            FluentValidation.ValidationException or InventoryAlert.Domain.Common.Exceptions.ValidationException => (HttpStatusCode.BadRequest, ErrorRespondCode.BAD_REQUEST),
+            FluentValidation.ValidationException or ValidationException => (HttpStatusCode.BadRequest, ErrorRespondCode.BAD_REQUEST),
             ArgumentException => (HttpStatusCode.BadRequest, ErrorRespondCode.BAD_REQUEST),
             UnauthorizedAccessException => (HttpStatusCode.Unauthorized, ErrorRespondCode.UNAUTHORIZED),
             _ => (HttpStatusCode.InternalServerError, ErrorRespondCode.GENERAL_ERROR)
@@ -41,12 +43,12 @@ public class GlobalExceptionMiddleware(ILoggerFactory loggerFactory) : IMiddlewa
         var errorMessage = exception switch
         {
             UserFriendlyException ufe => ufe.UserFriendlyMessage,
-            KeyNotFoundException or NotFoundException or FluentValidation.ValidationException or InventoryAlert.Domain.Common.Exceptions.ValidationException or ArgumentException or UnauthorizedAccessException => exception.Message,
+            KeyNotFoundException or NotFoundException or FluentValidation.ValidationException or ValidationException or ArgumentException or UnauthorizedAccessException => exception.Message,
             _ => "An unhandled error has occurred."
         };
 
         context.Response.StatusCode = (int)statusCode;
-        
+
         var errorResponse = new ErrorResponse(
             new Error(errorCode, errorMessage),
             correlationId

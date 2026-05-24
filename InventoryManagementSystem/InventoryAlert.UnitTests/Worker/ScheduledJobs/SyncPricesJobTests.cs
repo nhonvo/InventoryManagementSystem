@@ -38,7 +38,7 @@ public class SyncPricesJobTests
         _uow.Setup(u => u.StockListings.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<StockListing> { listing });
         _finnhub.Setup(f => f.GetQuoteAsync("AAPL", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new InventoryAlert.Domain.External.Finnhub.FinnhubQuoteResponse { CurrentPrice = 150m });
-        
+
         _uow.Setup(u => u.AlertRules.GetBySymbolsAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<AlertRule>());
 
@@ -69,7 +69,7 @@ public class SyncPricesJobTests
         _uow.Setup(u => u.StockListings.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<StockListing> { listing });
         _finnhub.Setup(f => f.GetQuoteAsync("TSLA", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new InventoryAlert.Domain.External.Finnhub.FinnhubQuoteResponse { CurrentPrice = 210m });
-        
+
         _uow.Setup(u => u.AlertRules.GetBySymbolsAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<AlertRule> { rule });
 

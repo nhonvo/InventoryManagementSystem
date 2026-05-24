@@ -2,10 +2,7 @@
 using FluentAssertions;
 using InventoryAlert.IntegrationTests.Abstractions;
 using InventoryAlert.IntegrationTests.Clients;
-using InventoryAlert.IntegrationTests.Fixtures;
 using InventoryAlert.IntegrationTests.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using RestSharp;
 using Xunit.Abstractions;
 
 namespace InventoryAlert.IntegrationTests.Tests.Smoke;

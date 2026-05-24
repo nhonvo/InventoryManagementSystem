@@ -6,7 +6,6 @@ using InventoryAlert.E2ETests.Abstractions;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using RestSharp;
-using Xunit;
 
 namespace InventoryAlert.E2ETests;
 
@@ -17,14 +16,16 @@ public class SignalRNotificationE2ETests : BaseE2ETest
     {
         // 1. Arrange - Authenticate and setup SignalR connection
         await EnsureAuthenticatedAsync();
-        
+
         var hubUrl = $"{BaseUrl}{SignalRConstants.NotificationHubRoute}";
-        
+
         var connection = new HubConnectionBuilder()
-            .WithUrl(hubUrl, options => {
+            .WithUrl(hubUrl, options =>
+            {
                 options.AccessTokenProvider = () => Task.FromResult(JwtToken);
             })
-            .AddJsonProtocol(options => {
+            .AddJsonProtocol(options =>
+            {
                 options.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
             })
             .WithAutomaticReconnect()
@@ -46,7 +47,7 @@ public class SignalRNotificationE2ETests : BaseE2ETest
             // 2. Act - Trigger notification via test endpoint
             var testMessage = $"E2E SignalR Test {Guid.NewGuid()}";
             var request = CreateAuthenticatedRequest($"api/v1/notifications/test-signalr?message={testMessage}", Method.Post);
-            
+
             var response = await Client.ExecuteAsync(request);
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 

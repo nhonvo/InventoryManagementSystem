@@ -42,7 +42,7 @@ public class IntegrationMessageRouter(
 
         if (_enablePayloadLogging)
         {
-            _logger.LogInformation("[MessageRouter] Routing envelope for EventType: {EventType} | MessageId: {MessageId} | Payload: {Payload}", 
+            _logger.LogInformation("[MessageRouter] Routing envelope for EventType: {EventType} | MessageId: {MessageId} | Payload: {Payload}",
                 envelope.EventType, envelope.MessageId, envelope.Payload);
         }
 

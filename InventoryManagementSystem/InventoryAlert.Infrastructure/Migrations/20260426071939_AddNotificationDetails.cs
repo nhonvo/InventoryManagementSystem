@@ -2,39 +2,38 @@
 
 #nullable disable
 
-namespace InventoryAlert.Infrastructure.Migrations
+namespace InventoryAlert.Infrastructure.Migrations;
+
+/// <inheritdoc />
+public partial class AddNotificationDetails : Migration
 {
     /// <inheritdoc />
-    public partial class AddNotificationDetails : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<int>(
-                name: "Severity",
-                table: "notifications",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
+        migrationBuilder.AddColumn<int>(
+            name: "Severity",
+            table: "notifications",
+            type: "integer",
+            nullable: false,
+            defaultValue: 0);
 
-            migrationBuilder.AddColumn<int>(
-                name: "Type",
-                table: "notifications",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
-        }
+        migrationBuilder.AddColumn<int>(
+            name: "Type",
+            table: "notifications",
+            type: "integer",
+            nullable: false,
+            defaultValue: 0);
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "Severity",
-                table: "notifications");
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropColumn(
+            name: "Severity",
+            table: "notifications");
 
-            migrationBuilder.DropColumn(
-                name: "Type",
-                table: "notifications");
-        }
+        migrationBuilder.DropColumn(
+            name: "Type",
+            table: "notifications");
     }
 }

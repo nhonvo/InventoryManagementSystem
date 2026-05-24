@@ -1,6 +1,5 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
 using InventoryAlert.Domain.Entities.Dynamodb;
 using InventoryAlert.Domain.Interfaces;
 using Microsoft.Extensions.Logging;

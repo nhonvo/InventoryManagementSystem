@@ -10,7 +10,7 @@ public static class WaitHelper
             if (await condition()) return;
             await Task.Delay(pollIntervalMs);
         }
-        
+
         throw new TimeoutException($"Condition was not met within {timeoutSeconds} seconds.");
     }
 }

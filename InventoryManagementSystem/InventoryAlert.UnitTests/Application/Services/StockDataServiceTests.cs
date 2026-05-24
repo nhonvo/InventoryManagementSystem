@@ -35,7 +35,7 @@ public class StockDataServiceTests
         // Mock ExecuteSynchronizedAsync to execute the delegate
         _uow.Setup(u => u.ExecuteSynchronizedAsync(It.IsAny<Func<Task<StockListing?>>>(), It.IsAny<CancellationToken>()))
             .Returns<Func<Task<StockListing?>>, CancellationToken>((func, ct) => func());
-            
+
         _uow.Setup(u => u.ExecuteSynchronizedAsync(It.IsAny<Func<Task<StockListing>>>(), It.IsAny<CancellationToken>()))
             .Returns<Func<Task<StockListing>>, CancellationToken>((func, ct) => func());
 

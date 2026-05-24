@@ -2,10 +2,7 @@ using System.Net;
 using FluentAssertions;
 using InventoryAlert.IntegrationTests.Abstractions;
 using InventoryAlert.IntegrationTests.Clients;
-using InventoryAlert.IntegrationTests.Fixtures;
 using InventoryAlert.IntegrationTests.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using RestSharp;
 using Xunit.Abstractions;
 
 namespace InventoryAlert.IntegrationTests.Tests.Api;
@@ -23,7 +20,7 @@ public class StockApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task GetStocks_ShouldReturnStocks_WhenTokenIsValid()
     {
         // Arrange
@@ -39,7 +36,7 @@ public class StockApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task SearchSymbol_ShouldReturnSymbols_WhenTokenIsValid()
     {
         // Arrange
@@ -56,7 +53,7 @@ public class StockApiTest : BaseIntegrationTest
     }
 
     [Fact]
-    
+
     public async Task GetStockQuote_ShouldReturnStockQuote_WhenTokenIsValid()
     {
         // Arrange

@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Configuration;
 
 namespace InventoryAlert.IntegrationTests.Infrastructure;
 
@@ -23,7 +22,7 @@ public class SeqLogReader
                 var url = $"/api/events?count={count}&filter={Uri.EscapeDataString(filter)}";
 
                 var response = await _httpClient.GetFromJsonAsync<List<SeqEventResponse>>(url, ct);
-                
+
                 if (response != null && response.Any())
                 {
                     return response.Select(e => $"[{e.Level}] {e.RenderMessage()}").ToList();
@@ -72,7 +71,7 @@ public class SeqLogReader
         public string RenderMessage()
         {
             if (MessageTemplateTokens == null) return string.Empty;
-            
+
             var sb = new System.Text.StringBuilder();
             foreach (var token in MessageTemplateTokens)
             {

@@ -21,6 +21,10 @@ public class WatchlistServiceTests
 
     public WatchlistServiceTests()
     {
+        // Mock transaction execution
+        _uow.Setup(u => u.ExecuteTransactionAsync(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
+            .Returns<Func<Task>, CancellationToken>((action, _) => action());
+
         _sut = new WatchlistService(_uow.Object, _stockData.Object, _logger.Object);
     }
 

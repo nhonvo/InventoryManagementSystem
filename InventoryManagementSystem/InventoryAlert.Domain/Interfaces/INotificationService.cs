@@ -6,12 +6,12 @@ namespace InventoryAlert.Domain.Interfaces;
 public interface INotificationService
 {
     Task<NotificationResponse> CreateAsync(
-        Guid userId, 
-        string message, 
+        Guid userId,
+        string message,
         NotificationType type = NotificationType.System,
         NotificationSeverity severity = NotificationSeverity.Info,
-        string? symbol = null, 
-        Guid? alertRuleId = null, 
+        string? symbol = null,
+        Guid? alertRuleId = null,
         CancellationToken ct = default);
 
     Task<PagedResult<NotificationResponse>> GetPagedAsync(string userId, bool onlyUnread, int page, int pageSize, CancellationToken ct);

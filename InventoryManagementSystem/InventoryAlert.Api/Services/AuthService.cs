@@ -8,12 +8,11 @@ using InventoryAlert.Domain.DTOs;
 using InventoryAlert.Domain.Entities.Postgres;
 using InventoryAlert.Domain.Interfaces;
 using Microsoft.IdentityModel.Tokens;
-using Serilog;
 
 namespace InventoryAlert.Api.Services;
 
 public class AuthService(
-    IUnitOfWork unitOfWork, 
+    IUnitOfWork unitOfWork,
     ApiSettings settings,
     ILogger<AuthService> logger) : IAuthService
 {
@@ -35,7 +34,7 @@ public class AuthService(
         var refreshExpiresAt = DateTime.UtcNow.AddDays(_settings.Jwt.RefreshExpiryDays > 0 ? _settings.Jwt.RefreshExpiryDays : 7);
         var refreshToken = GenerateRefreshToken(user, refreshExpiresAt);
 
-        _logger.LogInformation("[AuthService] User {Username} authenticated successfully.", user.Username);
+        _logger.LogInformation("[Auth] User {Username} authenticated successfully.", user.Username);
 
         return new AuthTokenPair(new AuthResponse(token, expiresAt), refreshToken, refreshExpiresAt);
     }
@@ -61,7 +60,7 @@ public class AuthService(
             await _unitOfWork.Users.AddAsync(user, ct);
         }, ct);
 
-        _logger.LogInformation("[AuthService] User {Username} registered successfully.", request.Username);
+        _logger.LogInformation("[Auth] User {Username} registered successfully.", request.Username);
 
         return new RegistrationResponse("Registration successful", request.Username);
     }

@@ -3,7 +3,7 @@ using Hangfire.Common;
 using Hangfire.Server;
 using Hangfire.States;
 using Hangfire.Storage;
-using Microsoft.Extensions.Logging;
+using InventoryAlert.Infrastructure.Utilities;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace InventoryAlert.Worker.Filters;
@@ -30,7 +30,7 @@ public sealed class HangfireJobLoggingFilter : JobFilterAttribute, IApplyStateFi
     public void OnPerforming(PerformingContext filterContext)
     {
         filterContext.Items["Stopwatch"] = Stopwatch.StartNew();
-        GetLogger().LogInformation("handler.started: Job {JobName} execution started.", filterContext.BackgroundJob.Job.Type.Name);
+        GetLogger().LogInformation(LoggingConfiguration.Templates.JobStarted, filterContext.BackgroundJob.Job.Type.Name);
     }
 
     public void OnPerformed(PerformedContext filterContext)
@@ -40,10 +40,10 @@ public sealed class HangfireJobLoggingFilter : JobFilterAttribute, IApplyStateFi
         var stopwatch = filterContext.Items["Stopwatch"] as Stopwatch;
         stopwatch?.Stop();
         var elapsedMs = stopwatch?.Elapsed.TotalMilliseconds ?? 0;
-        
+
         bool succeeded = filterContext.Exception == null && !filterContext.Canceled;
 
-        logger.LogInformation("handler.completed: Job {JobName} execution finished. Succeeded={Succeeded} | ElapsedMs={ElapsedMs:F3}", 
+        logger.LogInformation(LoggingConfiguration.Templates.JobCompleted,
             jobName, succeeded, elapsedMs);
     }
 

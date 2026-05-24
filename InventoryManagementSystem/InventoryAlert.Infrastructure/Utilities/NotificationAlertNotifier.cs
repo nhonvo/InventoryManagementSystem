@@ -40,7 +40,7 @@ public class NotificationAlertNotifier(
             // The Redis backplane ensures this reaches the correct Api instance where the user is connected.
             await _hubContext.Clients.User(notification.UserId.ToString())
                 .ReceiveNotification(dto);
-            
+
             _logger.LogInformation("[AlertNotifier] Successfully pushed SignalR alert to User {UserId}", notification.UserId);
         }
         catch (Exception ex)

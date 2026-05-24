@@ -2,10 +2,7 @@
 using FluentAssertions;
 using InventoryAlert.IntegrationTests.Abstractions;
 using InventoryAlert.IntegrationTests.Clients;
-using InventoryAlert.IntegrationTests.Fixtures;
 using InventoryAlert.IntegrationTests.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using RestSharp;
 using Xunit.Abstractions;
 
 namespace InventoryAlert.IntegrationTests.Tests.Smoke;
@@ -13,7 +10,7 @@ namespace InventoryAlert.IntegrationTests.Tests.Smoke;
 public class AuthSmokeTest : BaseIntegrationTest
 {
     private readonly AuthClient _client;
-    
+
     public AuthSmokeTest(TestFixture fixture, ITestOutputHelper output) : base(fixture, output)
     {
         _client = new AuthClient(Client);

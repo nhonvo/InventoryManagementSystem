@@ -1,5 +1,3 @@
-using InventoryAlert.Domain.DTOs;
-
 namespace InventoryAlert.Domain.Interfaces;
 
 public interface IEventService

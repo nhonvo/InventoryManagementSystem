@@ -1,10 +1,9 @@
+using FluentAssertions;
 using InventoryAlert.Domain.Entities.Postgres;
 using InventoryAlert.Domain.Events.Payloads;
 using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.IntegrationTests.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit;
-using FluentAssertions;
 
 namespace InventoryAlert.IntegrationTests.Tests.Handlers;
 
@@ -25,7 +24,7 @@ public class LowHoldingsHandlerTests : IAsyncLifetime
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    
+
     public async Task HandleAsync_CreatesNotification_AndDispatchesToNotifier()
     {
         // Arrange
@@ -47,8 +46,8 @@ public class LowHoldingsHandlerTests : IAsyncLifetime
 
         // Assert
         var notesResult = await unitOfWork.Notifications.GetByUserPagedAsync(userId.ToString(), true, 1, 10, ct);
-        notesResult.Items.Should().ContainSingle(n => 
-            n.TickerSymbol == "MSFT" && 
+        notesResult.Items.Should().ContainSingle(n =>
+            n.TickerSymbol == "MSFT" &&
             n.Message.Contains("balance has reached 5") &&
             n.Message.Contains("threshold of 10"));
 

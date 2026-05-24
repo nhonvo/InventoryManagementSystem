@@ -25,10 +25,10 @@ public class NewsSyncJobTests
         var settings = new WorkerSettings { MaxDegreeOfParallelism = 5 };
         _uowMock.Setup(u => u.StockListings).Returns(new Mock<IStockListingRepository>().Object);
         _sut = new NewsSyncJob(
-            _uowMock.Object, 
-            _finnhubMock.Object, 
-            _companyNewsRepoMock.Object, 
-            _marketNewsRepoMock.Object, 
+            _uowMock.Object,
+            _finnhubMock.Object,
+            _companyNewsRepoMock.Object,
+            _marketNewsRepoMock.Object,
             settings,
             _loggerMock.Object);
     }
@@ -43,7 +43,7 @@ public class NewsSyncJobTests
 
         var listing = new StockListing { TickerSymbol = "AAPL" };
         _uowMock.Setup(u => u.StockListings.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<StockListing> { listing });
-        
+
         var companyNews = new List<FinnhubNewsItem> { new() { Id = 3, Headline = "Apple News", Datetime = 1712217602 } };
         _finnhubMock.Setup(f => f.GetCompanyNewsAsync("AAPL", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(companyNews);
@@ -63,16 +63,16 @@ public class NewsSyncJobTests
         // Arrange
         _finnhubMock.Setup(f => f.GetMarketNewsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new List<FinnhubNewsItem>());
 
-        var listings = new List<StockListing> 
-        { 
+        var listings = new List<StockListing>
+        {
             new() { TickerSymbol = "AAPL" },
             new() { TickerSymbol = "MSFT" }
         };
         _uowMock.Setup(u => u.StockListings.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(listings);
-        
+
         _finnhubMock.Setup(f => f.GetCompanyNewsAsync("AAPL", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("API Error"));
-        
+
         _finnhubMock.Setup(f => f.GetCompanyNewsAsync("MSFT", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<FinnhubNewsItem> { new() { Id = 4, Headline = "MSFT News" } });
 

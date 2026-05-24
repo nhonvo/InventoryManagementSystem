@@ -1,18 +1,18 @@
 using InventoryAlert.Api.Configuration;
 using InventoryAlert.Api.ServiceExtensions;
 using InventoryAlert.Domain.Configuration;
+using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.Infrastructure;
 using InventoryAlert.Infrastructure.Hubs;
-using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.Worker.Configuration;
 using InventoryAlert.Worker.IntegrationEvents.Handlers;
 using InventoryAlert.Worker.IntegrationEvents.Routing;
 using InventoryAlert.Worker.Interfaces;
 using InventoryAlert.Worker.ScheduledJobs;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.SignalR;
 using Moq;
 
 namespace InventoryAlert.IntegrationTests.Infrastructure;

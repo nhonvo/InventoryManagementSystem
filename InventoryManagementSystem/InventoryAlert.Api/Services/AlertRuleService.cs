@@ -26,64 +26,86 @@ public class AlertRuleService(IUnitOfWork unitOfWork, IStockDataService stockDat
         // Discovery flow: auto-resolve and persist symbol metadata if missing.
         // This removes the UI/API coupling that required users to 'visit a quote/profile' before creating alerts.
         _ = await stockDataService.GetProfileAsync(normalizedSymbol, ct) ?? throw new InvalidOperationException($"Symbol {normalizedSymbol} could not be resolved.");
-        var rule = new AlertRule
+
+        AlertRuleResponse result = null!;
+        await unitOfWork.ExecuteTransactionAsync(async () =>
         {
-            UserId = userGuid,
-            TickerSymbol = normalizedSymbol,
-            Condition = request.Condition,
-            TargetValue = request.TargetValue,
-            TriggerOnce = request.TriggerOnce,
-            IsActive = true
-        };
+            var rule = new AlertRule
+            {
+                UserId = userGuid,
+                TickerSymbol = normalizedSymbol,
+                Condition = request.Condition,
+                TargetValue = request.TargetValue,
+                TriggerOnce = request.TriggerOnce,
+                IsActive = true
+            };
 
-        await unitOfWork.AlertRules.AddAsync(rule, ct);
-        await unitOfWork.SaveChangesAsync(ct);
+            await unitOfWork.AlertRules.AddAsync(rule, ct);
+            await unitOfWork.SaveChangesAsync(ct);
+            result = MapToResponse(rule);
+        }, ct);
 
-        return MapToResponse(rule);
+        return result;
     }
 
     public async Task<AlertRuleResponse> UpdateAsync(Guid id, AlertRuleRequest request, string userId, CancellationToken ct)
     {
-        var rule = await unitOfWork.AlertRules.GetByIdAsync(id, ct);
-        if (rule == null || rule.UserId != Guid.Parse(userId))
+        AlertRuleResponse result = null!;
+        await unitOfWork.ExecuteTransactionAsync(async () =>
         {
-            throw new KeyNotFoundException("Alert rule not found.");
-        }
+            var rule = await unitOfWork.AlertRules.GetByIdAsync(id, ct);
+            if (rule == null || rule.UserId != Guid.Parse(userId))
+            {
+                throw new KeyNotFoundException("Alert rule not found.");
+            }
 
-        // Full replacement — all fields overwritten
-        rule.TickerSymbol = request.TickerSymbol;
-        rule.Condition = request.Condition;
-        rule.TargetValue = request.TargetValue;
-        rule.TriggerOnce = request.TriggerOnce;
+            // Full replacement — all fields overwritten
+            rule.TickerSymbol = request.TickerSymbol;
+            rule.Condition = request.Condition;
+            rule.TargetValue = request.TargetValue;
+            rule.TriggerOnce = request.TriggerOnce;
 
-        await unitOfWork.SaveChangesAsync(ct);
-        return MapToResponse(rule);
+            await unitOfWork.SaveChangesAsync(ct);
+            result = MapToResponse(rule);
+        }, ct);
+
+        return result;
     }
 
     public async Task<AlertRuleResponse> ToggleAsync(Guid id, bool isActive, string userId, CancellationToken ct)
     {
-        var rule = await unitOfWork.AlertRules.GetByIdAsync(id, ct);
-        if (rule == null || rule.UserId != Guid.Parse(userId))
+        AlertRuleResponse result = null!;
+        await unitOfWork.ExecuteTransactionAsync(async () =>
         {
-            throw new KeyNotFoundException("Alert rule not found.");
-        }
+            var rule = await unitOfWork.AlertRules.GetByIdAsync(id, ct);
+            if (rule == null || rule.UserId != Guid.Parse(userId))
+            {
+                throw new KeyNotFoundException("Alert rule not found.");
+            }
 
-        rule.IsActive = isActive;
-        await unitOfWork.SaveChangesAsync(ct);
+            rule.IsActive = isActive;
+            await unitOfWork.SaveChangesAsync(ct);
+            result = MapToResponse(rule);
+        }, ct);
 
-        return MapToResponse(rule);
+        return result;
     }
 
     public async Task<bool> DeleteAsync(Guid id, string userId, CancellationToken ct)
     {
-        var rule = await unitOfWork.AlertRules.GetByIdAsync(id, ct);
-        if (rule != null && rule.UserId == Guid.Parse(userId))
+        bool result = false;
+        await unitOfWork.ExecuteTransactionAsync(async () =>
         {
-            await unitOfWork.AlertRules.DeleteAsync(rule, ct);
-            await unitOfWork.SaveChangesAsync(ct);
-            return true;
-        }
-        return false;
+            var rule = await unitOfWork.AlertRules.GetByIdAsync(id, ct);
+            if (rule != null && rule.UserId == Guid.Parse(userId))
+            {
+                await unitOfWork.AlertRules.DeleteAsync(rule, ct);
+                await unitOfWork.SaveChangesAsync(ct);
+                result = true;
+            }
+        }, ct);
+
+        return result;
     }
 
     private static AlertRuleResponse MapToResponse(AlertRule rule) =>
