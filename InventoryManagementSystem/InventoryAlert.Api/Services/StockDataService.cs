@@ -48,6 +48,9 @@ public class StockDataService(
 
     public async Task<StockQuoteResponse?> GetQuoteAsync(string symbol, CancellationToken ct = default)
     {
+        // Discovery: Ensure we have the listing first
+        var listing = await EnsureListingAsync(symbol, ct);
+
         var cacheKey = $"quote:{symbol}";
         var cached = await _cache.StringGetAsync(cacheKey);
         if (cached.HasValue)
@@ -58,10 +61,7 @@ public class StockDataService(
 
         _logger.LogInformation("[Cache] Miss: Fetching {Symbol}", symbol);
 
-        // Discovery: Ensure we have the listing first
-        var listing = await EnsureListingAsync(symbol, ct);
-
-        var q = await finnhub.GetQuoteAsync(symbol, ct);
+        var q = await _finnhub.GetQuoteAsync(symbol, ct);
         if (q?.CurrentPrice is null or 0)
         {
             _logger.LogWarning("[Quote] Not Found: {Symbol}", symbol);
@@ -97,16 +97,16 @@ public class StockDataService(
 
     public async Task<StockMetricResponse?> GetFinancialsAsync(string symbol, CancellationToken ct = default)
     {
+        var listing = await EnsureListingAsync(symbol, ct);
+
         var cacheKey = $"metrics:{symbol}";
         var cached = await _cache.StringGetAsync(cacheKey);
         if (cached.HasValue)
-            return JsonSerializer.Deserialize<StockMetricResponse>((string)cached!, JsonOptions.Default);
-
-        var listing = await EnsureListingAsync(symbol, ct);
-
-        var metric = await unitOfWork.ExecuteSynchronizedAsync(
-            () => unitOfWork.Metrics.GetBySymbolAsync(symbol, ct), ct);
-
+            return JsonSerializer.Deserialize<StockMetricResponse>((string)cached!, _json);
+        
+        var metric = await _unitOfWork.ExecuteSynchronizedAsync(
+            () => _unitOfWork.Metrics.GetBySymbolAsync(symbol, ct), ct);
+        
         if (metric == null)
         {
             if (listing != null)

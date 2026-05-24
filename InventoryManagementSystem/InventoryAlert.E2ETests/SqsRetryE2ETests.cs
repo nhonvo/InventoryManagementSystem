@@ -21,7 +21,8 @@ public class SqsRetryE2ETests : BaseE2ETest
             new Amazon.Runtime.BasicAWSCredentials("test", "test"),
             new AmazonSQSConfig
             {
-                ServiceURL = "http://localhost:5000"
+                ServiceURL = "http://localhost:5000",
+                AuthenticationRegion = "us-east-1"
             });
     }
 
