@@ -64,6 +64,7 @@ public static class DependencyInjection
             var config = new AmazonDynamoDBConfig { ServiceURL = settings.Aws.EndpointUrl };
             if (settings.Aws.EndpointUrl.Contains("localhost") || settings.Aws.EndpointUrl.Contains("moto"))
             {
+                config.AuthenticationRegion = "us-east-1";
                 return new AmazonDynamoDBClient(new Amazon.Runtime.BasicAWSCredentials("mock", "mock"), config);
             }
             return new AmazonDynamoDBClient(config);
@@ -78,6 +79,7 @@ public static class DependencyInjection
             var config = new AmazonSQSConfig { ServiceURL = settings.Aws.EndpointUrl };
             if (settings.Aws.EndpointUrl.Contains("localhost") || settings.Aws.EndpointUrl.Contains("moto"))
             {
+                config.AuthenticationRegion = "us-east-1";
                 return new AmazonSQSClient(new Amazon.Runtime.BasicAWSCredentials("mock", "mock"), config);
             }
             return new AmazonSQSClient(config);
@@ -90,6 +92,7 @@ public static class DependencyInjection
             var config = new AmazonSimpleNotificationServiceConfig { ServiceURL = settings.Aws.EndpointUrl };
             if (settings.Aws.EndpointUrl.Contains("localhost") || settings.Aws.EndpointUrl.Contains("moto"))
             {
+                config.AuthenticationRegion = "us-east-1";
                 return new AmazonSimpleNotificationServiceClient(new Amazon.Runtime.BasicAWSCredentials("mock", "mock"), config);
             }
             return new AmazonSimpleNotificationServiceClient(config);
