@@ -28,7 +28,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\InventoryAlert.Api\appsettings.json" Link="appsettings.json">
+    <None Include="..\InventoryAlert.Api\appsettings.json" Link="appsettings.json" Condition="Exists('..\InventoryAlert.Api\appsettings.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\InventoryAlert.Api\appsettings.Example.json" Link="appsettings.json" Condition="!Exists('..\InventoryAlert.Api\appsettings.json')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="appsettings.test.json">
