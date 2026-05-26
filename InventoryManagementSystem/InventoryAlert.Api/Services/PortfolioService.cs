@@ -210,6 +210,7 @@ public class PortfolioService(
         await _unitOfWork.ExecuteTransactionAsync(async () =>
         {
             await OpenPositionAsyncInternal(request, userId, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
             result = await GetPositionBySymbolAsync(request.TickerSymbol, userId, ct)
                 ?? throw new InvalidOperationException("Failed to retrieve newly created position.");
         }, ct);

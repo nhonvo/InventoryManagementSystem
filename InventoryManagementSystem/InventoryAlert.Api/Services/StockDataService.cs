@@ -59,7 +59,7 @@ public class StockDataService(
             return JsonSerializer.Deserialize<StockQuoteResponse>((string)cached!, JsonOptions.Default);
         }
 
-        var q = await _finnhub.GetQuoteAsync(symbol, ct);
+        var q = await finnhub.GetQuoteAsync(symbol, ct);
         if (q?.CurrentPrice is null or 0)
         {
             _logger.LogWarning("[Quote] Not Found: {Symbol}", symbol);
@@ -100,10 +100,10 @@ public class StockDataService(
         var cacheKey = $"metrics:{symbol}";
         var cached = await _cache.StringGetAsync(cacheKey);
         if (cached.HasValue)
-            return JsonSerializer.Deserialize<StockMetricResponse>((string)cached!, _json);
+            return JsonSerializer.Deserialize<StockMetricResponse>((string)cached!, JsonOptions.Default);
         
-        var metric = await _unitOfWork.ExecuteSynchronizedAsync(
-            () => _unitOfWork.Metrics.GetBySymbolAsync(symbol, ct), ct);
+        var metric = await unitOfWork.ExecuteSynchronizedAsync(
+            () => unitOfWork.Metrics.GetBySymbolAsync(symbol, ct), ct);
         
         if (metric == null)
         {

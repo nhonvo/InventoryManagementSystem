@@ -28,6 +28,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\InventoryAlert.Api\appsettings.json" Link="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="appsettings.test.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
