@@ -16,15 +16,15 @@ last_updated: 2026-04-05
 
 ## 1. Solution Project Map
 
-| Project | SDK | Role |
-|---|---|---|
-| `InventoryAlert.Api` | `Microsoft.NET.Sdk.Web` | REST API — Controllers, Application Services, Infrastructure |
-| `InventoryAlert.Worker` | `Microsoft.NET.Sdk.Web` | Background processor — Hangfire jobs, SQS consumers, Event Handlers |
-| `InventoryAlert.Contracts` | `Microsoft.NET.Sdk` | Shared kernel — Entities, Events, Constants. Zero dependencies. |
-| `InventoryAlert.Sample` | `Microsoft.NET.Sdk` | Local test publisher — bypasses API to directly push events to SNS |
-| `InventoryAlert.UnitTests` | `Microsoft.NET.Sdk` | xUnit + Moq + FluentAssertions unit test suite |
-| `InventoryAlert.IntegrationTests` | `Microsoft.NET.Sdk` | Testcontainers.PostgreSql integration tests |
-| `InventoryAlert.ArchitectureTests` | `Microsoft.NET.Sdk` | NetArchTest.Rules — automated DDD boundary enforcement |
+| Project                            | SDK                     | Role                                                                |
+| ---------------------------------- | ----------------------- | ------------------------------------------------------------------- |
+| `InventoryAlert.Api`               | `Microsoft.NET.Sdk.Web` | REST API — Controllers, Application Services, Infrastructure        |
+| `InventoryAlert.Worker`            | `Microsoft.NET.Sdk.Web` | Background processor — Hangfire jobs, SQS consumers, Event Handlers |
+| `InventoryAlert.Contracts`         | `Microsoft.NET.Sdk`     | Shared kernel — Entities, Events, Constants. Zero dependencies.     |
+| `InventoryAlert.Sample`            | `Microsoft.NET.Sdk`     | Local test publisher — bypasses API to directly push events to SNS  |
+| `InventoryAlert.UnitTests`         | `Microsoft.NET.Sdk`     | xUnit + Moq + FluentAssertions unit test suite                      |
+| `InventoryAlert.IntegrationTests`  | `Microsoft.NET.Sdk`     | Testcontainers.PostgreSql integration tests                         |
+| `InventoryAlert.ArchitectureTests` | `Microsoft.NET.Sdk`     | NetArchTest.Rules — automated DDD boundary enforcement              |
 
 ---
 
@@ -62,13 +62,13 @@ The `Contracts` project has **zero external NuGet dependencies** and is the sing
 
 ### Domain Entities
 
-| Class | Key Fields |
-|---|---|
-| `Product` | `Id`, `Name`, `TickerSymbol`, `OriginPrice`, `CurrentPrice`, `PriceAlertThreshold` (double, e.g. `0.2` = 20%), `StockCount`, `StockAlertThreshold`, `LastAlertSentAt` (nullable DateTime for alert cooldown) |
-| `EventLog` | DynamoDB audit record per published event |
-| `EarningsRecord` | Persisted EPS data from Finnhub earnings events |
-| `NewsRecord` | Persisted company news headline |
-| `InsiderTransaction` | Persisted insider sell transaction |
+| Class                | Key Fields                                                                                                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Product`            | `Id`, `Name`, `TickerSymbol`, `OriginPrice`, `CurrentPrice`, `PriceAlertThreshold` (double, e.g. `0.2` = 20%), `StockCount`, `StockAlertThreshold`, `LastAlertSentAt` (nullable DateTime for alert cooldown) |
+| `EventLog`           | DynamoDB audit record per published event                                                                                                                                                                    |
+| `EarningsRecord`     | Persisted EPS data from Finnhub earnings events                                                                                                                                                              |
+| `NewsRecord`         | Persisted company news headline                                                                                                                                                                              |
+| `InsiderTransaction` | Persisted insider sell transaction                                                                                                                                                                           |
 
 ### Event Pipeline Types
 
@@ -87,13 +87,13 @@ public record EventEnvelope
 
 **`EventTypes` static class** — canonical reverse-DNS event names:
 
-| Constant | Value |
-|---|---|
-| `MarketPriceAlert` | `inventoryalert.pricing.price-drop.v1` |
-| `StockLowAlert` | `inventoryalert.inventory.stock-low.v1` |
-| `EarningsAlert` | `inventoryalert.fundamentals.earnings.v1` |
+| Constant           | Value                                         |
+| ------------------ | --------------------------------------------- |
+| `MarketPriceAlert` | `inventoryalert.pricing.price-drop.v1`        |
+| `StockLowAlert`    | `inventoryalert.inventory.stock-low.v1`       |
+| `EarningsAlert`    | `inventoryalert.fundamentals.earnings.v1`     |
 | `InsiderSellAlert` | `inventoryalert.fundamentals.insider-sell.v1` |
-| `CompanyNewsAlert` | `inventoryalert.news.headline.v1` |
+| `CompanyNewsAlert` | `inventoryalert.news.headline.v1`             |
 
 ---
 
@@ -111,13 +111,13 @@ public record EventEnvelope
 2. Each message body is deserialized into `EventEnvelope`.
 3. An internal **Dictionary Dispatcher** reads `EventType` and invokes the corresponding `IEventHandler<TPayload>`:
 
-| EventType | Handler | Action |
-|---|---|---|
-| `MarketPriceAlert` | `PriceAlertHandler` | Logs a structured `🚨 PRICE DROP ALERT` warning; Telegram plug-in point |
-| `EarningsAlert` | `EarningsHandler` | Persists `EarningsRecord` to PostgreSQL via `WorkerDbContext` |
-| `CompanyNewsAlert` | `NewsHandler` | Persists `NewsRecord` to PostgreSQL |
-| `InsiderSellAlert` | `InsiderHandler` | Persists `InsiderTransaction` to PostgreSQL |
-| *(unknown)* | `UnknownEventHandler` | Logs and discards gracefully — no crash |
+| EventType          | Handler               | Action                                                                 |
+| ------------------ | --------------------- | ---------------------------------------------------------------------- |
+| `MarketPriceAlert` | `PriceAlertHandler`   | Logs a structured `🚨 PRICE DROP ALERT` warning; Telegram plug-in point |
+| `EarningsAlert`    | `EarningsHandler`     | Persists `EarningsRecord` to PostgreSQL via `WorkerDbContext`          |
+| `CompanyNewsAlert` | `NewsHandler`         | Persists `NewsRecord` to PostgreSQL                                    |
+| `InsiderSellAlert` | `InsiderHandler`      | Persists `InsiderTransaction` to PostgreSQL                            |
+| *(unknown)*        | `UnknownEventHandler` | Logs and discards gracefully — no crash                                |
 
 4. **Dead-Letter Queue**: After `ApproximateReceiveCount` exceeds 3, SQS automaticaly routes to `inventory-event-dlq`.
 
@@ -125,12 +125,12 @@ public record EventEnvelope
 
 ## 5. Storage Layer
 
-| Store | Purpose | Access Pattern |
-|---|---|---|
+| Store                              | Purpose                                                         | Access Pattern                                                 |
+| ---------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------- |
 | **PostgreSQL** (Npgsql EF Core 10) | `Product`, `EarningsRecord`, `NewsRecord`, `InsiderTransaction` | `IProductRepository` → `GenericRepository<T>` → `AppDbContext` |
-| **AWS DynamoDB** | `EventLog` audit trail (append-only, TTL-expiring) | `DynamoEventLogRepository`, accessed via `IEventService` |
-| **IMemoryCache** (ASP.NET) | `Product` single-item cache (`Product_{id}`, 10 min TTL) | `ProductService.GetProductByIdAsync` — cache-aside pattern |
-| **Hangfire** | Job scheduling metadata | Stored in PostgreSQL (`WorkerDbContext`) |
+| **AWS DynamoDB**                   | `EventLog` audit trail (append-only, TTL-expiring)              | `DynamoEventLogRepository`, accessed via `IEventService`       |
+| **IMemoryCache** (ASP.NET)         | `Product` single-item cache (`Product_{id}`, 10 min TTL)        | `ProductService.GetProductByIdAsync` — cache-aside pattern     |
+| **Hangfire**                       | Job scheduling metadata                                         | Stored in PostgreSQL (`WorkerDbContext`)                       |
 
 ### Transaction Pattern (`ExecuteTransactionAsync`)
 All writes use the project-mandated capture pattern:
@@ -177,12 +177,12 @@ All Docker files are linked as **Solution Items** in `InventoryManagementSystem.
 
 ## 8. Testing Strategy
 
-| Suite | Count | Tools |
-|---|---|---|
-| `InventoryAlert.UnitTests` | 66 tests | xUnit, Moq, FluentAssertions, EF InMemory |
-| `InventoryAlert.IntegrationTests` | 5 tests | Testcontainers.PostgreSql |
-| `InventoryAlert.ArchitectureTests` | 9 tests | NetArchTest.Rules |
-| **Total** | **80 tests, 0 failures** | |
+| Suite                              | Count                    | Tools                                     |
+| ---------------------------------- | ------------------------ | ----------------------------------------- |
+| `InventoryAlert.UnitTests`         | 66 tests                 | xUnit, Moq, FluentAssertions, EF InMemory |
+| `InventoryAlert.IntegrationTests`  | 5 tests                  | Testcontainers.PostgreSql                 |
+| `InventoryAlert.ArchitectureTests` | 9 tests                  | NetArchTest.Rules                         |
+| **Total**                          | **80 tests, 0 failures** |                                           |
 
 Key unit test rules:
 - `ExecuteTransactionAsync` mocks **must** invoke the delegate: `.Returns<Func<Task>, CancellationToken>((action, _) => action())`

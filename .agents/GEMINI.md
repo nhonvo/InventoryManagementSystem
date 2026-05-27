@@ -91,17 +91,17 @@ Real-time inventory management system with portfolio + watchlist + alerting.
 
 ## Tech Stack
 
-| Layer | Technology |
-| :--- | :--- |
-| Runtime | .NET 10 (C# 12) |
-| Web Framework | ASP.NET Core Minimal Hosting |
-| ORM | EF Core 10 + Npgsql (PostgreSQL) |
-| External API | Finnhub REST (RestSharp client) |
-| Background Jobs | Hangfire (Worker) + native SQS poller |
-| Documentation | Swashbuckle / Swagger |
-| Tests | xUnit + Moq + FluentAssertions |
-| Containerization | Docker + Docker Compose |
-| Search/Memory | BM25+ (`.agents/scripts/core/`) |
+| Layer            | Technology                            |
+| :--------------- | :------------------------------------ |
+| Runtime          | .NET 10 (C# 12)                       |
+| Web Framework    | ASP.NET Core Minimal Hosting          |
+| ORM              | EF Core 10 + Npgsql (PostgreSQL)      |
+| External API     | Finnhub REST (RestSharp client)       |
+| Background Jobs  | Hangfire (Worker) + native SQS poller |
+| Documentation    | Swashbuckle / Swagger                 |
+| Tests            | xUnit + Moq + FluentAssertions        |
+| Containerization | Docker + Docker Compose               |
+| Search/Memory    | BM25+ (`.agents/scripts/core/`)       |
 
 ---
 
@@ -146,74 +146,74 @@ ojt-training/
 
 ### Postgres entities (core)
 
-| Entity | Purpose / notes |
-| :--- | :--- |
-| `User` | Auth identity (seeded in dev) |
-| `StockListing` | Symbol directory (name, exchange, logo, industry, etc.) |
-| `WatchlistItem` | User → symbol subscription |
-| `Trade` | Ownership ledger (immutable position changes); optional `Notes` |
-| `AlertRule` | User-defined alert conditions per symbol |
-| `Notification` | Persisted alert notifications |
+| Entity          | Purpose / notes                                                 |
+| :-------------- | :-------------------------------------------------------------- |
+| `User`          | Auth identity (seeded in dev)                                   |
+| `StockListing`  | Symbol directory (name, exchange, logo, industry, etc.)         |
+| `WatchlistItem` | User → symbol subscription                                      |
+| `Trade`         | Ownership ledger (immutable position changes); optional `Notes` |
+| `AlertRule`     | User-defined alert conditions per symbol                        |
+| `Notification`  | Persisted alert notifications                                   |
 
 ### Postgres entities (intelligence / caching)
 
-| Entity | Purpose |
-| :--- | :--- |
-| `PriceHistory` | Historical quotes / cache |
-| `StockMetric` | Fundamental metrics cache |
-| `EarningsSurprise` | Earnings history cache |
+| Entity                | Purpose                       |
+| :-------------------- | :---------------------------- |
+| `PriceHistory`        | Historical quotes / cache     |
+| `StockMetric`         | Fundamental metrics cache     |
+| `EarningsSurprise`    | Earnings history cache        |
 | `RecommendationTrend` | Analyst recommendations cache |
-| `InsiderTransaction` | Insider trades cache |
+| `InsiderTransaction`  | Insider trades cache          |
 
 ### DynamoDB read models
 
-| DynamoDB table | Entry model |
-| :--- | :--- |
-| `inventoryalert-market-news` | `MarketNewsDynamoEntry` |
+| DynamoDB table                | Entry model              |
+| :---------------------------- | :----------------------- |
+| `inventoryalert-market-news`  | `MarketNewsDynamoEntry`  |
 | `inventoryalert-company-news` | `CompanyNewsDynamoEntry` |
 
 ---
 
 ## Key Services (API)
 
-| Service | What it does |
-| :--- | :--- |
-| `PortfolioService` | Positions, cost basis, trades, portfolio alerts |
-| `WatchlistService` | CRUD watchlist symbols for a user |
-| `AlertRuleService` | CRUD alert rules + evaluation helpers |
-| `NotificationService` | Read/ack notifications |
-| `StockDataService` | Quotes + profile + market intelligence (cache-first) |
+| Service               | What it does                                         |
+| :-------------------- | :--------------------------------------------------- |
+| `PortfolioService`    | Positions, cost basis, trades, portfolio alerts      |
+| `WatchlistService`    | CRUD watchlist symbols for a user                    |
+| `AlertRuleService`    | CRUD alert rules + evaluation helpers                |
+| `NotificationService` | Read/ack notifications                               |
+| `StockDataService`    | Quotes + profile + market intelligence (cache-first) |
 
 ---
 
 ## Key Service: `StockDataService`
 
-| Method | What it does |
-| :--- | :--- |
-| `GetQuoteAsync` | Returns price quote (Redis cache-first) |
-| `GetProfileAsync` | Returns company profile (Postgres cache-first) |
-| `GetFinancialsAsync` | Returns cached financial metrics (fundamentals) |
-| `GetEarningsAsync` | Returns earnings surprises/history |
-| `GetRecommendationsAsync` | Returns analyst recommendation trends |
-| `GetInsidersAsync` | Returns insider transactions |
-| `GetPeersAsync` | Returns peer symbols |
-| `GetCompanyNewsAsync` | Returns company news (DynamoDB-backed) |
-| `GetMarketNewsAsync` | Returns market news (DynamoDB-backed) |
-| `GetMarketStatusAsync` | Returns market status |
-| `GetMarketHolidaysAsync` | Returns market holidays |
-| `GetEarningsCalendarAsync` | Returns earnings calendar |
-| `GetIpoCalendarAsync` | Returns IPO calendar |
-| `SearchSymbolsAsync` | Search for tickers/companies |
+| Method                     | What it does                                    |
+| :------------------------- | :---------------------------------------------- |
+| `GetQuoteAsync`            | Returns price quote (Redis cache-first)         |
+| `GetProfileAsync`          | Returns company profile (Postgres cache-first)  |
+| `GetFinancialsAsync`       | Returns cached financial metrics (fundamentals) |
+| `GetEarningsAsync`         | Returns earnings surprises/history              |
+| `GetRecommendationsAsync`  | Returns analyst recommendation trends           |
+| `GetInsidersAsync`         | Returns insider transactions                    |
+| `GetPeersAsync`            | Returns peer symbols                            |
+| `GetCompanyNewsAsync`      | Returns company news (DynamoDB-backed)          |
+| `GetMarketNewsAsync`       | Returns market news (DynamoDB-backed)           |
+| `GetMarketStatusAsync`     | Returns market status                           |
+| `GetMarketHolidaysAsync`   | Returns market holidays                         |
+| `GetEarningsCalendarAsync` | Returns earnings calendar                       |
+| `GetIpoCalendarAsync`      | Returns IPO calendar                            |
+| `SearchSymbolsAsync`       | Search for tickers/companies                    |
 
 ---
 
 ## DI Registration Points
 
-| What | Where |
-| :--- | :--- |
-| App settings bind/validate | `InventoryManagementSystem/InventoryAlert.Api/Program.cs` |
-| API service registration | `InventoryManagementSystem/InventoryAlert.Api/ServiceExtensions/InfrastructureServiceExtensions.cs` (`AddWebApiInfrastructure`) |
-| Infrastructure (EF, repos, Finnhub, AWS, Redis) | `InventoryManagementSystem/InventoryAlert.Infrastructure/DependencyInjection.cs` (`AddInfrastructure`) |
+| What                                            | Where                                                                                                                           |
+| :---------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------ |
+| App settings bind/validate                      | `InventoryManagementSystem/InventoryAlert.Api/Program.cs`                                                                       |
+| API service registration                        | `InventoryManagementSystem/InventoryAlert.Api/ServiceExtensions/InfrastructureServiceExtensions.cs` (`AddWebApiInfrastructure`) |
+| Infrastructure (EF, repos, Finnhub, AWS, Redis) | `InventoryManagementSystem/InventoryAlert.Infrastructure/DependencyInjection.cs` (`AddInfrastructure`)                          |
 
 ---
 
@@ -227,20 +227,20 @@ ojt-training/
 
 ## Available Slash Commands
 
-| Command | When to use |
-| :--- | :--- |
-| `/init` | Start of every session — re-index BM25, sync context |
-| `/plan` | Design a feature before implementation |
+| Command         | When to use                                                                 |
+| :-------------- | :-------------------------------------------------------------------------- |
+| `/init`         | Start of every session — re-index BM25, sync context                        |
+| `/plan`         | Design a feature before implementation                                      |
 | `/feature-flow` | Master dev lifecycle: requirement → Domain → App → Infra → Web → Tests → PR |
-| `/add-feature` | Adding a new method/endpoint to an existing entity |
-| `/add-entity` | Adding a completely new domain entity end-to-end |
-| `/db-migration` | Creating or applying an EF Core migration |
-| `/run-tests` | Running tests + optional coverage report |
-| `/docker-run` | Bringing up the full stack locally |
-| `/code-review` | Pre-merge checklist |
-| `/fix-build` | Diagnosing build/test failures |
-| `/doc` | Sync documentation after implementing a feature |
-| `/search` | BM25 search for context without reading full files |
+| `/add-feature`  | Adding a new method/endpoint to an existing entity                          |
+| `/add-entity`   | Adding a completely new domain entity end-to-end                            |
+| `/db-migration` | Creating or applying an EF Core migration                                   |
+| `/run-tests`    | Running tests + optional coverage report                                    |
+| `/docker-run`   | Bringing up the full stack locally                                          |
+| `/code-review`  | Pre-merge checklist                                                         |
+| `/fix-build`    | Diagnosing build/test failures                                              |
+| `/doc`          | Sync documentation after implementing a feature                             |
+| `/search`       | BM25 search for context without reading full files                          |
 
 ---
 
@@ -279,10 +279,10 @@ python .agents/scripts/core/bm25_search.py "StockDataService GetQuoteAsync" --ve
 
 Seeded users (development/docker) via `InventoryManagementSystem/InventoryAlert.Infrastructure/Persistence/Postgres/DatabaseSeeder.cs`:
 
-| Username | Email |
-| :--- | :--- |
-| `admin` | `admin@example.com` |
-| `user1` | `user1@example.com` |
+| Username | Email               |
+| :------- | :------------------ |
+| `admin`  | `admin@example.com` |
+| `user1`  | `user1@example.com` |
 
 ---
 
@@ -314,11 +314,11 @@ python .agents/scripts/core/bm25_search.py "your question about the code" -n 5
 
 ## Quick Links
 
-| Resource | Path |
-| :--- | :--- |
-| AI System Core | `.agents/GEMINI.md` |
-| DDD Architecture Rules | `.agents/skills/ddd-architecture/SKILL.md` |
-| Testing Patterns | `.agents/skills/testing-patterns/SKILL.md` |
-| Finnhub Integration | `.agents/skills/finnhub-integration/SKILL.md` |
-| Project Rules | `.agents/rules/project-rules.md` |
-| Roadmap | `doc/ROADMAP.md` |
+| Resource               | Path                                          |
+| :--------------------- | :-------------------------------------------- |
+| AI System Core         | `.agents/GEMINI.md`                           |
+| DDD Architecture Rules | `.agents/skills/ddd-architecture/SKILL.md`    |
+| Testing Patterns       | `.agents/skills/testing-patterns/SKILL.md`    |
+| Finnhub Integration    | `.agents/skills/finnhub-integration/SKILL.md` |
+| Project Rules          | `.agents/rules/project-rules.md`              |
+| Roadmap                | `doc/ROADMAP.md`                              |

@@ -33,9 +33,9 @@ tags: [workflow, migration, efcore, database, postgresql, inventoryalert]
 ## Prerequisites
 
 - `dotnet-ef` installed: `dotnet tool install -g dotnet-ef`
-- PostgreSQL running: `docker-compose up postgres -d`
+- PostgreSQL running: `docker compose up db -d`
 - `appsettings.Development.json` has valid `Database.DefaultConnection`
-- Working directory: solution root `InventoryManagementSystem/`
+- Working directory: `src/`
 
 ---
 
@@ -63,7 +63,7 @@ dotnet ef migrations add AddNotificationDetails --project InventoryAlert.Infrast
 
 ### 3. Review the generated migration
 
-Open `InventoryManagementSystem/InventoryAlert.Infrastructure/Migrations/<timestamp>_<Name>.cs`:
+Open `src/InventoryAlert.Infrastructure/Migrations/<timestamp>_<Name>.cs`:
 
 - `Up()` — adds/changes exactly what you intended
 - `Down()` — correctly reverses it
@@ -108,7 +108,7 @@ dotnet ef migrations remove --project InventoryAlert.Infrastructure --startup-pr
 
 | Error | Fix |
 |-------|-----|
-| `No DbContext was found` | Run from `InventoryManagementSystem/`, use `--project InventoryAlert.Api` |
+| `No DbContext was found` | Run from `src/`, use `--project InventoryAlert.Infrastructure --startup-project InventoryAlert.Api` |
 | `Connection refused` | `docker-compose up postgres -d` |
 | `Pending model changes` | Run `dotnet ef migrations add` to capture drift |
 | `MSB4066 Include attribute` | Fix nested `<PackageReference>` in `.csproj` |

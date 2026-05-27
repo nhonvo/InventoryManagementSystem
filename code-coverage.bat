@@ -3,7 +3,7 @@ REM ========================
 REM Set Tools & Paths
 REM ========================
 SET "dotnet=dotnet"
-SET "testproject=./InventoryManagementSystem/InventoryAlert.UnitTests/InventoryAlert.UnitTests.csproj"
+SET "testproject=./src/test/InventoryAlert.UnitTests/InventoryAlert.UnitTests.csproj"
 SET "coveragedir=./coverage/"
 
 echo [info] Ensuring tools are installed...

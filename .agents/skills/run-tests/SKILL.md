@@ -32,7 +32,7 @@ tags: [workflow, tests, xunit, coverage, inventoryalert]
 
 ## Prerequisites
 
-- `InventoryManagementSystem/` as working directory
+- Root directory as working directory
 - Packages: `xunit`, `Moq`, `FluentAssertions`, `EF InMemory` (all in `.csproj`)
 
 ---
@@ -49,29 +49,29 @@ dotnet build --no-restore
 ### 2. Run all tests
 
 ```bash
-dotnet test InventoryManagementSystem --no-build --verbosity normal
+dotnet test src/InventoryManagementSystem.sln --no-build --verbosity normal
 ```
 
 ### 3. Run by test class
 
 ```bash
-dotnet test InventoryManagementSystem --no-build --filter "FullyQualifiedName~PortfolioServiceTests"
-dotnet test InventoryManagementSystem --no-build --filter "FullyQualifiedName~StockDataServiceTests"
-dotnet test InventoryManagementSystem --no-build --filter "FullyQualifiedName~AlertRuleServiceTests"
-dotnet test InventoryManagementSystem --no-build --filter "FullyQualifiedName~WatchlistControllerTests"
-dotnet test InventoryManagementSystem --no-build --filter "FullyQualifiedName~GenericRepositoryTests"
+dotnet test src/InventoryManagementSystem.sln --no-build --filter "FullyQualifiedName~PortfolioServiceTests"
+dotnet test src/InventoryManagementSystem.sln --no-build --filter "FullyQualifiedName~StockDataServiceTests"
+dotnet test src/InventoryManagementSystem.sln --no-build --filter "FullyQualifiedName~AlertRuleServiceTests"
+dotnet test src/InventoryManagementSystem.sln --no-build --filter "FullyQualifiedName~WatchlistControllerTests"
+dotnet test src/InventoryManagementSystem.sln --no-build --filter "FullyQualifiedName~GenericRepositoryTests"
 ```
 
 ### 4. Run by method name
 
 ```bash
-dotnet test InventoryManagementSystem --no-build --filter "FullyQualifiedName~GetQuote_ReturnsCachedResult_WhenAvailable"
+dotnet test src/InventoryManagementSystem.sln --no-build --filter "FullyQualifiedName~GetQuote_ReturnsCachedResult_WhenAvailable"
 ```
 
 ### 5. Run with coverage (HTML report)
 
 ```bash
-dotnet test InventoryManagementSystem --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults
+dotnet test src/InventoryManagementSystem.sln --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults
 dotnet tool install -g dotnet-reportgenerator-globaltool
 reportgenerator -reports:"./TestResults/**/coverage.cobertura.xml" -targetdir:"./TestResults/CoverageReport" -reporttypes:Html
 start ./TestResults/CoverageReport/index.html

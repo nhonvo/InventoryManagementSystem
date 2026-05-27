@@ -7,13 +7,13 @@ on:
       - "refactor/**"
       - "feature/**"
     paths:
-      - "InventoryAlert.Wiki/docs/**"
+      - "src/ui/InventoryAlert.Wiki/docs/**"
       - ".github/workflows/sync-github-wiki.yml"
   
   pull_request:
     branches: [ "main" ]
     paths:
-      - "InventoryAlert.Wiki/docs/**"
+      - "src/ui/InventoryAlert.Wiki/docs/**"
 
   workflow_dispatch:
 
@@ -56,7 +56,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add .
-            git commit -m "Sync wiki from InventoryAlert.Wiki/docs"
+            git commit -m "Sync wiki from src/ui/InventoryAlert.Wiki/docs"
             git push
           else
             echo "No changes to commit."

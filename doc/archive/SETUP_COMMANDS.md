@@ -7,13 +7,13 @@
 
 ## 📁 Final Project Names
 
-| Project | Type | Purpose |
-| :--- | :--- | :--- |
-| `InventoryAlert.Api` | ASP.NET Web API | ✅ Existing — extended with event endpoints |
-| `InventoryAlert.Contracts` | Class Library | ✅ Done — shared event schemas + domain entities |
-| `InventoryAlert.Worker` | Worker Service | ✅ Done — Hangfire + SQS consumer |
-| `InventoryAlert.Sample` | Console App | ✅ Done — sample event publisher |
-| `InventoryAlert.Tests` | xUnit Test | ✅ Existing |
+| Project                    | Type            | Purpose                                         |
+| :------------------------- | :-------------- | :---------------------------------------------- |
+| `InventoryAlert.Api`       | ASP.NET Web API | ✅ Existing — extended with event endpoints      |
+| `InventoryAlert.Contracts` | Class Library   | ✅ Done — shared event schemas + domain entities |
+| `InventoryAlert.Worker`    | Worker Service  | ✅ Done — Hangfire + SQS consumer                |
+| `InventoryAlert.Sample`    | Console App     | ✅ Done — sample event publisher                 |
+| `InventoryAlert.Tests`     | xUnit Test      | ✅ Existing                                      |
 
 ---
 
@@ -184,11 +184,11 @@ Automatically creates SNS/SQS resources on first Docker boot:
 - **Script:** `SolutionFolder/moto-init/init-sqs.sh`
 - **Runs via:** `moto-init` service in docker-compose (one-shot, exits when done)
 
-| Resource | Type | Notes |
-| :--- | :--- | :--- |
+| Resource              | Type         | Notes                              |
+| :-------------------- | :----------- | :--------------------------------- |
 | `inventory-event-dlq` | SQS Standard | Dead Letter Queue (max 3 receives) |
-| `event-queue` | SQS Standard | Main queue — DLQ redrive wired |
-| `inventory-events` | SNS Topic | Auto-subscribed to `event-queue` |
+| `event-queue`         | SQS Standard | Main queue — DLQ redrive wired     |
+| `inventory-events`    | SNS Topic    | Auto-subscribed to `event-queue`   |
 
 > Script is **idempotent** — checks before creating, safe to re-run.
 

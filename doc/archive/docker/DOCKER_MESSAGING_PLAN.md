@@ -176,13 +176,13 @@ using (var scope = app.Services.CreateScope())
 
 ### Decision: Hangfire vs BackgroundService
 
-| Feature | `BackgroundService` (Current) | Hangfire |
-|---|---|---|
-| Dashboard UI | ❌ None | ✅ `/hangfire` |
-| Retry on failure | ❌ Manual | ✅ Built-in |
-| Job history / logs | ❌ Just console logs | ✅ Persistent DB |
-| Recurring schedule | ⚠️ PeriodicTimer | ✅ Cron expressions |
-| Complexity | ✅ Simple | ⚠️ Needs DB table |
+| Feature            | `BackgroundService` (Current) | Hangfire           |
+| ------------------ | ----------------------------- | ------------------ |
+| Dashboard UI       | ❌ None                        | ✅ `/hangfire`      |
+| Retry on failure   | ❌ Manual                      | ✅ Built-in         |
+| Job history / logs | ❌ Just console logs           | ✅ Persistent DB    |
+| Recurring schedule | ⚠️ PeriodicTimer               | ✅ Cron expressions |
+| Complexity         | ✅ Simple                      | ⚠️ Needs DB table   |
 
 **Recommendation:** Keep `BackgroundService` for now. Add Hangfire only when you need the Dashboard or retry management.
 
