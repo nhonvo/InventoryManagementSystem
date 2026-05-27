@@ -9,7 +9,7 @@
     <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
     <PackageVersion Include="AWSSDK.DynamoDBv2" Version="4.0.17.6" />
-    <PackageVersion Include="AWSSDK.SimpleNotificationService" Version="4.0.2.25" />
+    <PackageVersion Include="AWSSDK.SimpleNotificationService" Version="4.0.2.34" />
     <PackageVersion Include="AWSSDK.SQS" Version="4.0.2.23" />
     <PackageVersion Include="Azure.Identity" Version="1.13.2" />
     <PackageVersion Include="FluentAssertions" Version="8.9.0" />
