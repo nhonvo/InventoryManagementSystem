@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkinventory_alert_wiki=self.webpackChunkinventory_alert_wiki||[]).push([[2555],{2555:(e,r,i)=>{i.d(r,{createWardleyServices:()=>a.J});var a=i(4837);i(9302)}}]);

@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkinventory_alert_wiki=self.webpackChunkinventory_alert_wiki||[]).push([[6402],{6402:(e,r,i)=>{i.d(r,{createArchitectureServices:()=>t.S});var t=i(5016);i(9302)}}]);

@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkinventory_alert_wiki=self.webpackChunkinventory_alert_wiki||[]).push([[8119],{8119:(e,i,r)=>{r.d(i,{createGitGraphServices:()=>t.b});var t=r(3398);r(9302)}}]);
