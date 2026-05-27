@@ -29,9 +29,9 @@ flowchart TD
     
     H & I & J --> K{Breached?}
     K -- Yes --> L{Redis Cooldown active?}
-    L -- Yes --> M[Skip — inventoryalert:alerts:cooldown:v1:{userId}:{ruleId} exists]
+    L -- Yes --> M["Skip — inventoryalert:alerts:cooldown:v1:{userId}:{ruleId} exists"]
     L -- No --> N[1. INSERT Notification row]
-    N --> O[2. SET inventoryalert:alerts:cooldown:v1:{userId}:{ruleId} TTL=24h]
+    N --> O["2. SET inventoryalert:alerts:cooldown:v1:{userId}:{ruleId} TTL=24h"]
     O --> P[3. Push via SignalR HubContext]
     P --> Q{TriggerOnce?}
     Q -- Yes --> R[UPDATE AlertRule SET IsActive = false]
