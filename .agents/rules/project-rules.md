@@ -52,7 +52,7 @@ These rules apply to **every** code change in this repository. They are the proj
 - Never inject `AppDbContext` directly into Application-layer services.
 - Never modify auto-generated `ModelSnapshot.cs` manually.
 - Migration naming: `Verb + Entity + Detail` e.g. `AddNotificationDetails`.
-- Run migrations from `InventoryManagementSystem/` with `--project InventoryAlert.Api`.
+- Run migrations from `src/` with `--project InventoryAlert.Infrastructure --startup-project InventoryAlert.Api`.
 
 ## Workflow
 

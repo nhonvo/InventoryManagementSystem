@@ -11,9 +11,9 @@
 | :------------------------- | :-------------- | :---------------------------------------------- |
 | `InventoryAlert.Api`       | ASP.NET Web API | ✅ Existing — extended with event endpoints      |
 | `InventoryAlert.Contracts` | Class Library   | ✅ Done — shared event schemas + domain entities |
-| `InventoryAlert.Worker`    | Worker Service  | ✅ Done — Hangfire + SQS consumer               |
-| `InventoryAlert.Sample`    | Console App     | ✅ Done — sample event publisher                |
-| `InventoryAlert.Tests`     | xUnit Test      | ✅ Existing                                     |
+| `InventoryAlert.Worker`    | Worker Service  | ✅ Done — Hangfire + SQS consumer                |
+| `InventoryAlert.Sample`    | Console App     | ✅ Done — sample event publisher                 |
+| `InventoryAlert.Tests`     | xUnit Test      | ✅ Existing                                      |
 
 ---
 

@@ -101,13 +101,13 @@ All events follow the standard SNS notification format:
 
 ### Event Types
 
-| EventType | Trigger | Finnhub Source |
-| :--- | :--- | :--- |
-| `MarketPriceAlert` | Price drops beyond `PriceAlertThreshold` | `/quote` |
-| `StockLowAlert` | `StockCount` drops below `StockAlertThreshold` | Internal DB |
-| `EarningsAlert` | A tracked company announces earnings | `/stock/earnings` |
-| `InsiderSellAlert` | Insider selling detected above a threshold | `/stock/insider-transactions` |
-| `CompanyNewsAlert` | High-impact news published for a tracked stock | `/company-news` |
+| EventType          | Trigger                                        | Finnhub Source                |
+| :----------------- | :--------------------------------------------- | :---------------------------- |
+| `MarketPriceAlert` | Price drops beyond `PriceAlertThreshold`       | `/quote`                      |
+| `StockLowAlert`    | `StockCount` drops below `StockAlertThreshold` | Internal DB                   |
+| `EarningsAlert`    | A tracked company announces earnings           | `/stock/earnings`             |
+| `InsiderSellAlert` | Insider selling detected above a threshold     | `/stock/insider-transactions` |
+| `CompanyNewsAlert` | High-impact news published for a tracked stock | `/company-news`               |
 
 ### New Domain Models
 
@@ -170,12 +170,12 @@ public record CompanyNewsAlertPayload
 
 ### New Endpoints
 
-| Method | Route | Purpose |
-| :--- | :--- | :--- |
-| `POST` | `/api/events` | Receive any generic event and publish to SNS |
-| `POST` | `/api/events/market-alert` | Manually trigger a `MarketPriceAlert` event |
-| `POST` | `/api/events/news-alert` | Manually trigger a `CompanyNewsAlert` event |
-| `GET`  | `/api/events/types` | List all supported event types |
+| Method | Route                      | Purpose                                      |
+| :----- | :------------------------- | :------------------------------------------- |
+| `POST` | `/api/events`              | Receive any generic event and publish to SNS |
+| `POST` | `/api/events/market-alert` | Manually trigger a `MarketPriceAlert` event  |
+| `POST` | `/api/events/news-alert`   | Manually trigger a `CompanyNewsAlert` event  |
+| `GET`  | `/api/events/types`        | List all supported event types               |
 
 ### New Service: `IEventPublisher`
 
@@ -191,14 +191,14 @@ IEventPublisher
 
 Persist all published events to the DB for auditing:
 
-| Column | Type | Notes |
-| :--- | :--- | :--- |
-| `Id` | `int` | PK |
-| `MessageId` | `string` | From SNS |
-| `EventType` | `string` | e.g. `MarketPriceAlert` |
-| `Payload` | `string` | JSON body |
-| `PublishedAt` | `DateTime` | UTC |
-| `SourceService` | `string` | e.g. `InventoryAlert.Api` |
+| Column          | Type       | Notes                     |
+| :-------------- | :--------- | :------------------------ |
+| `Id`            | `int`      | PK                        |
+| `MessageId`     | `string`   | From SNS                  |
+| `EventType`     | `string`   | e.g. `MarketPriceAlert`   |
+| `Payload`       | `string`   | JSON body                 |
+| `PublishedAt`   | `DateTime` | UTC                       |
+| `SourceService` | `string`   | e.g. `InventoryAlert.Api` |
 
 ---
 
@@ -214,13 +214,13 @@ This is a separate **.NET Worker Service** (minimal API or `BackgroundService` h
 
 ### Architecture: Hangfire Jobs
 
-| Job Name | Schedule | Responsibility | Finnhub Call |
-| :--- | :--- | :--- | :--- |
-| `PollSqsJob` | Every 30s | Dequeue messages from SQS and dispatch to handlers | None |
-| `SyncPricesJob` | Every 10m | Update `CurrentPrice` for all products | `/quote` |
-| `EarningsCheckJob` | Every 6h | Check if tracked symbols have new earnings | `/stock/earnings` |
-| `InsiderTxCheckJob` | Every 6h | Check for insider selling on tracked symbols | `/stock/insider-transactions` |
-| `NewsCheckJob` | Every 1h | Fetch latest news for tracked symbols | `/company-news` |
+| Job Name            | Schedule  | Responsibility                                     | Finnhub Call                  |
+| :------------------ | :-------- | :------------------------------------------------- | :---------------------------- |
+| `PollSqsJob`        | Every 30s | Dequeue messages from SQS and dispatch to handlers | None                          |
+| `SyncPricesJob`     | Every 10m | Update `CurrentPrice` for all products             | `/quote`                      |
+| `EarningsCheckJob`  | Every 6h  | Check if tracked symbols have new earnings         | `/stock/earnings`             |
+| `InsiderTxCheckJob` | Every 6h  | Check for insider selling on tracked symbols       | `/stock/insider-transactions` |
+| `NewsCheckJob`      | Every 1h  | Fetch latest news for tracked symbols              | `/company-news`               |
 
 ### SQS Consumer Flow
 
@@ -241,12 +241,12 @@ PollSqsJob runs →
 
 ### Redis Caching Strategy
 
-| Key Pattern | Stores | TTL | Populated By |
-| :--- | :--- | :--- | :--- |
-| `product:quote:{AAPL}` | Latest price quote | 60 seconds | `SyncPricesJob` |
-| `alert:history:{AAPL}` | Last alert timestamp | 24 hours | `PollSqsJob` (dedup) |
-| `job:last-run:EarningsCheckJob` | Last run timestamp | 10 minutes | Each Job |
-| `news:{AAPL}:latest` | Latest news headline | 1 hour | `NewsCheckJob` |
+| Key Pattern                     | Stores               | TTL        | Populated By         |
+| :------------------------------ | :------------------- | :--------- | :------------------- |
+| `product:quote:{AAPL}`          | Latest price quote   | 60 seconds | `SyncPricesJob`      |
+| `alert:history:{AAPL}`          | Last alert timestamp | 24 hours   | `PollSqsJob` (dedup) |
+| `job:last-run:EarningsCheckJob` | Last run timestamp   | 10 minutes | Each Job             |
+| `news:{AAPL}:latest`            | Latest news headline | 1 hour     | `NewsCheckJob`       |
 
 ---
 
@@ -300,13 +300,13 @@ Time:      2026-04-04 02:00 UTC
 
 ## 🧩 Business Logic Scenarios (Finnhub Free Tier)
 
-| Scenario | Entities Affected | Finnhub Endpoint | Event Published |
-| :--- | :--- | :--- | :--- |
-| **Price Drop > threshold** | `Product.CurrentPrice` | `/quote` | `MarketPriceAlert` |
-| **Earnings miss > 10%** | New `EarningsRecord` entity | `/stock/earnings` | `EarningsAlert` |
-| **Insider sells > $1M** | New `InsiderTransaction` entity | `/stock/insider-transactions` | `InsiderSellAlert` |
-| **High impact news** | New `NewsRecord` entity | `/company-news` | `CompanyNewsAlert` |
-| **Market closes** | Trigger close-of-day sync | `/stock/market-status` | Internal only |
+| Scenario                   | Entities Affected               | Finnhub Endpoint              | Event Published    |
+| :------------------------- | :------------------------------ | :---------------------------- | :----------------- |
+| **Price Drop > threshold** | `Product.CurrentPrice`          | `/quote`                      | `MarketPriceAlert` |
+| **Earnings miss > 10%**    | New `EarningsRecord` entity     | `/stock/earnings`             | `EarningsAlert`    |
+| **Insider sells > $1M**    | New `InsiderTransaction` entity | `/stock/insider-transactions` | `InsiderSellAlert` |
+| **High impact news**       | New `NewsRecord` entity         | `/company-news`               | `CompanyNewsAlert` |
+| **Market closes**          | Trigger close-of-day sync       | `/stock/market-status`        | Internal only      |
 
 ### New Entities (Database Changes Required)
 

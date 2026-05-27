@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const sourceDir = path.resolve(__dirname, '../InventoryAlert.Wiki/docs');
+const sourceDir = path.resolve(__dirname, '../src/ui/InventoryAlert.Wiki/docs');
 const targetDir = path.resolve(__dirname, '../artifacts/wiki-export');
 
 function processFile(filePath, rootSourceDir, outDir) {

@@ -21,12 +21,12 @@ last_updated: 2026-04-05
 
 ## 🚀 Pre-Flight: Start & Health Check
 
-| # | Step | Expected |
-|---|---|---|
-| 1 | Run `docker-compose up --build` | All 5 containers start without error |
-| 2 | Check `moto-init` logs | `SQS queue created`, `DynamoDB table created` messages visible |
-| 3 | `GET http://localhost:5000/swagger` | Swagger UI loads with all endpoints |
-| 4 | Check `logs/inventoryalert.log` exists | Serilog has created the log file |
+| #   | Step                                   | Expected                                                       |
+| --- | -------------------------------------- | -------------------------------------------------------------- |
+| 1   | Run `docker-compose up --build`        | All 5 containers start without error                           |
+| 2   | Check `moto-init` logs                 | `SQS queue created`, `DynamoDB table created` messages visible |
+| 3   | `GET http://localhost:5000/swagger`    | Swagger UI loads with all endpoints                            |
+| 4   | Check `logs/inventoryalert.log` exists | Serilog has created the log file                               |
 
 > 🔍 **REVIEW:** There is no `/health` endpoint defined. If the `api` or `worker` container crashes silently, there is no heartbeat to detect it. Consider adding `app.MapHealthChecks("/health")`.
 
@@ -87,18 +87,18 @@ POST /api/products
 
 ### TC-PROD-02 — Create Product (Validation Failures)
 
-| Sub-case | Payload Change | Expected |
-|---|---|---|
-| Empty name | `"name": ""` | ❌ `400` — `"Name is required."` |
-| Name too long | `"name": "A" * 257` | ❌ `400` — `"Name must not exceed 256 characters."` |
-| Lowercase ticker | `"tickerSymbol": "aapl"` | ❌ `400` — `"TickerSymbol must be 1–16 uppercase letters"` |
-| Ticker with numbers | `"tickerSymbol": "AAP1"` | ❌ `400` — regex rejects non-alpha characters |
-| `originPrice: 0` | `"originPrice": 0` | ❌ `400` — `"OriginPrice must be greater than 0."` |
-| `originPrice: -1` | `"originPrice": -1` | ❌ `400` |
-| `currentPrice: -1` | `"currentPrice": -1` | ❌ `400` — `"CurrentPrice must be 0 or greater."` |
-| `stockCount: -1` | `"stockCount": -1` | ❌ `400` |
-| `priceAlertThreshold: 1.1` | `"priceAlertThreshold": 1.1` | ❌ `400` — `"must be between 0.0 and 1.0"` |
-| `priceAlertThreshold: -0.1` | `"priceAlertThreshold": -0.1` | ❌ `400` |
+| Sub-case                    | Payload Change                | Expected                                                  |
+| --------------------------- | ----------------------------- | --------------------------------------------------------- |
+| Empty name                  | `"name": ""`                  | ❌ `400` — `"Name is required."`                           |
+| Name too long               | `"name": "A" * 257`           | ❌ `400` — `"Name must not exceed 256 characters."`        |
+| Lowercase ticker            | `"tickerSymbol": "aapl"`      | ❌ `400` — `"TickerSymbol must be 1–16 uppercase letters"` |
+| Ticker with numbers         | `"tickerSymbol": "AAP1"`      | ❌ `400` — regex rejects non-alpha characters              |
+| `originPrice: 0`            | `"originPrice": 0`            | ❌ `400` — `"OriginPrice must be greater than 0."`         |
+| `originPrice: -1`           | `"originPrice": -1`           | ❌ `400`                                                   |
+| `currentPrice: -1`          | `"currentPrice": -1`          | ❌ `400` — `"CurrentPrice must be 0 or greater."`          |
+| `stockCount: -1`            | `"stockCount": -1`            | ❌ `400`                                                   |
+| `priceAlertThreshold: 1.1`  | `"priceAlertThreshold": 1.1`  | ❌ `400` — `"must be between 0.0 and 1.0"`                 |
+| `priceAlertThreshold: -0.1` | `"priceAlertThreshold": -0.1` | ❌ `400`                                                   |
 
 > 🔍 **REVIEW:** `tickerSymbol` is declared as `string?` (nullable) in `ProductRequest.cs` but the validator treats it as required. Confirm the swagger UI does not allow submitting without it. Check if `null` body field passes validation.
 
@@ -387,16 +387,16 @@ POST /api/products/bulk
 
 ## 🔍 Summary: All Items Needing Human Review
 
-| ID | Location | Issue | Priority |
-|---|---|---|---|
-| A | `AuthController.cs:26-27` | `admin`/`admin123` fallback always active if config missing | 🔴 High |
-| B | `appsettings.Docker.json:7` | Real Finnhub API key possibly committed in git history | 🔴 High |
-| C | `ProductsController.cs` — `UpdateStockCount` | No validation on negative `stockCount` query param | 🟡 Medium |
-| D | `ProductService.cs` — `GetPriceLossAlertsAsync` | `LastAlertSentAt` cooldown is never written — gate always bypassed | 🟡 Medium |
-| E | `EventsController.cs` — `PublishEvent` | Unknown event types accepted without validation against `EventTypes.All` | 🟡 Medium |
-| F | `ProductService.cs:55` | Cache TTL (10 min) is hardcoded — no config key | 🟢 Low |
-| G | No health endpoint | No `/health` or `/ready` probe for Docker orchestration | 🟢 Low |
-| H | `ProductRequest.cs:7` | `TickerSymbol` is `string?` (nullable) but validator treats it as required | 🟢 Low |
-| I | `TC-BULK-02` / `TC-BULK-03` | Validation behavior for bulk insert edge cases unverified | 🟢 Low |
-| J | DLQ monitoring | No alerting on dead-letter queue depth | 🟢 Low |
-| K | `MinuteSyncCurrentPrice` | Verify setting is actually wired into Hangfire cron in Worker `Program.cs` | 🟢 Low |
+| ID  | Location                                        | Issue                                                                      | Priority |
+| --- | ----------------------------------------------- | -------------------------------------------------------------------------- | -------- |
+| A   | `AuthController.cs:26-27`                       | `admin`/`admin123` fallback always active if config missing                | 🔴 High   |
+| B   | `appsettings.Docker.json:7`                     | Real Finnhub API key possibly committed in git history                     | 🔴 High   |
+| C   | `ProductsController.cs` — `UpdateStockCount`    | No validation on negative `stockCount` query param                         | 🟡 Medium |
+| D   | `ProductService.cs` — `GetPriceLossAlertsAsync` | `LastAlertSentAt` cooldown is never written — gate always bypassed         | 🟡 Medium |
+| E   | `EventsController.cs` — `PublishEvent`          | Unknown event types accepted without validation against `EventTypes.All`   | 🟡 Medium |
+| F   | `ProductService.cs:55`                          | Cache TTL (10 min) is hardcoded — no config key                            | 🟢 Low    |
+| G   | No health endpoint                              | No `/health` or `/ready` probe for Docker orchestration                    | 🟢 Low    |
+| H   | `ProductRequest.cs:7`                           | `TickerSymbol` is `string?` (nullable) but validator treats it as required | 🟢 Low    |
+| I   | `TC-BULK-02` / `TC-BULK-03`                     | Validation behavior for bulk insert edge cases unverified                  | 🟢 Low    |
+| J   | DLQ monitoring                                  | No alerting on dead-letter queue depth                                     | 🟢 Low    |
+| K   | `MinuteSyncCurrentPrice`                        | Verify setting is actually wired into Hangfire cron in Worker `Program.cs` | 🟢 Low    |

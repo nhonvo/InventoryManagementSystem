@@ -162,15 +162,15 @@ This aligns with many .NET clients and tooling, but is a bigger change and may n
 
 This table is a suggested baseline:
 
-| HTTP | Code | When |
-|---:|---|---|
-| 400 | `InventoryAlert.BAD_REQUEST` | invalid input shape, parsing, validation failures |
-| 401 | `InventoryAlert.UNAUTHORIZED` | missing/invalid auth, invalid refresh token |
-| 403 | `InventoryAlert.FORBIDDEN` | authenticated but lacks permission |
-| 404 | `InventoryAlert.NOT_FOUND` | resource id not found (rule id, notification id, etc.) |
-| 409 | `InventoryAlert.CONFLICT` | version conflict / uniqueness / state conflict |
-| 422 | `InventoryAlert.UNPROCESSABLE_ENTITY` | business-rule violation when input is syntactically valid |
-| 500 | `InventoryAlert.INTERNAL_ERROR` (or `GENERAL_ERROR`) | unexpected server failures |
+| HTTP | Code                                                 | When                                                      |
+| ---: | ---------------------------------------------------- | --------------------------------------------------------- |
+|  400 | `InventoryAlert.BAD_REQUEST`                         | invalid input shape, parsing, validation failures         |
+|  401 | `InventoryAlert.UNAUTHORIZED`                        | missing/invalid auth, invalid refresh token               |
+|  403 | `InventoryAlert.FORBIDDEN`                           | authenticated but lacks permission                        |
+|  404 | `InventoryAlert.NOT_FOUND`                           | resource id not found (rule id, notification id, etc.)    |
+|  409 | `InventoryAlert.CONFLICT`                            | version conflict / uniqueness / state conflict            |
+|  422 | `InventoryAlert.UNPROCESSABLE_ENTITY`                | business-rule violation when input is syntactically valid |
+|  500 | `InventoryAlert.INTERNAL_ERROR` (or `GENERAL_ERROR`) | unexpected server failures                                |
 
 Recommendation:
 
