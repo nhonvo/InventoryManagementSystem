@@ -131,21 +131,23 @@ Deploy your live demo to best-in-class free tier cloud platforms:
 
 ```
 Vercel (Free)      ──►  Next.js 15 UI
-Render (Free)      ──►  .NET 10 API + Worker Container
-Supabase (Free)    ──►  PostgreSQL DB (500 MB)
+Render (Free)      ──►  .NET 10 API + Worker Container (IPv4)
+Neon (Free)        ──►  PostgreSQL DB (Native IPv4 Pooled DB)
 Upstash (Free)     ──►  Redis Cache (10,000 req/day)
 GitHub Pages (Free)──►  Docusaurus Documentation Portal
 ```
 
-### 1. Database Setup on Supabase (Postgres)
-1. Register at [supabase.com](https://supabase.com) (Free Tier).
-2. Create project `inventory-alert-demo`. Copy the connection string:
+### 1. Database Setup on Neon PostgreSQL (Recommended for Render IPv4)
+Render free tier outbound networking relies on IPv4 addresses. **Neon (`neon.tech`)** is the recommended PostgreSQL host because it provides native IPv4 pooled endpoints:
+
+1. Register at [neon.tech](https://neon.tech) (Free Tier).
+2. Create project `inventory-alert-db`. Copy the IPv4 Connection String from the Neon dashboard:
    ```
-   Host=aws-0-[REGION].pooler.supabase.com;Port=6543;Database=postgres;Username=postgres.[REF];Password=[PASS];SSL Mode=Require;Trust Server Certificate=true
+   Host=ep-xyz-name.us-east-2.aws.neon.tech;Database=neondb;Username=neondb_owner;Password=[YOUR_PASSWORD];SSL Mode=Require;Trust Server Certificate=true
    ```
-3. Run migrations against Supabase:
+3. Run EF Core migrations against your Neon database:
    ```bash
-   dotnet ef database update --project src/InventoryAlert.Infrastructure --startup-project src/InventoryAlert.Api --connection "Host=...pooler.supabase.com;Port=6543;Database=postgres;Username=postgres.[REF];Password=[PASS];SSL Mode=Require;Trust Server Certificate=true"
+   dotnet ef database update --project src/InventoryAlert.Infrastructure --startup-project src/InventoryAlert.Api --connection "Host=ep-xyz-name.us-east-2.aws.neon.tech;Database=neondb;Username=neondb_owner;Password=[YOUR_PASSWORD];SSL Mode=Require;Trust Server Certificate=true"
    ```
 
 ### 2. Cache Setup on Upstash (Redis)
@@ -157,10 +159,10 @@ GitHub Pages (Free)──►  Docusaurus Documentation Portal
 
 ### 3. API & Worker Deployment on Render
 1. Register at [render.com](https://render.com) and link your GitHub repo.
-2. Create a **New Web Service** with **Docker** environment.
+2. Create a **New Web Service** using the root **Docker** environment.
 3. Add Environment Variables:
    - `ASPNETCORE_ENVIRONMENT`: `Production`
-   - `Database__DefaultConnection`: *[Your Supabase connection string]*
+   - `Database__DefaultConnection`: *[Your Neon connection string]*
    - `Redis__ConnectionString`: *[Your Upstash connection string]*
    - `Finnhub__ApiKey`: *[Your Finnhub key]*
    - `Jwt__Key`: *[Super_Secret_32_Char_Key]*
@@ -201,21 +203,41 @@ Expected Output: `Healthy`
 
 ---
 
-## 📊 6. Admin Dashboards & Monitoring Strategy (Local & Production / Render)
+## 📊 6. Admin Dashboards & Monitoring Strategy (Local & Render Production)
 
-When running Moto (emulating SNS, SQS, DynamoDB) on Render or Docker, Render does not include built-in AWS CloudWatch / DynamoDB management dashboards. Use these solutions to inspect and monitor your services:
+When running Moto (emulating SNS, SQS, DynamoDB) or PostgreSQL on Render, Render does not include an AWS CloudWatch console. Use the following deployment strategies to monitor your system:
 
-| Dashboard / Tool | URL / Access | Purpose |
-| :--- | :--- | :--- |
-| **DynamoDB Admin Web UI** | `http://localhost:8001` (Docker) or Render Web Service (`aaronshaf/dynamodb-admin`) | Visual browser GUI to scan, query, insert, and manage DynamoDB items & tables. |
-| **Hangfire Dashboard** | `http://localhost:8081` (Worker) | Monitor background jobs, queues, execution history, and retry failed SQS/scheduled jobs. |
-| **Seq Structured Logging** | `http://localhost:5341` | Searchable structured log dashboard for API & Worker log events. |
-| **Supabase SQL & Table Editor** | Supabase Console | If using Strategy B (Postgres JSONB), inspect company & market news read models directly in SQL/UI. |
+| Dashboard / Tool | Location & Access | RAM / Resource Cost | Purpose |
+| :--- | :--- | :---: | :--- |
+| **Hangfire Dashboard** | `https://<your-render-url>/hangfire` | **$0** (Built into API process) | Monitor background job queues, execution logs, retries, and scheduled jobs. |
+| **Neon Console (Table/SQL)** | [console.neon.tech](https://console.neon.tech) | **$0** (Hosted by Neon) | Visually inspect relational tables and `JSONB` news/payload read models. |
+| **DynamoDB Admin UI** | Local CLI or 2nd Render Web Service | **$0** (Local CLI) | Web GUI to scan, query, insert, and edit DynamoDB items & tables. |
+| **Render Streaming Logs** | Render Console → Service → Logs | **$0** (Built into Render) | Stream live `stdout`/`stderr` logs from API & Worker processes. |
 
-### Adding DynamoDB Admin Container on Render:
+---
+
+### 🔍 How to Monitor DynamoDB in Detail
+
+#### Option A: Run `dynamodb-admin` Locally (Recommended for Render Free Tier — $0 Memory Overhead)
+Run `dynamodb-admin` on your computer via Node.js and point it across the internet to your live Render Moto endpoint:
+```bash
+DYNAMO_ENDPOINT=https://inventory-alert-api.onrender.com npx dynamodb-admin
+```
+Open `http://localhost:8001` in your local browser to query, scan, and manage DynamoDB tables hosted inside your Render container.
+
+#### Option B: Deploy `dynamodb-admin` as a 2nd Render Container
 Deploy a new Web Service on Render using image `aaronshaf/dynamodb-admin:latest` with env:
-- `DYNAMO_ENDPOINT`: `http://<your-moto-service-name>:5000` (or your AWS endpoint)
+- `DYNAMO_ENDPOINT`: `http://<your-api-render-service-name>:5000`
 - `AWS_REGION`: `us-east-1`
 - `AWS_ACCESS_KEY_ID`: `test`
 - `AWS_SECRET_ACCESS_KEY`: `test`
+
+#### Option C: Strategy B (Neon PostgreSQL Native JSONB Querying)
+If using PostgreSQL for read models instead of DynamoDB, navigate to [console.neon.tech](https://console.neon.tech) → **SQL Editor** and run JSONB queries directly:
+```sql
+-- Query JSONB attributes from CompanyNews
+SELECT id, symbol, payload->>'headline' AS headline, published_at 
+FROM "CompanyNews" 
+ORDER BY published_at DESC LIMIT 20;
+```
 
