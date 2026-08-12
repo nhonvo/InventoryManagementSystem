@@ -3,19 +3,19 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /src
 
 # Copy solution and project files for layer-cached restore
-COPY ["InventoryManagementSystem.sln", "./"]
-COPY ["Directory.Packages.props", "./"]
-COPY ["InventoryAlert.Domain/InventoryAlert.Domain.csproj", "InventoryAlert.Domain/"]
-COPY ["InventoryAlert.Infrastructure/InventoryAlert.Infrastructure.csproj", "InventoryAlert.Infrastructure/"]
-COPY ["InventoryAlert.Api/InventoryAlert.Api.csproj", "InventoryAlert.Api/"]
-COPY ["InventoryAlert.Worker/InventoryAlert.Worker.csproj", "InventoryAlert.Worker/"]
+COPY ["src/InventoryManagementSystem.sln", "./"]
+COPY ["src/Directory.Packages.props", "./"]
+COPY ["src/InventoryAlert.Domain/InventoryAlert.Domain.csproj", "InventoryAlert.Domain/"]
+COPY ["src/InventoryAlert.Infrastructure/InventoryAlert.Infrastructure.csproj", "InventoryAlert.Infrastructure/"]
+COPY ["src/InventoryAlert.Api/InventoryAlert.Api.csproj", "InventoryAlert.Api/"]
+COPY ["src/InventoryAlert.Worker/InventoryAlert.Worker.csproj", "InventoryAlert.Worker/"]
 
 # Restore dependencies
 RUN dotnet restore "InventoryAlert.Api/InventoryAlert.Api.csproj"
 RUN dotnet restore "InventoryAlert.Worker/InventoryAlert.Worker.csproj"
 
 # Copy full source and publish both API and Worker
-COPY . .
+COPY src/ .
 RUN dotnet publish "InventoryAlert.Api/InventoryAlert.Api.csproj" \
     -c Release \
     --no-restore \

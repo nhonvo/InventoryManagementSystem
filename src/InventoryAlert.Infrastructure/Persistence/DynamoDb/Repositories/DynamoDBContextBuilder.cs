@@ -20,3 +20,4 @@ public class DynamoDBContextBuilder
 #pragma warning restore CS0618
     }
 }
+

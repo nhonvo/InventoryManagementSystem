@@ -15,6 +15,7 @@ public class CompanyNewsDynamoRepository(IAmazonDynamoDB dynamoDbClient, ILogger
         {
             var config = new DynamoDBOperationConfig
             {
+                OverrideTableName = "inventoryalert-company-news",
                 BackwardQuery = true
             };
 
