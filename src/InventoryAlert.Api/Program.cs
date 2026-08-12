@@ -53,12 +53,17 @@ try
     // ─── Security / Auth / CORS ───────────────────────────────────────────────
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowAll",
-            policy => policy
-                .SetIsOriginAllowed(origin => true)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials());
+        options.AddDefaultPolicy(policy => policy
+            .SetIsOriginAllowed(_ => true)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
+
+        options.AddPolicy("AllowAll", policy => policy
+            .SetIsOriginAllowed(_ => true)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
     });
 
     var jwtKey = settings.Jwt.Key;
@@ -140,6 +145,9 @@ try
     });
 
     // ─── Pipeline ─────────────────────────────────────────────────────────────
+    app.UseCors("AllowAll");
+    app.UseCors();
+
     app.UseMiddleware<CorrelationIdMiddleware>();
     app.UseMiddleware<GlobalExceptionMiddleware>();
 
