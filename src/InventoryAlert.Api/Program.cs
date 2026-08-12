@@ -1,3 +1,5 @@
+using Hangfire;
+using Hangfire.PostgreSql;
 using InventoryAlert.Api.Configuration;
 using InventoryAlert.Api.Extensions;
 using InventoryAlert.Api.Middleware;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Polly;
+using Scalar.AspNetCore;
 using Serilog;
 
 // ─── Early Configuration Binding for Bootstrap ───────────────────────────────
@@ -122,6 +125,10 @@ try
     builder.Services.AddResponseCaching();
     builder.Services.AddWebApiInfrastructure(settings);
 
+    builder.Services.AddHangfire(config =>
+        config.UsePostgreSqlStorage(opts =>
+                opts.UseNpgsqlConnection(settings.Database.DefaultConnection)));
+
     var app = builder.Build();
 
     // ─── Auto-migrate & Seed Database ─────────────────────────────────────────
@@ -166,6 +173,19 @@ try
 
     // Enable Swagger UI and Scalar API reference across all environments (including Production demo)
     app.UseSwaggerWithUI();
+
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = new[] { new InventoryAlert.Api.Filters.DevDashboardAuthorizationFilter() }
+    });
+
+    app.MapScalarApiReference(options =>
+    {
+        options
+            .WithTitle("InventoryAlert API Reference")
+            .WithTheme(ScalarTheme.Mars)
+            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+    });
 
     app.ConfigureHealthCheck();
     app.MapGet("/", () => Results.Redirect("/swagger/index.html"));
