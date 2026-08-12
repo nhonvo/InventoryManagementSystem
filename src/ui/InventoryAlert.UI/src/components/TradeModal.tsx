@@ -21,7 +21,7 @@ export function TradeModal({ isOpen, onClose, symbol, onSuccess }: TradeModalPro
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isExisting, setIsExisting] = useState(false);
+  const [currentHoldings, setCurrentHoldings] = useState<number>(0);
 
   useEffect(() => {
     if (isOpen) {
@@ -36,9 +36,16 @@ export function TradeModal({ isOpen, onClose, symbol, onSuccess }: TradeModalPro
   const checkExistingPosition = async (sym: string) => {
     try {
       const data = await fetchApi(`/api/v1/portfolio/positions/${sym}`);
-      setIsExisting(!!data);
+      if (data) {
+        setIsExisting(true);
+        setCurrentHoldings(data.holdingsCount ?? data.netHoldings ?? 0);
+      } else {
+        setIsExisting(false);
+        setCurrentHoldings(0);
+      }
     } catch {
       setIsExisting(false);
+      setCurrentHoldings(0);
     }
   };
 
@@ -57,6 +64,12 @@ export function TradeModal({ isOpen, onClose, symbol, onSuccess }: TradeModalPro
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    if (formData.type === 'Sell' && formData.quantity > currentHoldings) {
+      setError(`Cannot execute Sell trade. Selling ${formData.quantity} shares exceeds current holdings (${currentHoldings}).`);
+      setLoading(false);
+      return;
+    }
 
     try {
       if (isExisting) {

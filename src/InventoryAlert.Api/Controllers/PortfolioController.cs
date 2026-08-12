@@ -53,6 +53,14 @@ public class PortfolioController(IPortfolioService portfolioService) : Controlle
         return Ok(res);
     }
 
+    [HttpGet("{symbol}/trades")]
+    public async Task<ActionResult<IEnumerable<TradeResponse>>> GetTrades(string symbol, CancellationToken ct)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var res = await _portfolioService.GetTradesBySymbolAsync(symbol, userId, ct);
+        return Ok(res);
+    }
+
     [HttpDelete("positions/{symbol}")]
     public async Task<IActionResult> RemovePosition(string symbol, CancellationToken ct)
     {

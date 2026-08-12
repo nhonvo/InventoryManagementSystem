@@ -50,6 +50,13 @@ public class AlertRuleService(IUnitOfWork unitOfWork, IStockDataService stockDat
 
     public async Task<AlertRuleResponse> UpdateAsync(Guid id, AlertRuleRequest request, string userId, CancellationToken ct)
     {
+        var normalizedSymbol = request.TickerSymbol?.Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(normalizedSymbol))
+            throw new InvalidOperationException("TickerSymbol is required.");
+
+        if (request.TargetValue <= 0)
+            throw new InvalidOperationException("TargetValue must be greater than 0.");
+
         AlertRuleResponse result = null!;
         await unitOfWork.ExecuteTransactionAsync(async () =>
         {
@@ -60,7 +67,7 @@ public class AlertRuleService(IUnitOfWork unitOfWork, IStockDataService stockDat
             }
 
             // Full replacement — all fields overwritten
-            rule.TickerSymbol = request.TickerSymbol;
+            rule.TickerSymbol = normalizedSymbol;
             rule.Condition = request.Condition;
             rule.TargetValue = request.TargetValue;
             rule.TriggerOnce = request.TriggerOnce;

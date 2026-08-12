@@ -14,6 +14,15 @@ public record TradeRequest(
     decimal UnitPrice,
     string? Notes);
 
+public record TradeResponse(
+    Guid Id,
+    string Symbol,
+    TradeType Type,
+    decimal Quantity,
+    decimal UnitPrice,
+    string? Notes,
+    DateTime TradedAt);
+
 public record PortfolioPositionResponse(
     int StockId,
     string Symbol,

@@ -38,4 +38,9 @@ public interface IPortfolioService
     /// Remove a position from portfolio (requires active rules to be deleted first).
     /// </summary>
     Task RemovePositionAsync(string symbol, string userId, CancellationToken ct);
+
+    /// <summary>
+    /// Retrieve trade history execution records for a specific symbol.
+    /// </summary>
+    Task<IEnumerable<TradeResponse>> GetTradesBySymbolAsync(string symbol, string userId, CancellationToken ct);
 }

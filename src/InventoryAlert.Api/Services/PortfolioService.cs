@@ -306,4 +306,12 @@ public class PortfolioService(
 
         }, ct);
     }
+
+    public async Task<IEnumerable<TradeResponse>> GetTradesBySymbolAsync(string symbol, string userId, CancellationToken ct)
+    {
+        var userGuid = Guid.Parse(userId);
+        var trades = await _unitOfWork.Trades.GetByUserAndSymbolAsync(userGuid, symbol, ct);
+        return trades.OrderByDescending(t => t.TradedAt).Select(t => new TradeResponse(
+            t.Id, t.TickerSymbol, t.Type, t.Quantity, t.UnitPrice, t.Notes, t.TradedAt));
+    }
 }
