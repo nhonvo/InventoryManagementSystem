@@ -30,9 +30,9 @@ RUN dotnet publish "InventoryAlert.Worker/InventoryAlert.Worker.csproj" \
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
 WORKDIR /app
 
-# Install security, diagnostic, and Python Moto server dependencies for Render deployment
+# Install security, diagnostic, AWS CLI, and Python Moto server dependencies for Render deployment
 RUN apk add --no-cache icu-libs curl gcompat libgdiplus krb5-libs python3 py3-pip && \
-    pip install --no-cache-dir --break-system-packages "moto[server]"
+    pip install --no-cache-dir --break-system-packages "moto[server]" awscli
 
 # Configure runtime for Alpine (Globalization & File Watcher)
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
@@ -41,11 +41,14 @@ ENV ASPNETCORE_URLS=http://+:8080
 
 COPY --from=build /app/publish/api ./api
 COPY --from=build /app/publish/worker ./worker
+COPY src/SolutionFolder/moto-init/init-all.sh ./init-all.sh
 
-# Startup script: Starts Moto server + Worker in background, then executes .NET Web API
+# Startup script: Starts Moto server, runs Moto initialization (SQS/SNS/DynamoDB tables), starts Worker, and runs API
 RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
     echo 'moto_server -p 5000 -H 127.0.0.1 &' >> /app/entrypoint.sh && \
-    echo 'sleep 2' >> /app/entrypoint.sh && \
+    echo 'sleep 3' >> /app/entrypoint.sh && \
+    echo 'AWS_ENDPOINT_URL=http://127.0.0.1:5000 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=us-east-1 sh /app/init-all.sh' >> /app/entrypoint.sh && \
+    echo 'sleep 1' >> /app/entrypoint.sh && \
     echo 'dotnet /app/worker/InventoryAlert.Worker.dll &' >> /app/entrypoint.sh && \
     echo 'sleep 1' >> /app/entrypoint.sh && \
     echo 'exec dotnet /app/api/InventoryAlert.Api.dll' >> /app/entrypoint.sh && \
