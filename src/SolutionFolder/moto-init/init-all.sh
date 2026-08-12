@@ -52,7 +52,6 @@ if aws sqs get-queue-url --queue-name event-queue --endpoint-url "$ENDPOINT_URL"
     echo "  [SKIP] event-queue already exists."
 else
     echo "  [CREATE] event-queue..."
-    # Explicit JSON attributes for redrive policy to be robust
     aws sqs create-queue \
         --queue-name event-queue \
         --attributes "{\"VisibilityTimeout\":\"30\",\"ReceiveMessageWaitTimeSeconds\":\"5\",\"RedrivePolicy\":\"{\\\"deadLetterTargetArn\\\":\\\"$DLQ_ARN\\\",\\\"maxReceiveCount\\\":\\\"3\\\"}\"}" \

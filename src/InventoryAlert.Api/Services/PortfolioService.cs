@@ -221,11 +221,24 @@ public class PortfolioService(
     private async Task OpenPositionAsyncInternal(CreatePositionRequest request, string userId, CancellationToken ct)
     {
         var userGuid = Guid.Parse(userId);
+        var symbol = request.TickerSymbol.ToUpperInvariant();
 
-        var listing = await _unitOfWork.StockListings.FindBySymbolAsync(request.TickerSymbol, ct);
+        var listing = await _unitOfWork.StockListings.FindBySymbolAsync(symbol, ct);
         if (listing == null)
         {
-            throw new InvalidOperationException($"Symbol {request.TickerSymbol} must be resolved before opening a position.");
+            await _stockDataService.GetProfileAsync(symbol, ct);
+            listing = await _unitOfWork.StockListings.FindBySymbolAsync(symbol, ct);
+        }
+
+        if (listing == null)
+        {
+            listing = new StockListing
+            {
+                TickerSymbol = symbol,
+                Name = symbol,
+                Currency = "USD"
+            };
+            await _unitOfWork.StockListings.AddAsync(listing, ct);
         }
 
         var existingWatch = await _unitOfWork.WatchlistItems.GetByUserAndSymbolAsync(userId, request.TickerSymbol, ct);

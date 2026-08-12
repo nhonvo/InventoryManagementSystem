@@ -21,14 +21,26 @@ export function TradeModal({ isOpen, onClose, symbol, onSuccess }: TradeModalPro
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isExisting, setIsExisting] = useState(false);
   const [currentHoldings, setCurrentHoldings] = useState<number>(0);
 
   useEffect(() => {
     if (isOpen) {
-      setFormData(prev => ({ ...prev, tickerSymbol: symbol, type: 'Buy' }));
+      setFormData({
+        tickerSymbol: symbol,
+        type: 'Buy',
+        quantity: 1,
+        unitPrice: 0,
+        notes: '',
+        tradedAt: new Date().toISOString().split('T')[0]
+      });
+      setError("");
       if (symbol) {
         checkExistingPosition(symbol);
         fetchCurrentPrice(symbol);
+      } else {
+        setIsExisting(false);
+        setCurrentHoldings(0);
       }
     }
   }, [isOpen, symbol]);

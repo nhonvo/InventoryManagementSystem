@@ -14,7 +14,7 @@ COPY ["src/InventoryAlert.Worker/InventoryAlert.Worker.csproj", "InventoryAlert.
 RUN dotnet restore "InventoryAlert.Api/InventoryAlert.Api.csproj"
 RUN dotnet restore "InventoryAlert.Worker/InventoryAlert.Worker.csproj"
 
-# Copy full source and publish both API and Worker
+# Copy full source and publish API and Worker
 COPY src/ .
 RUN dotnet publish "InventoryAlert.Api/InventoryAlert.Api.csproj" \
     -c Release \
@@ -30,7 +30,7 @@ RUN dotnet publish "InventoryAlert.Worker/InventoryAlert.Worker.csproj" \
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
 WORKDIR /app
 
-# Install security, diagnostic, and Python Moto server dependencies
+# Install security, diagnostic, and Python Moto server dependencies for Render deployment
 RUN apk add --no-cache icu-libs curl gcompat libgdiplus krb5-libs python3 py3-pip && \
     pip install --no-cache-dir --break-system-packages "moto[server]"
 

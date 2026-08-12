@@ -122,13 +122,13 @@ export default function MarketOverview() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 py-2">
         <div>
-          <h1 className="text-5xl font-semibold tracking-tight uppercase">Market Pulse</h1>
-          <p className="text-zinc-500 font-medium mt-2 text-lg">Global financial overview and real-time news stream.</p>
+          <h1 className="text-5xl font-semibold tracking-tight uppercase text-zinc-900 dark:text-white">Market Pulse</h1>
+          <p className="text-zinc-500 dark:text-zinc-400 font-medium mt-2 text-lg">Global financial overview and real-time news stream.</p>
         </div>
         <div className="flex gap-4">
           <button
             onClick={() => loadMarketData(newsCategory)}
-            className="p-3 bg-zinc-900 border border-white/5 rounded-2xl text-zinc-400 hover:text-white hover:border-white/10 transition-all active:scale-95"
+            className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 rounded-2xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-white/10 transition-all active:scale-95 shadow-sm dark:shadow-none"
             title="Refresh View"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -136,10 +136,10 @@ export default function MarketOverview() {
             </svg>
           </button>
           <div
-            className={`flex items-center gap-3 px-6 py-3 rounded-2xl border font-bold text-sm tracking-tight transition-all shadow-lg ${
+            className={`flex items-center gap-3 px-6 py-3 rounded-2xl border font-bold text-sm tracking-tight transition-all shadow-sm ${
               usStatus?.isOpen
-                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                : "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400"
             }`}
           >
             <span
@@ -160,21 +160,21 @@ export default function MarketOverview() {
           {statuses.slice(0, 4).map((s) => (
             <div
               key={s.exchange}
-              className={`rounded-3xl p-6 border relative overflow-hidden group transition-colors ${
+              className={`rounded-3xl p-6 border relative overflow-hidden group transition-colors shadow-sm dark:shadow-none ${
                 s.isOpen
                   ? "bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40"
-                  : "bg-zinc-900 border-white/5 hover:border-white/10"
+                  : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-white/5 hover:border-zinc-300 dark:hover:border-white/10"
               }`}
             >
-              <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-1">{s.exchange}</p>
-              <p className={`text-xl font-semibold mb-1 ${s.isOpen ? "text-emerald-400" : "text-zinc-300"}`}>
+              <p className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-1">{s.exchange}</p>
+              <p className={`text-xl font-semibold mb-1 ${s.isOpen ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-800 dark:text-zinc-300"}`}>
                 {s.isOpen ? "OPEN" : "CLOSED"}
               </p>
-              <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">
+              <p className="text-xs text-zinc-500 dark:text-zinc-500 font-medium uppercase tracking-wider">
                 {s.session} · {s.timezone}
               </p>
               {s.holiday && (
-                <p className="text-xs text-amber-400 font-semibold mt-1 uppercase tracking-wider">
+                <p className="text-xs text-amber-500 dark:text-amber-400 font-semibold mt-1 uppercase tracking-wider">
                   🎌 {s.holiday}
                 </p>
               )}
@@ -187,7 +187,7 @@ export default function MarketOverview() {
         {/* Toast Notification */}
         {toast && (
             <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300 border backdrop-blur-xl ${
-                toast.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                toast.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
             }`}>
                 <div className="flex items-center gap-3">
                     {toast.type === 'success' ? (
@@ -201,17 +201,17 @@ export default function MarketOverview() {
         )}
 
         {/* News Feed */}
-        <div className="lg:col-span-2 bg-zinc-900 border border-white/5 rounded-3xl flex flex-col overflow-hidden shadow-2xl">
-          <div className="p-6 border-b border-white/5 bg-black/20 flex items-center justify-between flex-wrap gap-3">
+        <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 rounded-3xl flex flex-col overflow-hidden shadow-sm dark:shadow-2xl">
+          <div className="p-6 border-b border-zinc-200 dark:border-white/5 bg-zinc-50/50 dark:bg-black/20 flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-4">
-                <h3 className="font-semibold text-xl tracking-tight uppercase">Headlines</h3>
+                <h3 className="font-semibold text-xl tracking-tight uppercase text-zinc-900 dark:text-white">Headlines</h3>
                 <button
                     onClick={syncNews}
                     disabled={syncingNews}
                     className={`flex items-center gap-2 px-4 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
                         syncingNews 
-                        ? 'bg-blue-600/10 border-blue-600/20 text-blue-400 cursor-not-allowed' 
-                        : 'bg-zinc-800 border-white/5 text-zinc-400 hover:text-white hover:border-white/10 hover:bg-zinc-700 active:scale-95'
+                        ? 'bg-blue-600/10 border-blue-600/20 text-blue-500 dark:text-blue-400 cursor-not-allowed' 
+                        : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-white/5 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-white/10 hover:bg-zinc-200 dark:hover:bg-zinc-700 active:scale-95'
                     }`}
                 >
                     <svg className={`w-3.5 h-3.5 ${syncingNews ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -221,13 +221,13 @@ export default function MarketOverview() {
                 </button>
             </div>
             {/* Spec §5.4: category filter */}
-            <div className="flex gap-1 p-1 bg-zinc-800 rounded-xl">
+            <div className="flex gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
               {NEWS_CATEGORIES.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setNewsCategory(cat)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
-                    newsCategory === cat ? "bg-blue-600 text-white" : "text-zinc-400 hover:text-white"
+                    newsCategory === cat ? "bg-blue-600 text-white" : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
                   }`}
                 >
                   {cat}
@@ -239,7 +239,7 @@ export default function MarketOverview() {
             {loading ? (
               <div className="p-6 space-y-6">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-24 bg-zinc-800/50 animate-pulse rounded-2xl" />
+                  <div key={i} className="h-24 bg-zinc-100 dark:bg-zinc-800/50 animate-pulse rounded-2xl" />
                 ))}
               </div>
             ) : news.length === 0 ? (
@@ -253,9 +253,9 @@ export default function MarketOverview() {
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex gap-6 p-6 rounded-2xl hover:bg-white/[0.02] transition-all group"
+                  className="flex gap-6 p-6 rounded-2xl hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-all group border-b border-zinc-100 dark:border-white/5 last:border-0"
                 >
-                  <div className="w-24 h-24 bg-zinc-800 rounded-2xl shrink-0 overflow-hidden relative shadow-lg">
+                  <div className="w-24 h-24 bg-zinc-100 dark:bg-zinc-800 rounded-2xl shrink-0 overflow-hidden relative shadow-md dark:shadow-lg">
                     {item.image ? (
                       <img
                         src={item.image}
@@ -263,19 +263,19 @@ export default function MarketOverview() {
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full bg-linear-to-br from-zinc-700 to-zinc-800 flex items-center justify-center text-zinc-600 text-xs font-bold">
+                      <div className="w-full h-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800 flex items-center justify-center text-zinc-500 dark:text-zinc-400 text-xs font-bold">
                         NEWS
                       </div>
                     )}
                   </div>
                   <div className="flex flex-col justify-center">
-                    <p className="font-semibold text-lg leading-tight mb-2 group-hover:text-blue-400 transition-colors line-clamp-2">
+                    <p className="font-semibold text-lg leading-tight mb-2 text-zinc-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                       {item.headline}
                     </p>
-                    <p className="text-sm text-zinc-500 line-clamp-2 mb-3 font-medium">{item.summary}</p>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-3 font-medium">{item.summary}</p>
                     <div className="flex gap-3 text-xs items-center text-zinc-500 font-semibold uppercase tracking-wider">
-                      <span className="text-blue-500">{item.source}</span>
-                      <span className="w-1 h-1 bg-zinc-700 rounded-full" />
+                      <span className="text-blue-600 dark:text-blue-400">{item.source}</span>
+                      <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full" />
                       <span>{new Date(item.dateTime * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                     </div>
                   </div>
@@ -286,7 +286,7 @@ export default function MarketOverview() {
           
           {/* Pagination */}
           {news.length > 0 && (
-            <div className="border-t border-white/5 bg-black/10">
+            <div className="border-t border-zinc-200 dark:border-white/5 bg-zinc-50/50 dark:bg-black/10">
               <Pagination
                 currentPage={newsPage}
                 hasNextPage={news.length === newsPageSize}
@@ -298,15 +298,15 @@ export default function MarketOverview() {
         </div>
 
         {/* Right panel: Earnings Calendar + Exchange Status sidebar */}
-        <div className="bg-zinc-900 border border-white/5 rounded-3xl flex flex-col overflow-hidden shadow-2xl">
-          <div className="p-6 border-b border-white/5 bg-black/20">
-            <h3 className="font-semibold text-xl tracking-tight uppercase">Upcoming Earnings</h3>
-            <p className="text-zinc-500 text-xs font-medium mt-1 uppercase tracking-wider">Next 30 days</p>
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 rounded-3xl flex flex-col overflow-hidden shadow-sm dark:shadow-2xl">
+          <div className="p-6 border-b border-zinc-200 dark:border-white/5 bg-zinc-50/50 dark:bg-black/20">
+            <h3 className="font-semibold text-xl tracking-tight uppercase text-zinc-900 dark:text-white">Upcoming Earnings</h3>
+            <p className="text-zinc-500 dark:text-zinc-400 text-xs font-medium mt-1 uppercase tracking-wider">Next 30 days</p>
           </div>
           <div className="p-6 space-y-4 flex-1 overflow-auto">
             {loading ? (
               [1, 2, 3].map((i) => (
-                <div key={i} className="h-14 bg-zinc-800/50 animate-pulse rounded-xl" />
+                <div key={i} className="h-14 bg-zinc-100 dark:bg-zinc-800/50 animate-pulse rounded-xl" />
               ))
             ) : earningsCalendar.length === 0 ? (
               <p className="text-zinc-500 text-sm font-medium text-center py-8">
@@ -318,30 +318,30 @@ export default function MarketOverview() {
                 return (
                   <div key={`${e.symbol}-${e.date}`} className="group cursor-pointer">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="font-semibold text-lg text-white group-hover:text-blue-400 transition-colors uppercase tracking-tight">
+                      <span className="font-semibold text-lg text-zinc-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors uppercase tracking-tight">
                         {e.symbol}
                       </span>
                       <span
                         className={`text-xs font-semibold px-2 py-0.5 rounded tracking-wider uppercase ${
                           isReleased
-                            ? "bg-emerald-500/10 text-emerald-400"
-                            : "bg-blue-500/10 text-blue-400"
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                         }`}
                       >
                         {isReleased ? "Released" : e.date}
                       </span>
                     </div>
                     {e.epsEstimate != null && (
-                      <p className="text-xs text-zinc-500 font-medium">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
                         EPS Est: ${e.epsEstimate.toFixed(2)}
                         {isReleased && (
-                          <span className={`ml-2 font-semibold ${(e.epsActual ?? 0) >= (e.epsEstimate ?? 0) ? "text-emerald-400" : "text-rose-400"}`}>
+                          <span className={`ml-2 font-semibold ${(e.epsActual ?? 0) >= (e.epsEstimate ?? 0) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                             → Actual: ${e.epsActual?.toFixed(2)}
                           </span>
                         )}
                       </p>
                     )}
-                    <div className="h-px bg-white/5 mt-3" />
+                    <div className="h-px bg-zinc-200 dark:bg-white/5 mt-3" />
                   </div>
                 );
               })
@@ -350,15 +350,15 @@ export default function MarketOverview() {
 
           {/* Exchange status mini-section */}
           {usStatus && (
-            <div className="p-6 border-t border-white/5 space-y-3">
-              <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wide mb-3">Primary Exchange</p>
+            <div className="p-6 border-t border-zinc-200 dark:border-white/5 space-y-3">
+              <p className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold uppercase tracking-wide mb-3">Primary Exchange</p>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-zinc-400 uppercase tracking-tight">Timezone</span>
-                <span className="text-sm font-semibold text-white">{usStatus.timezone}</span>
+                <span className="text-sm font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-tight">Timezone</span>
+                <span className="text-sm font-semibold text-zinc-900 dark:text-white">{usStatus.timezone}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-zinc-400 uppercase tracking-tight">Session</span>
-                <span className="text-sm font-semibold text-white uppercase">{usStatus.session}</span>
+                <span className="text-sm font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-tight">Session</span>
+                <span className="text-sm font-semibold text-zinc-900 dark:text-white uppercase">{usStatus.session}</span>
               </div>
             </div>
           )}

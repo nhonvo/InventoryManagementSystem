@@ -113,6 +113,12 @@ export default function PortfolioPage() {
         </button>
       </div>
 
+      {error && (
+        <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl text-sm font-semibold text-center">
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 p-8 rounded-3xl shadow-sm dark:shadow-none">
           <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-2">Total Market Value</p>

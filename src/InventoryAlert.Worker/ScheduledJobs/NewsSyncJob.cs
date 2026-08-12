@@ -3,11 +3,15 @@ using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.Worker.Configuration;
 using InventoryAlert.Worker.Models;
 
+using Hangfire;
+
 namespace InventoryAlert.Worker.ScheduledJobs;
 
 /// <summary>
 /// Consolidated job for fetching both Global Market News and Symbol-Specific Company News.
 /// </summary>
+[DisableConcurrentExecution(timeoutInSeconds: 600)]
+[AutomaticRetry(Attempts = 3, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
 public class NewsSyncJob(
     IUnitOfWork unitOfWork,
     IFinnhubClient finnhub,

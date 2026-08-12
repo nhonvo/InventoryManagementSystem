@@ -2,6 +2,7 @@ using System.Text.Json;
 using InventoryAlert.Domain.Configuration;
 using InventoryAlert.Domain.Constants;
 using InventoryAlert.Domain.DTOs;
+using InventoryAlert.Domain.Entities.Dynamodb;
 using InventoryAlert.Domain.Entities.Postgres;
 using InventoryAlert.Domain.Interfaces;
 using StackExchange.Redis;
@@ -176,7 +177,42 @@ public class StockDataService(
 
     public async Task<IEnumerable<NewsResponse>> GetCompanyNewsAsync(string symbol, int page = 1, int pageSize = 10, CancellationToken ct = default)
     {
-        var entries = await companyNewsRepo.GetLatestBySymbolAsync(symbol.ToUpperInvariant(), page * pageSize, ct);
+        var normalized = symbol.ToUpperInvariant();
+        var entries = await companyNewsRepo.GetLatestBySymbolAsync(normalized, page * pageSize, ct);
+
+        if (!entries.Any())
+        {
+            try
+            {
+                var from = DateTime.UtcNow.AddDays(-7).ToString("yyyy-MM-dd");
+                var to = DateTime.UtcNow.ToString("yyyy-MM-dd");
+                var finnhubNews = await finnhub.GetCompanyNewsAsync(normalized, from, to, ct);
+                if (finnhubNews.Any())
+                {
+                    var newEntries = finnhubNews.Select(n => new CompanyNewsDynamoEntry
+                    {
+                        PK = $"SYMBOL#{normalized}",
+                        SK = n.Datetime.ToString(),
+                        NewsId = n.Id,
+                        Symbol = normalized,
+                        Headline = n.Headline ?? string.Empty,
+                        Summary = n.Summary ?? string.Empty,
+                        Source = n.Source ?? "Finnhub",
+                        Url = n.Url ?? string.Empty,
+                        ImageUrl = n.Image ?? string.Empty,
+                        Timestamp = n.Datetime
+                    }).ToList();
+
+                    entries = newEntries;
+                    try { await companyNewsRepo.BatchSaveAsync(newEntries, ct); } catch {}
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[News] Failed to fetch company news fallback for {Symbol}", normalized);
+            }
+        }
+
         return entries
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -189,6 +225,38 @@ public class StockDataService(
     public async Task<IEnumerable<NewsResponse>> GetMarketNewsAsync(string category, int page, int pageSize = 20, CancellationToken ct = default)
     {
         var entries = await marketNewsRepo.QueryAsync($"CATEGORY#{category.ToUpperInvariant()}", ct);
+
+        if (!entries.Any())
+        {
+            try
+            {
+                var finnhubNews = await finnhub.GetMarketNewsAsync(category, ct);
+                if (finnhubNews.Any())
+                {
+                    var newEntries = finnhubNews.Select(n => new MarketNewsDynamoEntry
+                    {
+                        PK = $"CATEGORY#{category.ToUpperInvariant()}",
+                        SK = n.Id.ToString(),
+                        NewsId = n.Id,
+                        Category = category.ToLowerInvariant(),
+                        Headline = n.Headline ?? string.Empty,
+                        Summary = n.Summary ?? string.Empty,
+                        Source = n.Source ?? "Finnhub",
+                        Url = n.Url ?? string.Empty,
+                        ImageUrl = n.Image ?? string.Empty,
+                        PublishedAt = DateTimeOffset.FromUnixTimeSeconds(n.Datetime).UtcDateTime.ToString("o")
+                    }).ToList();
+
+                    entries = newEntries;
+                    try { await marketNewsRepo.BatchSaveAsync(newEntries, ct); } catch {}
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[News] Failed to fetch market news fallback for {Category}", category);
+            }
+        }
+
         return entries
             .OrderByDescending(x => x.PublishedAt)
             .Skip((page - 1) * pageSize)
@@ -281,11 +349,6 @@ public class StockDataService(
 
         // 2. Parallel API call
         var profile = await finnhub.GetProfileAsync(normalized, ct);
-        if (profile == null)
-        {
-            _logger.LogWarning("[Discovery] Failed: {Symbol} not found in external API.", normalized);
-            return null;
-        }
 
         // 3. Save (Synchronized with double-check)
         return await unitOfWork.ExecuteSynchronizedAsync(async () =>
@@ -293,18 +356,20 @@ public class StockDataService(
             var existing = await unitOfWork.StockListings.FindBySymbolAsync(normalized, ct);
             if (existing != null) return existing;
 
-            _logger.LogInformation("[Discovery] Success: Saving new StockListing: {Symbol} ({Name})", normalized, profile.Name);
+            var name = profile?.Name ?? normalized;
+            _logger.LogInformation("[Discovery] Success: Saving new StockListing: {Symbol} ({Name})", normalized, name);
 
             var newListing = new StockListing
             {
                 TickerSymbol = normalized.Length > 10 ? normalized[..10] : normalized,
-                Name = profile.Name?.Length > 200 ? profile.Name[..200] : (profile.Name ?? normalized),
-                Exchange = profile.Exchange?.Length > 50 ? profile.Exchange[..50] : profile.Exchange,
-                Currency = profile.Currency?.Length > 10 ? profile.Currency[..10] : profile.Currency,
-                Country = profile.Country?.Length > 10 ? profile.Country[..10] : profile.Country,
-                Industry = profile.Industry?.Length > 100 ? profile.Industry[..100] : profile.Industry,
-                Logo = profile.Logo?.Length > 1000 ? profile.Logo[..1000] : profile.Logo,
-                WebUrl = profile.WebUrl?.Length > 1000 ? profile.WebUrl[..1000] : profile.WebUrl
+                Name = name.Length > 200 ? name[..200] : name,
+                Exchange = profile?.Exchange != null && profile.Exchange.Length > 50 ? profile.Exchange[..50] : (profile?.Exchange ?? "OTHER"),
+                Currency = profile?.Currency != null && profile.Currency.Length > 10 ? profile.Currency[..10] : (profile?.Currency ?? "USD"),
+                Country = profile?.Country != null && profile.Country.Length > 10 ? profile.Country[..10] : (profile?.Country ?? "US"),
+                Industry = profile?.Industry != null && profile.Industry.Length > 100 ? profile.Industry[..100] : (profile?.Industry ?? "General"),
+                MarketCap = profile?.MarketCap,
+                Logo = profile?.Logo != null && profile.Logo.Length > 1000 ? profile.Logo[..1000] : profile?.Logo,
+                WebUrl = profile?.WebUrl != null && profile.WebUrl.Length > 1000 ? profile.WebUrl[..1000] : profile?.WebUrl
             };
 
             await unitOfWork.StockListings.AddAsync(newListing, ct);

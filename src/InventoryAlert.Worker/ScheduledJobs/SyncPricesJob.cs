@@ -5,8 +5,12 @@ using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.Worker.Configuration;
 using InventoryAlert.Worker.Models;
 
+using Hangfire;
+
 namespace InventoryAlert.Worker.ScheduledJobs;
 
+[DisableConcurrentExecution(timeoutInSeconds: 300)]
+[AutomaticRetry(Attempts = 3, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
 public class SyncPricesJob(
     IUnitOfWork unitOfWork,
     IFinnhubClient finnhub,

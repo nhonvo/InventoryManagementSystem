@@ -25,6 +25,17 @@ interface SymbolSearchResult {
   exchange: string;
 }
 
+function formatMarketCap(val: number | null | undefined): string {
+  if (!val || val <= 0) return "N/A";
+  if (val >= 1000000) {
+    return `$${(val / 1000000).toFixed(2)}T`;
+  }
+  if (val >= 1000) {
+    return `$${(val / 1000).toFixed(1)}B`;
+  }
+  return `$${val.toFixed(1)}M`;
+}
+
 export default function StockCatalog() {
   const [stocks, setStocks] = useState<StockListing[]>([]);
   const [searchResults, setSearchResults] = useState<SymbolSearchResult[]>([]);
@@ -181,7 +192,7 @@ export default function StockCatalog() {
                     </td>
                     <td className="px-6 py-5 text-xs font-medium text-zinc-500 uppercase">{s.industry}</td>
                     <td className="px-6 py-5 text-right font-semibold text-zinc-700 dark:text-zinc-300">
-                      ${((s.marketCap || 0) / 1000).toFixed(1)}B
+                      {formatMarketCap(s.marketCap)}
                     </td>
                     <td className="px-6 py-5 text-center">
                       <Link

@@ -1,8 +1,12 @@
 using InventoryAlert.Domain.Interfaces;
 using InventoryAlert.Worker.Models;
 
+using Hangfire;
+
 namespace InventoryAlert.Worker.ScheduledJobs;
 
+[DisableConcurrentExecution(timeoutInSeconds: 300)]
+[AutomaticRetry(Attempts = 3, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
 public class CleanupPriceHistoryJob(
     IUnitOfWork unitOfWork,
     ILogger<CleanupPriceHistoryJob> logger)
