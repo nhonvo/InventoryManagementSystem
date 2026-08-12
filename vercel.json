@@ -1,6 +1,0 @@
-{
-  "framework": "nextjs",
-  "buildCommand": "cd src/ui/InventoryAlert.UI && npm run build",
-  "outputDirectory": "src/ui/InventoryAlert.UI/.next",
-  "installCommand": "cd src/ui/InventoryAlert.UI && npm install"
-}
