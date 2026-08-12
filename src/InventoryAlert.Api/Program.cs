@@ -174,7 +174,7 @@ try
     // Enable Swagger UI and Scalar API reference across all environments (including Production demo)
     app.UseSwaggerWithUI();
 
-    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    app.MapHangfireDashboard("/hangfire", new DashboardOptions
     {
         Authorization = new[] { new InventoryAlert.Api.Filters.DevDashboardAuthorizationFilter() }
     });
