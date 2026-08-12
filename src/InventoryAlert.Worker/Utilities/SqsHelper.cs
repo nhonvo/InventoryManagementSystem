@@ -30,6 +30,20 @@ public class SqsHelper : ISqsHelper
             var response = await _sqsClient.ReceiveMessageAsync(request, ct);
             return response.Messages ?? [];
         }
+        catch (QueueDoesNotExistException)
+        {
+            _logger.LogInformation("[SqsHelper] Queue {QueueUrl} does not exist in Moto. Auto-creating queue...", queueUrl);
+            try
+            {
+                var queueName = queueUrl.Substring(queueUrl.LastIndexOf('/') + 1);
+                await _sqsClient.CreateQueueAsync(queueName, ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[SqsHelper] Failed to auto-create SQS queue {QueueUrl}.", queueUrl);
+            }
+            return [];
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error receiving messages from SQS: {QueueUrl}", queueUrl);
