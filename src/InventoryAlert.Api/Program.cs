@@ -53,25 +53,12 @@ try
     // ─── Security / Auth / CORS ───────────────────────────────────────────────
     builder.Services.AddCors(options =>
     {
-        if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Docker"))
-        {
-            options.AddPolicy("AllowAll",
-                policy => policy
-                    .SetIsOriginAllowed(origin => true)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials());
-        }
-        else
-        {
-            var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? [];
-            options.AddPolicy("AllowAll",
-                policy => policy
-                    .WithOrigins(allowedOrigins)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials());
-        }
+        options.AddPolicy("AllowAll",
+            policy => policy
+                .SetIsOriginAllowed(origin => true)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials());
     });
 
     var jwtKey = settings.Jwt.Key;
