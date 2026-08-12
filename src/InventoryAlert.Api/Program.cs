@@ -172,10 +172,8 @@ try
 
     app.UseResponseCaching();
 
-    if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))
-    {
-        app.UseSwaggerWithUI();
-    }
+    // Enable Swagger UI and Scalar API reference across all environments (including Production demo)
+    app.UseSwaggerWithUI();
 
     app.ConfigureHealthCheck();
     app.MapControllers();
