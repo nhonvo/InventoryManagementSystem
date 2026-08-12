@@ -179,15 +179,6 @@ try
         Authorization = new[] { new InventoryAlert.Api.Filters.DevDashboardAuthorizationFilter() }
     });
 
-    app.MapScalarApiReference(options =>
-    {
-        options
-            .WithTitle("InventoryAlert API Reference")
-            .WithTheme(ScalarTheme.Mars)
-            .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json")
-            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-    });
-
     app.ConfigureHealthCheck();
     app.MapGet("/", () => Results.Redirect("/swagger/index.html"));
     app.MapControllers();
