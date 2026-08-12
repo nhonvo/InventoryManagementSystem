@@ -34,8 +34,9 @@ WORKDIR /app
 RUN apk add --no-cache icu-libs curl gcompat libgdiplus krb5-libs python3 py3-pip && \
     pip install --no-cache-dir --break-system-packages "moto[server]"
 
-# Configure runtime for Alpine (Globalization)
+# Configure runtime for Alpine (Globalization & File Watcher)
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+ENV DOTNET_USE_POLLING_FILE_WATCHER=true
 ENV ASPNETCORE_URLS=http://+:8080
 
 COPY --from=build /app/publish/api ./api
