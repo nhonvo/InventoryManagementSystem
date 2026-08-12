@@ -117,6 +117,7 @@ try
             options.Configuration.ChannelPrefix = StackExchange.Redis.RedisChannel.Literal("InventoryAlert_SignalR");
         });
 
+    builder.Services.AddHttpClient();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerOpenAPI(settings);
     builder.Services.SetupMvc();
@@ -177,6 +178,42 @@ try
     app.MapHangfireDashboard("/hangfire", new DashboardOptions
     {
         Authorization = new[] { new InventoryAlert.Api.Filters.DevDashboardAuthorizationFilter() }
+    });
+
+    // Proxy /aws/* requests to internal Moto server on port 5000 (allows dynamodb-admin or AWS CLI remote management)
+    app.Map("/aws/{**catch-all}", async (HttpContext context, IHttpClientFactory clientFactory) =>
+    {
+        var client = clientFactory.CreateClient();
+        var catchAll = context.Request.RouteValues["catch-all"];
+        var targetUri = new Uri($"http://127.0.0.1:5000/{catchAll}{context.Request.QueryString}");
+
+        var requestMessage = new HttpRequestMessage(new HttpMethod(context.Request.Method), targetUri);
+        foreach (var header in context.Request.Headers)
+        {
+            if (header.Key.StartsWith("Content-", StringComparison.OrdinalIgnoreCase) || header.Key.Equals("Host", StringComparison.OrdinalIgnoreCase)) continue;
+            requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+        }
+
+        if (context.Request.ContentLength > 0 || !string.IsNullOrEmpty(context.Request.ContentType))
+        {
+            requestMessage.Content = new StreamContent(context.Request.Body);
+            if (!string.IsNullOrEmpty(context.Request.ContentType) && System.Net.Http.Headers.MediaTypeHeaderValue.TryParse(context.Request.ContentType, out var contentType))
+            {
+                requestMessage.Content.Headers.ContentType = contentType;
+            }
+        }
+
+        using var responseMessage = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, context.RequestAborted);
+        context.Response.StatusCode = (int)responseMessage.StatusCode;
+        foreach (var header in responseMessage.Headers)
+        {
+            context.Response.Headers[header.Key] = header.Value.ToArray();
+        }
+        foreach (var header in responseMessage.Content.Headers)
+        {
+            context.Response.Headers[header.Key] = header.Value.ToArray();
+        }
+        await responseMessage.Content.CopyToAsync(context.Response.Body);
     });
 
     app.MapScalarApiReference(options =>
