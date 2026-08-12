@@ -218,10 +218,12 @@ When running Moto (emulating SNS, SQS, DynamoDB) or PostgreSQL on Render, Render
 
 ### 🔍 How to Monitor DynamoDB in Detail
 
-#### Option A: Run `dynamodb-admin` Locally (Recommended for Render Free Tier — $0 Memory Overhead)
-Run `dynamodb-admin` on your computer via Node.js and point it across the internet to your live Render Moto endpoint:
+#### Option A: Run `dynamodb-admin` Locally via API Proxy (Recommended — $0 RAM Overhead)
+Since Render free tier containers only expose port `8080` publicly, the API automatically reverse-proxies requests hitting `/aws/*` to Moto on internal port `5000`.
+
+Run `dynamodb-admin` on your computer and point it to your live Render API proxy endpoint:
 ```bash
-DYNAMO_ENDPOINT=https://inventory-alert-api.onrender.com npx dynamodb-admin
+DYNAMO_ENDPOINT=https://inventory-alert-api.onrender.com/aws npx dynamodb-admin
 ```
 Open `http://localhost:8001` in your local browser to query, scan, and manage DynamoDB tables hosted inside your Render container.
 
