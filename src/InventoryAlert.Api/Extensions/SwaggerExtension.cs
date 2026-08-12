@@ -78,18 +78,6 @@ public static class SwaggerExtension
             setupAction.SwaggerEndpoint("/swagger/v1/swagger.json", $"{ApplicationConstants.Name} API v1");
             setupAction.RoutePrefix = "swagger";
         });
-
-        if (app is IEndpointRouteBuilder endpoints)
-        {
-            endpoints.MapScalarApiReference(options =>
-            {
-                options
-                    .WithTitle($"{ApplicationConstants.Name} API Reference")
-                    .WithTheme(ScalarTheme.Mars)
-                    .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json")
-                    .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-            });
-        }
     }
 }
 
