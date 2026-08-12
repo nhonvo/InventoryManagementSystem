@@ -31,6 +31,7 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+    builder.WebHost.UseUrls("http://127.0.0.1:8081");
 
     // ─── Serilog ──────────────────────────────────────────────────────────────
     builder.Host.UseSerilog((context, services, configuration) =>
