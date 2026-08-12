@@ -176,6 +176,7 @@ try
     app.UseSwaggerWithUI();
 
     app.ConfigureHealthCheck();
+    app.MapGet("/", () => Results.Redirect("/swagger/index.html"));
     app.MapControllers();
     app.MapHub<InventoryAlert.Infrastructure.Hubs.NotificationHub>(InventoryAlert.Domain.Interfaces.SignalRConstants.NotificationHubRoute);
     app.Run();

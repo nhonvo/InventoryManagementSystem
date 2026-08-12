@@ -42,6 +42,28 @@ public static class HealthCheckExtensions
             }
         });
 
+        app.UseHealthChecks("/healthz", new HealthCheckOptions
+        {
+            Predicate = _ => true,
+            ResponseWriter = async (context, report) =>
+            {
+                context.Response.ContentType = "application/json";
+                var response = new
+                {
+                    status = report.Status.ToString(),
+                    checks = report.Entries.Select(entry => new
+                    {
+                        name = entry.Key,
+                        status = entry.Value.Status.ToString(),
+                        description = entry.Value.Description,
+                        duration = entry.Value.Duration
+                    }),
+                    totalDuration = report.TotalDuration
+                };
+                await context.Response.WriteAsJsonAsync(response);
+            }
+        });
+
         // Additional endpoint for external synthetic checks
         app.UseHealthChecks("/synthetic-check", new HealthCheckOptions
         {
