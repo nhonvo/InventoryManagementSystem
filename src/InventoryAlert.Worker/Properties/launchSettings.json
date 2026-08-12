@@ -1,9 +1,10 @@
-﻿{
+{
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "InventoryAlert.Worker": {
+    "http": {
       "commandName": "Project",
       "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:8081",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
       }

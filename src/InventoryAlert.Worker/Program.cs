@@ -31,7 +31,6 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
-    builder.WebHost.UseUrls("http://127.0.0.1:8081");
 
     // ─── Serilog ──────────────────────────────────────────────────────────────
     builder.Host.UseSerilog((context, services, configuration) =>
@@ -82,7 +81,7 @@ try
     builder.Services.AddScoped<MarketPriceAlertHandler>();
     builder.Services.AddScoped<LowHoldingsHandler>();
     builder.Services.AddScoped<IRawDefaultHandler, DefaultHandler>();
-    builder.Services.AddScoped<InventoryAlert.Worker.Interfaces.IIntegrationMessageRouter, IntegrationMessageRouter>();
+    builder.Services.AddScoped<IIntegrationMessageRouter, IntegrationMessageRouter>();
     builder.Services.AddScoped<ISqsHelper, SqsHelper>();
 
     builder.Services.AddHostedService<JobSchedulerService>();
