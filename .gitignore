@@ -484,14 +484,14 @@ $RECYCLE.BIN/
 *.lnk
 
 # Vim temporary swap files
-*.swp
-InventoryManagementSystem/InventoryAlert.Api/appsettings.Development.json
-InventoryManagementSystem/InventoryAlert.Api/appsettings.Docker.json
-InventoryManagementSystem/InventoryAlert.Api/appsettings.json
+# ASP.NET Core appsettings files containing secrets or local developer configuration
+**/appsettings.Development.json
+**/appsettings.Docker.json
+**/appsettings.Local.json
+**/appsettings.Production.json
+!**/appsettings.Example.json
+!**/appsettings.test.json
 skills-lock.json
-InventoryManagementSystem/InventoryAlert.Worker/appsettings.Development.json
-InventoryManagementSystem/InventoryAlert.Worker/appsettings.Docker.json
-InventoryManagementSystem/InventoryAlert.Worker/appsettings.json
 coverage/html/class.js
 coverage/html/icon_cog_dark.svg
 coverage/html/icon_cog.svg

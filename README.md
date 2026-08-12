@@ -20,30 +20,42 @@ Detailed specifications and architectural guides located in the `doc/` folder:
 
 ## Quick start (development)
 
-Prereqs: Docker, .NET 10 SDK, Node.js 20.
+Prereqs: Docker Desktop, .NET 10 SDK, Node.js 20.
+
+### 0) Configuration & Security Setup
+Before running the application, set up your configuration:
+1. Copy `appsettings.Example.json` to create `appsettings.Development.json` in both project folders:
+   - `src/InventoryAlert.Api/appsettings.Development.json`
+   - `src/InventoryAlert.Worker/appsettings.Development.json`
+2. Insert your Finnhub API Key in `appsettings.Development.json` (`Finnhub.ApiKey`).
+3. *(Note: All environment-specific `appsettings.*.json` and `.env` files are gitignored. Never commit real API keys to repository!)*
 
 ### 1) Infrastructure (Docker)
 
 ```powershell
-cd InventoryManagementSystem
-docker compose up -d db redis moto moto-init seq
+cd src
+docker-compose up -d
 ```
 
 ### 2) Backend (API + Worker)
 
 ```powershell
-dotnet run --project InventoryManagementSystem/InventoryAlert.Api
-dotnet run --project InventoryManagementSystem/InventoryAlert.Worker
+# Run API (Terminal 1)
+dotnet run --project src/InventoryAlert.Api
+
+# Run Worker (Terminal 2)
+dotnet run --project src/InventoryAlert.Worker
 ```
 
-- API health: `http://localhost:5294/health`
-- Swagger UI: `http://localhost:5294/swagger`
-- Scalar API reference: `http://localhost:5294/scalar/v1`
+- API health: `http://localhost:5001/healthz` (or `http://localhost:8080/healthz`)
+- Swagger UI: `http://localhost:5001/swagger`
+- Hangfire Dashboard: `http://localhost:8081` (or `http://localhost:5002/hangfire`)
+- DynamoDB Admin UI: `http://localhost:8001`
 
 ### 3) Frontend (UI)
 
 ```powershell
-cd InventoryAlert.UI
+cd src/ui/InventoryAlert.UI
 npm install
 npm run dev
 ```
