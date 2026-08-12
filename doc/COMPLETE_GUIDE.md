@@ -198,3 +198,24 @@ Query your live running API:
 curl https://inventory-alert-api.onrender.com/healthz
 ```
 Expected Output: `Healthy`
+
+---
+
+## 📊 6. Admin Dashboards & Monitoring Strategy (Local & Production / Render)
+
+When running Moto (emulating SNS, SQS, DynamoDB) on Render or Docker, Render does not include built-in AWS CloudWatch / DynamoDB management dashboards. Use these solutions to inspect and monitor your services:
+
+| Dashboard / Tool | URL / Access | Purpose |
+| :--- | :--- | :--- |
+| **DynamoDB Admin Web UI** | `http://localhost:8001` (Docker) or Render Web Service (`aaronshaf/dynamodb-admin`) | Visual browser GUI to scan, query, insert, and manage DynamoDB items & tables. |
+| **Hangfire Dashboard** | `http://localhost:8081` (Worker) | Monitor background jobs, queues, execution history, and retry failed SQS/scheduled jobs. |
+| **Seq Structured Logging** | `http://localhost:5341` | Searchable structured log dashboard for API & Worker log events. |
+| **Supabase SQL & Table Editor** | Supabase Console | If using Strategy B (Postgres JSONB), inspect company & market news read models directly in SQL/UI. |
+
+### Adding DynamoDB Admin Container on Render:
+Deploy a new Web Service on Render using image `aaronshaf/dynamodb-admin:latest` with env:
+- `DYNAMO_ENDPOINT`: `http://<your-moto-service-name>:5000` (or your AWS endpoint)
+- `AWS_REGION`: `us-east-1`
+- `AWS_ACCESS_KEY_ID`: `test`
+- `AWS_SECRET_ACCESS_KEY`: `test`
+
