@@ -43,13 +43,13 @@ COPY --from=build /app/publish/api ./api
 COPY --from=build /app/publish/worker ./worker
 COPY src/SolutionFolder/moto-init/init-all.sh ./init-all.sh
 
-# Startup script: Starts Moto server, runs Moto initialization (SQS/SNS/DynamoDB tables), starts Worker, and runs API
+# Startup script: Starts Moto server, runs Moto initialization (SQS/SNS/DynamoDB tables), starts Worker on internal port 8081, and runs API on public port 8080
 RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
     echo 'moto_server -p 5000 -H 127.0.0.1 &' >> /app/entrypoint.sh && \
     echo 'sleep 3' >> /app/entrypoint.sh && \
     echo 'AWS_ENDPOINT_URL=http://127.0.0.1:5000 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=us-east-1 sh /app/init-all.sh' >> /app/entrypoint.sh && \
     echo 'sleep 1' >> /app/entrypoint.sh && \
-    echo 'dotnet /app/worker/InventoryAlert.Worker.dll &' >> /app/entrypoint.sh && \
+    echo 'ASPNETCORE_URLS=http://127.0.0.1:8081 ASPNETCORE_HTTP_PORTS=8081 dotnet /app/worker/InventoryAlert.Worker.dll &' >> /app/entrypoint.sh && \
     echo 'sleep 1' >> /app/entrypoint.sh && \
     echo 'exec dotnet /app/api/InventoryAlert.Api.dll' >> /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh
