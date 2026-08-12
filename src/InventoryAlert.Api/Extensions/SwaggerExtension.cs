@@ -86,6 +86,7 @@ public static class SwaggerExtension
                 options
                     .WithTitle($"{ApplicationConstants.Name} API Reference")
                     .WithTheme(ScalarTheme.Mars)
+                    .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json")
                     .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
             });
         }

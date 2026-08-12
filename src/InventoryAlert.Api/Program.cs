@@ -184,6 +184,7 @@ try
         options
             .WithTitle("InventoryAlert API Reference")
             .WithTheme(ScalarTheme.Mars)
+            .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json")
             .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
     });
 
