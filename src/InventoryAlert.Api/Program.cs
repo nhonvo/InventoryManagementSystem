@@ -119,28 +119,25 @@ try
 
     var app = builder.Build();
 
-    // ─── Auto-migrate ─────────────────────────────────────────────────────────
-    if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))
-    {
-        var retryPolicy = Policy
-            .Handle<Exception>()
-            .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-                (exception, timeSpan, retryCount, context) =>
-                {
-                    app.Logger.LogWarning("Database migration failed. Retry {RetryCount} in {RetryDelaySeconds}s.", retryCount, timeSpan.TotalSeconds);
-                });
-
-        await retryPolicy.ExecuteAsync(async () =>
-        {
-            using var scope = app.Services.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            await dbContext.Database.MigrateAsync();
-            if (Environment.GetEnvironmentVariable("SKIP_SEEDING") != "true")
+    // ─── Auto-migrate & Seed Database ─────────────────────────────────────────
+    var retryPolicy = Policy
+        .Handle<Exception>()
+        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(2),
+            (exception, timeSpan, retryCount, context) =>
             {
-                await InventoryAlert.Infrastructure.Persistence.Postgres.DatabaseSeeder.SeedAsync(dbContext, app.Logger);
-            }
-        });
-    }
+                app.Logger.LogWarning("Database migration attempt {RetryCount} failed: {Message}", retryCount, exception.Message);
+            });
+
+    await retryPolicy.ExecuteAsync(async () =>
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await dbContext.Database.MigrateAsync();
+        if (Environment.GetEnvironmentVariable("SKIP_SEEDING") != "true")
+        {
+            await InventoryAlert.Infrastructure.Persistence.Postgres.DatabaseSeeder.SeedAsync(dbContext, app.Logger);
+        }
+    });
 
     // ─── Pipeline ─────────────────────────────────────────────────────────────
     app.UseMiddleware<CorrelationIdMiddleware>();
