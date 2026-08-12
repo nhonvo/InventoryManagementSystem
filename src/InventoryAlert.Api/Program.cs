@@ -180,40 +180,48 @@ try
         Authorization = new[] { new InventoryAlert.Api.Filters.DevDashboardAuthorizationFilter() }
     });
 
-    // Proxy /aws/* requests to internal Moto server on port 5000 (allows dynamodb-admin or AWS CLI remote management)
-    app.Map("/aws/{**catch-all}", async (HttpContext context, IHttpClientFactory clientFactory) =>
+    // Proxy /aws and /aws/* requests to internal Moto server on port 5000 (allows dynamodb-admin or AWS CLI remote management)
+    app.UseWhen(context => context.Request.Path.StartsWithSegments("/aws"), awsApp =>
     {
-        var client = clientFactory.CreateClient();
-        var catchAll = context.Request.RouteValues["catch-all"];
-        var targetUri = new Uri($"http://127.0.0.1:5000/{catchAll}{context.Request.QueryString}");
-
-        var requestMessage = new HttpRequestMessage(new HttpMethod(context.Request.Method), targetUri);
-        foreach (var header in context.Request.Headers)
+        awsApp.Run(async context =>
         {
-            if (header.Key.StartsWith("Content-", StringComparison.OrdinalIgnoreCase) || header.Key.Equals("Host", StringComparison.OrdinalIgnoreCase)) continue;
-            requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
-        }
+            var clientFactory = context.RequestServices.GetRequiredService<IHttpClientFactory>();
+            var client = clientFactory.CreateClient();
 
-        if (context.Request.ContentLength > 0 || !string.IsNullOrEmpty(context.Request.ContentType))
-        {
-            requestMessage.Content = new StreamContent(context.Request.Body);
-            if (!string.IsNullOrEmpty(context.Request.ContentType) && System.Net.Http.Headers.MediaTypeHeaderValue.TryParse(context.Request.ContentType, out var contentType))
+            var path = context.Request.Path.Value ?? "/aws";
+            var relativePath = path.Length >= 4 ? path[4..] : "";
+            if (relativePath.StartsWith('/')) relativePath = relativePath[1..];
+
+            var targetUri = new Uri($"http://127.0.0.1:5000/{relativePath}{context.Request.QueryString}");
+
+            var requestMessage = new HttpRequestMessage(new HttpMethod(context.Request.Method), targetUri);
+            foreach (var header in context.Request.Headers)
             {
-                requestMessage.Content.Headers.ContentType = contentType;
+                if (header.Key.StartsWith("Content-", StringComparison.OrdinalIgnoreCase) || header.Key.Equals("Host", StringComparison.OrdinalIgnoreCase)) continue;
+                requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
             }
-        }
 
-        using var responseMessage = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, context.RequestAborted);
-        context.Response.StatusCode = (int)responseMessage.StatusCode;
-        foreach (var header in responseMessage.Headers)
-        {
-            context.Response.Headers[header.Key] = header.Value.ToArray();
-        }
-        foreach (var header in responseMessage.Content.Headers)
-        {
-            context.Response.Headers[header.Key] = header.Value.ToArray();
-        }
-        await responseMessage.Content.CopyToAsync(context.Response.Body);
+            if (context.Request.ContentLength > 0 || !string.IsNullOrEmpty(context.Request.ContentType))
+            {
+                requestMessage.Content = new StreamContent(context.Request.Body);
+                if (!string.IsNullOrEmpty(context.Request.ContentType) && System.Net.Http.Headers.MediaTypeHeaderValue.TryParse(context.Request.ContentType, out var contentType))
+                {
+                    requestMessage.Content.Headers.ContentType = contentType;
+                }
+            }
+
+            using var responseMessage = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, context.RequestAborted);
+            context.Response.StatusCode = (int)responseMessage.StatusCode;
+            foreach (var header in responseMessage.Headers)
+            {
+                context.Response.Headers[header.Key] = header.Value.ToArray();
+            }
+            foreach (var header in responseMessage.Content.Headers)
+            {
+                context.Response.Headers[header.Key] = header.Value.ToArray();
+            }
+            await responseMessage.Content.CopyToAsync(context.Response.Body);
+        });
     });
 
     app.MapScalarApiReference(options =>
