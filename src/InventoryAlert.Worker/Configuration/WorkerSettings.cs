@@ -21,4 +21,5 @@ public class JobSchedules
     public string NewsCheck { get; set; } = "*/15 * * * *"; // Every 15 min
     public string MarketNews { get; set; } = "*/30 * * * *"; // Every 30 min
     public string CleanupPrices { get; set; } = "0 2 * * *"; // Daily 2 AM
+    public string KeepAlive { get; set; } = "*/10 * * * *"; // Every 10 min
 }

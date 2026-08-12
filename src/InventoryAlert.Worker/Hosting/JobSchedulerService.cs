@@ -52,6 +52,11 @@ public sealed class JobSchedulerService(
             x => x.ExecuteAsync(CancellationToken.None),
             s.CleanupPrices);
 
+        _recurringJobs.AddOrUpdate<KeepAliveJob>(
+            "keep-alive",
+            x => x.ExecuteAsync(CancellationToken.None),
+            s.KeepAlive);
+
         _logger.LogInformation("[JobSchedulerService] All intelligence and cleanup jobs registered.");
 
         return Task.CompletedTask;
