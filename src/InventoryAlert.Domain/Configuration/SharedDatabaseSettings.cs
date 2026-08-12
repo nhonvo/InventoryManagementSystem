@@ -14,9 +14,14 @@ public class SharedDatabaseSettings
     {
         if (string.IsNullOrWhiteSpace(connectionString)) return string.Empty;
 
-        var cleaned = connectionString.Replace("\r", "").Replace("\n", " ").Trim();
+        // 1. Collapse all multi-spaces, newlines, tabs into single spaces
+        var cleaned = System.Text.RegularExpressions.Regex.Replace(connectionString, @"\s+", " ").Trim();
 
-        // If provided in URI format: postgresql://user:password@host:port/database?params
+        // 2. Normalize Npgsql parameter keys without internal spaces
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"Trust\s+Server\s+Certificate", "TrustServerCertificate", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"SSL\s+Mode", "SSLMode", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        // 3. Handle URI format postgresql://...
         if (cleaned.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase) ||
             cleaned.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase))
         {
@@ -44,7 +49,7 @@ public class SharedDatabaseSettings
                     }
                 }
 
-                return $"Host={host};Port={port};Database={dbName};Username={username};Password={password};SSL Mode={sslMode};Trust Server Certificate=true";
+                return $"Host={host};Port={port};Database={dbName};Username={username};Password={password};SSLMode={sslMode};TrustServerCertificate=true";
             }
             catch
             {
