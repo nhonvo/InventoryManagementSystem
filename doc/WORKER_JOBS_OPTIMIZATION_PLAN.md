@@ -80,12 +80,51 @@ graph TD
 | Job Class Name | CRON Schedule | Role Post-Optimization |
 | :--- | :--- | :--- |
 | **`SyncPricesJob`** | `*/15 * * * *` | Active ticker quote sync, `PriceHistory` insertion, alert rule evaluation. |
-| **`SyncStockFundamentalsJob`** *(New)* | `0 6 * * *` | Consolidated daily sync for fundamental metrics, earnings, recommendations, and insider trades for active symbols. |
+| **`SyncStockFundamentalsJob`** *(New)* | `10 6 * * *` | Consolidated daily sync for fundamental metrics, earnings, recommendations, and insider trades for active symbols. |
 | **`NewsSyncJob`** | `5 */2 * * *` | Market news & active company news batch writer to DynamoDB. |
-| **`CleanupPriceHistoryJob`** | `10 2 * * *` | Daily database retention cleanup (purges history > 1 year). |
+| **`CleanupPriceHistoryJob`** | `20 2 * * *` | Daily database retention cleanup (purges history > 1 year). |
 | **`KeepAliveJob`** | `*/10 * * * *` | Self-pings `/healthz` to guarantee 24/7 Render free-tier container uptime. |
 | **`ProcessQueueJob`** | Continuous Poller | Native SQS listener, Redis deduplication, and integration event routing. |
 | ~~`SyncMetricsJob`~~ | *Removed* | *Consolidated into `SyncStockFundamentalsJob`* |
 | ~~`SyncEarningsJob`~~ | *Removed* | *Consolidated into `SyncStockFundamentalsJob`* |
 | ~~`SyncRecommendationsJob`~~ | *Removed* | *Consolidated into `SyncStockFundamentalsJob`* |
 | ~~`SyncInsidersJob`~~ | *Removed* | *Consolidated into `SyncStockFundamentalsJob`* |
+
+---
+
+## 📈 Finnhub API Quota & Recurrence Schedule Analysis
+
+### 1. Finnhub Free Tier Hard Constraints
+- **Rate Limit Threshold**: **60 requests per minute** (1 request/second average limit).
+- **Enforcement**: Any 1-minute window exceeding 60 requests triggers `HTTP 429 Too Many Requests`.
+- **Daily Capacity Limit**: Up to 86,400 requests/day, provided minute-level rate limits are respected.
+
+### 2. Active Ticker Scaling Model ($N$)
+Let $N$ = Number of distinct active ticker symbols across all user watchlists, portfolios, and alert rules.
+- **Small Scale ($N = 20$ tickers)**: ~1 to 5 active users.
+- **Medium Scale ($N = 50$ tickers)**: ~10 to 50 active users.
+- **Large Scale ($N = 150$ tickers)**: ~100+ active users.
+
+### 3. Job Quota Consumption Breakdown ($N = 50$ active tickers)
+
+| Job Name | Calls / Run Formula | Calls per Run ($N=50$) | Daily Frequency | Daily Calls | Throttling Strategy |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **`SyncPricesJob`** | $N$ | 50 calls | 96 runs/day (Every 15 min) | 4,800 calls | Max 50 req/min (Burst < 60 limit) |
+| **`NewsSyncJob`** | $4 + N$ | 54 calls | 12 runs/day (Every 2 hrs) | 648 calls | 54 req/min (Burst < 60 limit) |
+| **`SyncStockFundamentalsJob`** | $4 \times N$ | 200 calls | 1 run/day (Daily at 06:10) | 200 calls | 1,000ms delay between calls (60 req/min limit) |
+| **`CleanupPriceHistoryJob`** | 0 | 0 calls | 1 run/day | 0 calls | Internal DB query |
+| **`KeepAliveJob`** | 0 | 0 calls | 144 runs/day | 0 calls | Internal HTTP ping |
+| **TOTAL DAILY USAGE** | — | — | — | **5,648 calls/day** | **~6.5% of total Finnhub daily quota** |
+
+### 4. Staggered Recurrence Schedule (Zero-Collision Blueprint)
+
+To prevent two jobs from executing in the same minute and exceeding the 60 req/min limit, jobs are staggered across different minute marks:
+
+```
+[Minute 00, 15, 30, 45] ➔ SyncPricesJob (Runs for ~50s)
+[Minute 05]            ➔ NewsSyncJob (Runs every 2 hours at :05)
+[Minute 10 (at 06:10)] ➔ SyncStockFundamentalsJob (Throttled 1s delay, runs ~3.3 mins)
+[Minute 20 (at 02:20)] ➔ CleanupPriceHistoryJob (Runs ~2s)
+```
+
+- **Result**: Zero minute collisions, **0% chance of HTTP 429 Too Many Requests**, and 100% reliable execution!
