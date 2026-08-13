@@ -36,19 +36,16 @@ Running inside `InventoryAlert.Worker`, driven by Hangfire cron schedules.
 
 Schedules are configurable via `WorkerSettings.Schedules.*` (with sensible defaults in code and environment overrides via `appsettings*.json`).
 
-InventoryAlert uses a total of **9 background jobs** (8 recurring via Hangfire + 1 continuous SQS listener).
+InventoryAlert uses a total of **6 background jobs** (5 recurring via Hangfire + 1 continuous SQS listener), optimized for active ticker scoping and Finnhub 60 req/min rate limits.
 
 | Job | Schedule setting | Finnhub Endpoint | Key duty |
 |---|---|---|---|
-| **SyncPricesJob** | `Schedules.SyncPrices` | `/quote` | Parallel fetch → insert `PriceHistory` → batch evaluate `AlertRule` → insert `Notification` → SignalR push |
-| **SyncMetricsJob** | `Schedules.SyncMetrics` | `/stock/metric` | Refresh cached `StockMetric` rows |
-| **SyncEarningsJob** | `Schedules.SyncEarnings` | `/stock/earnings` | Refresh `EarningsSurprise` rows |
-| **SyncRecommendationsJob** | `Schedules.SyncRecommendations` | `/stock/recommendation` | Refresh `RecommendationTrend` rows |
-| **SyncInsidersJob** | `Schedules.SyncInsiders` | `/stock/insider-transactions` | Refresh `InsiderTransaction` rows |
-| **NewsSyncJob** | `Schedules.MarketNews` | `/news` & `/company-news` | Consolidated market + company news sync (DynamoDB read-model) |
-| **CleanupPriceHistoryJob** | `Schedules.CleanupPrices` | — | Deletes `PriceHistory` rows older than 1 year |
-| **ProcessQueueJob** | Continuous | — | Native SQS poller + router + idempotency |
-| **KeepAliveJob** | `*/10 * * * *` | — | Self-pings `http://127.0.0.1:8080/healthz` to prevent Render container sleep |
+| **SyncPricesJob** | `*/15 * * * *` | `/quote` | Active symbol fetch → insert `PriceHistory` → evaluate `AlertRule` → insert `Notification` → SignalR push |
+| **SyncStockFundamentalsJob** | `10 6 * * *` | `/metric`, `/earnings`, `/recommendation`, `/insider-transactions` | Consolidated daily sync for basic financials, quarterly earnings, analyst recommendations, and SEC insider trades for active symbols |
+| **NewsSyncJob** | `5 */2 * * *` | `/news` & `/company-news` | Consolidated market + active company news batch sync to DynamoDB read models |
+| **CleanupPriceHistoryJob** | `20 2 * * *` | — | Deletes `PriceHistory` rows older than 1 year to keep PostgreSQL lean |
+| **ProcessQueueJob** | Continuous Poller | — | Native SQS poller + router + Redis idempotency |
+| **KeepAliveJob** | `*/10 * * * *` | — | Self-pings `http://127.0.0.1:8080/healthz` to guarantee 24/7 Render free-tier container uptime |
 
 ---
 
