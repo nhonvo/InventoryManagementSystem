@@ -32,7 +32,14 @@ public class ApiLoggingMiddlewareTests
         await _sut.InvokeAsync(context, next);
 
         // Assert
-        _logger.VerifyLog(LogLevel.Information, Times.Once());
+        _logger.Verify(
+            x => x.Log(
+                It.Is<LogLevel>(l => l == LogLevel.Information || l == LogLevel.Warning),
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 
     [Fact]

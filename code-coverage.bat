@@ -30,6 +30,7 @@ echo [info] Generating merged report...
 reportgenerator ^
   "-reports:%coveragedir%\**\coverage.cobertura.xml" ^
   "-targetdir:%coveragedir%\html" ^
+  "-filefilters:-*.Migrations.*;-*.AppDbContextModelSnapshot.*;-*.g.cs" ^
   -reporttypes:Html;TextSummary
 
 REM ========================

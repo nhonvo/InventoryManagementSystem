@@ -5,10 +5,17 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+    types: [ opened, synchronize, reopened, labeled ]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push' ||
+      github.actor == 'dependabot[bot]' ||
+      contains(github.event.pull_request.labels.*.name, 'dependabot') ||
+      contains(github.event.pull_request.labels.*.name, 'dependencies') ||
+      github.event.pull_request.head.repo.full_name == github.repository
     
     steps:
     - uses: actions/checkout@v6
@@ -44,6 +51,7 @@ jobs:
         reportgenerator \
           -reports:./coverage/**/coverage.cobertura.xml \
           -targetdir:./coverage/report \
+          -filefilters:"-*.Migrations.*;-*.AppDbContextModelSnapshot.*;-*.g.cs" \
           -reporttypes:"Html;MarkdownSummary;MarkdownSummaryGithub;TextSummary"
         
         # Display Code Coverage & Test Report in GitHub Action Run Summary UI

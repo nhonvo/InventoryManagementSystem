@@ -50,7 +50,6 @@ public static class SwaggerExtension
 
             options.AddSecurityDefinition("Bearer", securityScheme);
 
-            // Using the delegating Func overload for the new Microsoft.OpenApi model
             options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
             {
                 {

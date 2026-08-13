@@ -1,25 +1,99 @@
 version: 2
 updates:
-  # NuGet dependencies
+  # .NET Core NuGet dependencies
   - package-ecosystem: "nuget"
     directory: "/src"
+    target-branch: "main"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "dependabot"
+      - "nuget"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      dotnet-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
-  # UI Project NPM dependencies
+  # Next.js UI Frontend NPM dependencies
   - package-ecosystem: "npm"
     directory: "/src/ui/InventoryAlert.UI"
+    target-branch: "main"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "04:30"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "dependabot"
+      - "npm"
+      - "ui"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      ui-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
-  # Wiki Project NPM dependencies
+  # Docusaurus Wiki Documentation NPM dependencies
   - package-ecosystem: "npm"
     directory: "/src/ui/InventoryAlert.Wiki"
+    target-branch: "main"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "05:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "dependabot"
+      - "npm"
+      - "wiki"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      wiki-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
-  # GitHub Actions
+  # GitHub Actions Workflows
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "main"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "05:30"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "dependabot"
+      - "github-actions"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
