@@ -4,7 +4,29 @@ REM Set Tools & Paths
 REM ========================
 SET "dotnet=dotnet"
 SET "testproject=./src/test/InventoryAlert.UnitTests/InventoryAlert.UnitTests.csproj"
-SET "coveragedir=./coverage/"
+SET "coveragedir=coverage"
+
+echo [info] Ensuring tools are installed...
+dotnet tool install --global dotnet-reportgenerator-globaltool
+dotnet tool install --global coverlet.console
+
+REM ========================
+REM Run Tests & Coverage
+REM ========================
+echo [info] Cleaning old coverage data...
+if exist "%coveragedir%" rd /s /q "%coveragedir%"
+mkdir "%coveragedir%"
+
+echo [info] Cleaning build artifacts...
+%dotnet% clean %testproject%
+
+@echo off
+REM ========================
+REM Set Tools & Paths
+REM ========================
+SET "dotnet=dotnet"
+SET "testproject=./src/test/InventoryAlert.UnitTests/InventoryAlert.UnitTests.csproj"
+SET "coveragedir=coverage"
 
 echo [info] Ensuring tools are installed...
 dotnet tool install --global dotnet-reportgenerator-globaltool
@@ -31,7 +53,7 @@ reportgenerator ^
   "-reports:%coveragedir%\**\coverage.cobertura.xml" ^
   "-targetdir:%coveragedir%\html" ^
   "-filefilters:-*.Migrations.*;-*.AppDbContextModelSnapshot.*;-*.g.cs" ^
-  -reporttypes:Html;TextSummary
+  "-reporttypes:Html;TextSummary;MarkdownSummary"
 
 REM ========================
 REM Open the Report
