@@ -14,6 +14,7 @@
 | **Swagger API Documentation** | **Render** | [https://inventorymanagementsystem-s55e.onrender.com/swagger/index.html](https://inventorymanagementsystem-s55e.onrender.com/swagger/index.html) | 🟢 Live (200 OK) |
 | **Scalar API Reference** | **Render** | [https://inventorymanagementsystem-s55e.onrender.com/scalar/v1](https://inventorymanagementsystem-s55e.onrender.com/scalar/v1) | 🟢 Live (200 OK) |
 | **Health Check Endpoint** | **Render** | [https://inventorymanagementsystem-s55e.onrender.com/healthz](https://inventorymanagementsystem-s55e.onrender.com/healthz) | 🟢 Healthy |
+| **DynamoDB Admin Proxy** | **Render** | [https://inventorymanagementsystem-s55e.onrender.com/aws](https://inventorymanagementsystem-s55e.onrender.com/aws) | 🟢 Active (Reverse Proxied to Moto:5000) |
 | **SignalR Real-Time Hub** | **Render** | `wss://inventorymanagementsystem-s55e.onrender.com/hubs/notifications` | 🟢 Active |
 | **Background Worker Service** | **Render** | Embedded in Render Container (Hangfire + SQS Poller) | 🟢 Active |
 | **PostgreSQL Database** | **Neon.tech** | `ep-late-mode-azygp34n.c-3.ap-southeast-1.aws.neon.tech:5432` | 🟢 Migrated & Seeded |
