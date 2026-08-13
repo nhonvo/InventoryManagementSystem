@@ -56,4 +56,26 @@ public class WatchlistItemRepositoryTests
         // Assert
         Assert.Equal(2, items.Count());
     }
+
+    [Fact]
+    public async Task GetPagedByUserIdAsync_ReturnsPagedResults()
+    {
+        // Arrange
+        using var context = CreateDbContext();
+        var repo = new WatchlistItemRepository(context);
+        var userId = Guid.NewGuid();
+
+        context.WatchlistItems.AddRange(
+            new WatchlistItem { UserId = userId, TickerSymbol = "AAPL", CreatedAt = DateTime.UtcNow },
+            new WatchlistItem { UserId = userId, TickerSymbol = "MSFT", CreatedAt = DateTime.UtcNow }
+        );
+        await context.SaveChangesAsync();
+
+        // Act
+        var (items, total) = await repo.GetPagedByUserIdAsync(userId.ToString(), 1, 10, null, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(2, total);
+        Assert.Equal(2, items.Count());
+    }
 }

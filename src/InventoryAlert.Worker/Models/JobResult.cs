@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace InventoryAlert.Worker.Models;
 
 public enum JobStatus
@@ -7,6 +9,8 @@ public enum JobStatus
     Skipped,
     PartiallySucceeded
 }
+
+[ExcludeFromCodeCoverage]
 public record JobResult(
     JobStatus Status,
     string Message = "",

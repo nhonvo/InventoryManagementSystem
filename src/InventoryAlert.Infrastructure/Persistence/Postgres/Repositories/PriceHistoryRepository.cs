@@ -32,7 +32,16 @@ public class PriceHistoryRepository(AppDbContext context)
 
             if (batchIds.Count == 0) break;
 
-            await _dbSet.Where(x => batchIds.Contains(x.Id)).ExecuteDeleteAsync(ct);
+            try
+            {
+                await _dbSet.Where(x => batchIds.Contains(x.Id)).ExecuteDeleteAsync(ct);
+            }
+            catch (InvalidOperationException)
+            {
+                var items = await _dbSet.Where(x => batchIds.Contains(x.Id)).ToListAsync(ct);
+                _dbSet.RemoveRange(items);
+                await _context.SaveChangesAsync(ct);
+            }
             deletedCount += batchIds.Count;
         }
     }

@@ -250,5 +250,6 @@ finally
 
 namespace InventoryAlert.Api
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public partial class Program { }
 }

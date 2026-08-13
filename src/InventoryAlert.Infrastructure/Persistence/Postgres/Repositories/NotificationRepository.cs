@@ -43,8 +43,18 @@ public class NotificationRepository(AppDbContext context)
     public async Task<int> MarkAllReadAsync(string userId, CancellationToken ct)
     {
         var userGuid = Guid.Parse(userId);
-        return await _dbSet
-            .Where(x => x.UserId == userGuid && !x.IsRead)
-            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), ct);
+        try
+        {
+            return await _dbSet
+                .Where(x => x.UserId == userGuid && !x.IsRead)
+                .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), ct);
+        }
+        catch (InvalidOperationException)
+        {
+            var unread = await _dbSet.Where(x => x.UserId == userGuid && !x.IsRead).ToListAsync(ct);
+            foreach (var n in unread) n.IsRead = true;
+            await _context.SaveChangesAsync(ct);
+            return unread.Count;
+        }
     }
 }

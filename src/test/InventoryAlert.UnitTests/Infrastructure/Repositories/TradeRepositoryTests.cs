@@ -79,4 +79,24 @@ public class TradeRepositoryTests
         Assert.Contains("AAPL", symbols);
         Assert.Contains("AMZN", symbols);
     }
+
+    [Fact]
+    public async Task GetByUserAndSymbolsAsync_ReturnsTradesForMultipleSymbols()
+    {
+        // Arrange
+        using var context = CreateDbContext();
+        var repo = new TradeRepository(context);
+        var userId = Guid.NewGuid();
+        context.Trades.AddRange(
+            new Trade { Id = Guid.NewGuid(), UserId = userId, TickerSymbol = "AAPL", Type = TradeType.Buy, Quantity = 10, UnitPrice = 150m, TradedAt = DateTime.UtcNow },
+            new Trade { Id = Guid.NewGuid(), UserId = userId, TickerSymbol = "MSFT", Type = TradeType.Buy, Quantity = 5, UnitPrice = 300m, TradedAt = DateTime.UtcNow }
+        );
+        await context.SaveChangesAsync();
+
+        // Act
+        var trades = await repo.GetByUserAndSymbolsAsync(userId, new[] { "AAPL", "MSFT" }, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(2, trades.Count());
+    }
 }

@@ -101,4 +101,52 @@ public class ProcessQueueJobTests
         _routerMock.Verify(r => r.ProcessAndAcknowledgeAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()), Times.Never);
         _sqsHelperMock.Verify(s => s.DeleteMessageAsync(It.IsAny<string>(), "rh-dup", It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_StopsPolling_WhenCancellationRequested()
+    {
+        // Arrange
+        using var cts = new CancellationTokenSource();
+        cts.Cancel(); // Pre-cancelled token
+
+        // Act
+        await _sut.ExecuteAsync(cts.Token);
+
+        // Assert
+        _sqsHelperMock.Verify(s => s.ReceiveMessagesAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ProcessBatchAsync_DoesNotDelete_WhenProcessingFails()
+    {
+        // Arrange
+        var messageId = "msg-fail";
+        var message = new Message { Body = "{}", MessageId = messageId, ReceiptHandle = "rh-fail" };
+
+        _redisDbMock.Setup(d => d.KeyExistsAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>())).ReturnsAsync(false);
+        _routerMock.Setup(r => r.ProcessAndAcknowledgeAsync(message, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+        // Act
+        await _sut.ProcessBatchAsync(new[] { message }, CancellationToken.None);
+
+        // Assert
+        _sqsHelperMock.Verify(s => s.DeleteMessageAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ProcessBatchAsync_HandlesExceptionInRouter_AndReturnsFalse()
+    {
+        // Arrange
+        var messageId = "msg-ex";
+        var message = new Message { Body = "{}", MessageId = messageId, ReceiptHandle = "rh-ex" };
+
+        _redisDbMock.Setup(d => d.KeyExistsAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>())).ReturnsAsync(false);
+        _routerMock.Setup(r => r.ProcessAndAcknowledgeAsync(message, It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("Router error"));
+
+        // Act
+        await _sut.ProcessBatchAsync(new[] { message }, CancellationToken.None);
+
+        // Assert
+        _sqsHelperMock.Verify(s => s.DeleteMessageAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

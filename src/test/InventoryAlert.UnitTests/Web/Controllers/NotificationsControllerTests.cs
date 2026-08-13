@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FluentAssertions;
 using InventoryAlert.Api.Controllers;
 using InventoryAlert.Domain.DTOs;
+using InventoryAlert.Domain.Entities.Postgres;
 using InventoryAlert.Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,76 +13,107 @@ namespace InventoryAlert.UnitTests.Web.Controllers;
 
 public class NotificationsControllerTests
 {
-    private readonly Mock<INotificationService> _service = new();
-    private readonly Mock<IAlertNotifier> _notifier = new();
+    private readonly Mock<INotificationService> _serviceMock = new();
+    private readonly Mock<IAlertNotifier> _notifierMock = new();
     private readonly NotificationsController _sut;
+    private static readonly Guid TestUserGuid = Guid.NewGuid();
+    private static readonly string TestUserId = TestUserGuid.ToString();
     private static readonly CancellationToken Ct = CancellationToken.None;
-    private const string UserId = "user-1";
 
     public NotificationsControllerTests()
     {
-        _sut = new NotificationsController(_service.Object, _notifier.Object);
+        _sut = new NotificationsController(_serviceMock.Object, _notifierMock.Object);
 
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] {
-            new(ClaimTypes.NameIdentifier, UserId),
-        }, "mock"));
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+        [
+            new Claim(ClaimTypes.NameIdentifier, TestUserId)
+        ], "TestAuth"));
 
-        _sut.ControllerContext = new ControllerContext()
+        _sut.ControllerContext = new ControllerContext
         {
-            HttpContext = new DefaultHttpContext() { User = user }
+            HttpContext = new DefaultHttpContext { User = user }
         };
     }
 
     [Fact]
-    public async Task GetNotifications_Returns200_WithPagedItems()
+    public async Task TestSignalR_SendsNotificationAndReturnsOk()
     {
-        // Arrange
-        var pagedResult = new PagedResult<NotificationResponse>
-        {
-            Items = new List<NotificationResponse>(),
-            TotalItems = 0,
-            PageNumber = 1,
-            PageSize = 10
-        };
-        _service.Setup(s => s.GetPagedAsync(UserId, false, 1, 10, Ct)).ReturnsAsync(pagedResult);
-
         // Act
-        var result = await _sut.GetNotifications(false, 1, 10, Ct);
+        var result = await _sut.TestSignalR("Hello", Ct);
 
         // Assert
-        var ok = (result.Result as OkObjectResult);
-        ok.Should().NotBeNull();
-        ok!.StatusCode.Should().Be(StatusCodes.Status200OK);
-        ok.Value.Should().BeEquivalentTo(pagedResult);
+        result.Should().BeOfType<OkObjectResult>();
+        _notifierMock.Verify(n => n.NotifyAsync(It.IsAny<Notification>(), Ct), Times.Once);
     }
 
     [Fact]
-    public async Task GetUnreadCount_Returns200_WithCount()
+    public async Task GetNotifications_ReturnsOkWithPagedResult()
     {
         // Arrange
-        _service.Setup(s => s.GetUnreadCountAsync(UserId, Ct)).ReturnsAsync(5);
+        var paged = new PagedResult<NotificationResponse> { Items = [], TotalItems = 0, PageNumber = 1, PageSize = 20 };
+        _serviceMock.Setup(s => s.GetPagedAsync(TestUserId, false, 1, 20, Ct)).ReturnsAsync(paged);
+
+        // Act
+        var result = await _sut.GetNotifications(false, 1, 20, Ct);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().Be(paged);
+    }
+
+    [Fact]
+    public async Task GetUnreadCount_ReturnsOkWithCount()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.GetUnreadCountAsync(TestUserId, Ct)).ReturnsAsync(3);
 
         // Act
         var result = await _sut.GetUnreadCount(Ct);
 
         // Assert
-        var ok = (result.Result as OkObjectResult);
-        ok.Should().NotBeNull();
-        ok!.Value.Should().Be(5);
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().Be(3);
     }
 
     [Fact]
-    public async Task MarkReadAll_Returns200_WithUpdatedCount()
+    public async Task MarkRead_ReturnsNoContent()
     {
         // Arrange
-        _service.Setup(s => s.MarkAllReadAsync(UserId, Ct)).ReturnsAsync(10);
+        var id = Guid.NewGuid();
+
+        // Act
+        var result = await _sut.MarkRead(id, Ct);
+
+        // Assert
+        result.Should().BeOfType<NoContentResult>();
+        _serviceMock.Verify(s => s.MarkReadAsync(id, TestUserId, Ct), Times.Once);
+    }
+
+    [Fact]
+    public async Task MarkAllRead_ReturnsOkWithCount()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.MarkAllReadAsync(TestUserId, Ct)).ReturnsAsync(5);
 
         // Act
         var result = await _sut.MarkAllRead(Ct);
 
         // Assert
-        var ok = (result.Result as OkObjectResult);
-        ok.Should().NotBeNull();
-        ok!.Value.Should().Be(10);
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().Be(5);
+    }
+
+    [Fact]
+    public async Task Dismiss_ReturnsNoContent()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+
+        // Act
+        var result = await _sut.Dismiss(id, Ct);
+
+        // Assert
+        result.Should().BeOfType<NoContentResult>();
+        _serviceMock.Verify(s => s.DismissAsync(id, TestUserId, Ct), Times.Once);
     }
 }

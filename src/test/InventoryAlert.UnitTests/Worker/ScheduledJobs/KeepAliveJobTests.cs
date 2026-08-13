@@ -40,4 +40,50 @@ public class KeepAliveJobTests
         // Assert
         _httpClientFactoryMock.Verify(f => f.CreateClient(It.IsAny<string>()), Times.Once);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_LogsWarning_WhenSelfPingFailsWith500()
+    {
+        // Arrange
+        _httpMessageHandlerMock.Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            )
+            .ReturnsAsync(new HttpResponseMessage { StatusCode = HttpStatusCode.InternalServerError });
+
+        var client = new HttpClient(_httpMessageHandlerMock.Object);
+        _httpClientFactoryMock.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(client);
+        var job = new KeepAliveJob(_httpClientFactoryMock.Object, _loggerMock.Object);
+
+        // Act
+        await job.ExecuteAsync(CancellationToken.None);
+
+        // Assert
+        _httpClientFactoryMock.Verify(f => f.CreateClient(It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CatchesException_WhenHttpClientThrows()
+    {
+        // Arrange
+        _httpMessageHandlerMock.Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            )
+            .ThrowsAsync(new HttpRequestException("Network failure"));
+
+        var client = new HttpClient(_httpMessageHandlerMock.Object);
+        _httpClientFactoryMock.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(client);
+        var job = new KeepAliveJob(_httpClientFactoryMock.Object, _loggerMock.Object);
+
+        // Act
+        await job.ExecuteAsync(CancellationToken.None);
+
+        // Assert
+        _httpClientFactoryMock.Verify(f => f.CreateClient(It.IsAny<string>()), Times.Once);
+    }
 }

@@ -76,4 +76,53 @@ public class StockListingRepositoryTests
         Assert.Contains("GOOGL", symbols);
         Assert.Contains("MSFT", symbols);
     }
+
+    [Fact]
+    public async Task SearchAsync_ReturnsMatchingListings()
+    {
+        // Arrange
+        using var context = CreateDbContext();
+        var repo = new StockListingRepository(context);
+        context.StockListings.Add(new StockListing { Id = 1, TickerSymbol = "AAPL", Name = "Apple Inc." });
+        await context.SaveChangesAsync();
+
+        // Act
+        var result = await repo.SearchAsync("Apple", CancellationToken.None);
+
+        // Assert
+        Assert.Single(result);
+    }
+
+    [Fact]
+    public async Task SearchAsync_ReturnsAll_WhenQueryEmpty()
+    {
+        // Arrange
+        using var context = CreateDbContext();
+        var repo = new StockListingRepository(context);
+        context.StockListings.Add(new StockListing { Id = 1, TickerSymbol = "AAPL", Name = "Apple Inc." });
+        await context.SaveChangesAsync();
+
+        // Act
+        var result = await repo.SearchAsync("", CancellationToken.None);
+
+        // Assert
+        Assert.Single(result);
+    }
+
+    [Fact]
+    public async Task GetActiveSymbolsAsync_ReturnsAllStockListingSymbols_WhenNoUserActivity()
+    {
+        // Arrange
+        using var context = CreateDbContext();
+        var repo = new StockListingRepository(context);
+        context.StockListings.Add(new StockListing { Id = 1, TickerSymbol = "AAPL", Name = "Apple Inc." });
+        await context.SaveChangesAsync();
+
+        // Act
+        var symbols = await repo.GetActiveSymbolsAsync(CancellationToken.None);
+
+        // Assert
+        Assert.Single(symbols);
+        Assert.Contains("AAPL", symbols);
+    }
 }

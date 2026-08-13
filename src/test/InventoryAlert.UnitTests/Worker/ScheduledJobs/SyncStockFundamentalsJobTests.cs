@@ -64,4 +64,17 @@ public class SyncStockFundamentalsJobTests
         _uowMock.Verify(u => u.Insiders.ReplaceForSymbolAsync("AAPL", It.IsAny<IEnumerable<InsiderTransaction>>(), It.IsAny<CancellationToken>()), Times.Once);
         _uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsFailedStatus_WhenFatalErrorOccurs()
+    {
+        // Arrange
+        _uowMock.Setup(u => u.StockListings).Throws(new InvalidOperationException("Fatal Error"));
+
+        // Act
+        var result = await _sut.ExecuteAsync(CancellationToken.None);
+
+        // Assert
+        result.Status.Should().Be(JobStatus.Failed);
+    }
 }

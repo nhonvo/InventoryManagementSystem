@@ -82,4 +82,35 @@ public class SyncPricesJobTests
         _uow.Verify(u => u.Notifications.AddRangeAsync(It.Is<IEnumerable<Notification>>(n => n.Any(x => x.TickerSymbol == "TSLA" && x.AlertRuleId == rule.Id)), It.IsAny<CancellationToken>()), Times.Once);
         _notifier.Verify(n => n.NotifyAsync(It.IsAny<Notification>(), It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task Execute_HandlesQuoteExceptionAndContinues()
+    {
+        // Arrange
+        _uow.Setup(u => u.StockListings.GetActiveSymbolsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<string> { "AAPL", "FAIL" });
+        _finnhub.Setup(f => f.GetQuoteAsync("FAIL", It.IsAny<CancellationToken>())).ThrowsAsync(new Exception("Network error"));
+        _finnhub.Setup(f => f.GetQuoteAsync("AAPL", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new InventoryAlert.Domain.External.Finnhub.FinnhubQuoteResponse { CurrentPrice = 150m });
+        _uow.Setup(u => u.AlertRules.GetBySymbolsAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<AlertRule>());
+
+        // Act
+        var result = await _service.ExecuteAsync(CancellationToken.None);
+
+        // Assert
+        result.Status.Should().Be(InventoryAlert.Worker.Models.JobStatus.Success);
+    }
+
+    [Fact]
+    public async Task Execute_ReturnsFailedStatus_WhenFatalErrorOccurs()
+    {
+        // Arrange
+        _uow.Setup(u => u.StockListings).Throws(new InvalidOperationException("Fatal DB error"));
+
+        // Act
+        var result = await _service.ExecuteAsync(CancellationToken.None);
+
+        // Assert
+        result.Status.Should().Be(InventoryAlert.Worker.Models.JobStatus.Failed);
+    }
 }

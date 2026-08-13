@@ -25,9 +25,9 @@ public class StockListingRepository(AppDbContext context)
         if (string.IsNullOrWhiteSpace(query))
             return await GetAllAsync(ct);
 
+        var q = query.Trim().ToLower();
         return await _dbSet.AsNoTracking()
-            .Where(x => EF.Functions.ILike(x.Name, $"%{query}%") ||
-                        EF.Functions.ILike(x.TickerSymbol, $"%{query}%"))
+            .Where(x => x.Name.ToLower().Contains(q) || x.TickerSymbol.ToLower().Contains(q))
             .ToListAsync(ct);
     }
 

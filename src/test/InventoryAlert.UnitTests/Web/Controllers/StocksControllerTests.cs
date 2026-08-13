@@ -128,4 +128,94 @@ public class StocksControllerTests
         var actual = Assert.IsType<PeersResponse>(okResult.Value);
         Assert.Equal(2, actual.Peers.Count);
     }
+
+    [Fact]
+    public async Task GetFinancials_ReturnsOk_WhenFound()
+    {
+        // Arrange
+        var controller = new StocksController(_stockDataServiceMock.Object);
+        var res = new StockMetricResponse("AAPL", 30.5, 10.2, 5.5, 0.6, 200, 140, 0.15, 0.25, DateTime.UtcNow);
+        _stockDataServiceMock.Setup(s => s.GetFinancialsAsync("AAPL", It.IsAny<CancellationToken>())).ReturnsAsync(res);
+
+        // Act
+        var result = await controller.GetFinancials("AAPL", CancellationToken.None);
+
+        // Assert
+        Assert.IsType<OkObjectResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task GetFinancials_ReturnsNotFound_WhenNull()
+    {
+        // Arrange
+        var controller = new StocksController(_stockDataServiceMock.Object);
+        _stockDataServiceMock.Setup(s => s.GetFinancialsAsync("UNKNOWN", It.IsAny<CancellationToken>())).ReturnsAsync((StockMetricResponse?)null);
+
+        // Act
+        var result = await controller.GetFinancials("UNKNOWN", CancellationToken.None);
+
+        // Assert
+        Assert.IsType<NotFoundResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task GetEarnings_ReturnsOk()
+    {
+        // Arrange
+        var controller = new StocksController(_stockDataServiceMock.Object);
+        var list = new List<EarningsSurpriseResponse> { new(new DateOnly(2026, 1, 1), 1.5, 1.4, 7.1, new DateOnly(2026, 1, 1)) };
+        _stockDataServiceMock.Setup(s => s.GetEarningsAsync("AAPL", It.IsAny<CancellationToken>())).ReturnsAsync(list);
+
+        // Act
+        var result = await controller.GetEarnings("AAPL", CancellationToken.None);
+
+        // Assert
+        Assert.IsType<OkObjectResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task GetRecommendations_ReturnsOk()
+    {
+        // Arrange
+        var controller = new StocksController(_stockDataServiceMock.Object);
+        var list = new List<RecommendationResponse> { new("2026-01-01", 10, 5, 2, 1, 0) };
+        _stockDataServiceMock.Setup(s => s.GetRecommendationsAsync("AAPL", It.IsAny<CancellationToken>())).ReturnsAsync(list);
+
+        // Act
+        var result = await controller.GetRecommendations("AAPL", CancellationToken.None);
+
+        // Assert
+        Assert.IsType<OkObjectResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task GetInsiders_ReturnsOk()
+    {
+        // Arrange
+        var controller = new StocksController(_stockDataServiceMock.Object);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var list = new List<InsiderTransactionResponse> { new("Tim Cook", 1000, 150000, today, today, "S") };
+        _stockDataServiceMock.Setup(s => s.GetInsidersAsync("AAPL", It.IsAny<CancellationToken>())).ReturnsAsync(list);
+
+        // Act
+        var result = await controller.GetInsiders("AAPL", CancellationToken.None);
+
+        // Assert
+        Assert.IsType<OkObjectResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task GetNews_ReturnsOk()
+    {
+        // Arrange
+        var controller = new StocksController(_stockDataServiceMock.Object);
+        var list = new List<NewsResponse> { new(1, "Headline", "Summary", "Source", "Url", DateTime.UtcNow, "Image", "company") };
+        _stockDataServiceMock.Setup(s => s.GetCompanyNewsAsync("AAPL", 1, 10, It.IsAny<CancellationToken>())).ReturnsAsync(list);
+
+        // Act
+        var result = await controller.GetNews("AAPL", 1, 10, CancellationToken.None);
+
+        // Assert
+        Assert.IsType<OkObjectResult>(result.Result);
+    }
 }

@@ -152,4 +152,155 @@ public class PortfolioServiceTests
         result.Items.First().Symbol.Should().Be("AAPL");
         result.Items.First().HoldingsCount.Should().Be(5);
     }
+
+    [Fact]
+    public async Task GetPortfolioAlertsAsync_ReturnsBreachedAlerts()
+    {
+        // Arrange
+        var rules = (IEnumerable<AlertRule>)new List<AlertRule>
+        {
+            new() { TickerSymbol = "AAPL", Condition = AlertCondition.PriceAbove, TargetValue = 150m, IsActive = true }
+        };
+        _uow.Setup(u => u.ExecuteSynchronizedAsync(It.IsAny<Func<Task<IEnumerable<AlertRule>>>>(), Ct))
+            .ReturnsAsync(rules);
+        _stockData.Setup(s => s.GetQuoteAsync("AAPL", Ct))
+            .ReturnsAsync(new StockQuoteResponse("AAPL", 160m, 2m, 1.2, 162m, 158m, 159m, 158m, DateTime.UtcNow));
+
+        // Act
+        var alerts = await _sut.GetPortfolioAlertsAsync(UserId, Ct);
+
+        // Assert
+        alerts.Should().HaveCount(1);
+        alerts.First().Symbol.Should().Be("AAPL");
+        alerts.First().CurrentPrice.Should().Be(160m);
+    }
+
+    [Fact]
+    public async Task GetTradesBySymbolAsync_ReturnsMappedTradeResponses()
+    {
+        // Arrange
+        var trades = (IEnumerable<Trade>)new List<Trade>
+        {
+            new() { Id = Guid.NewGuid(), TickerSymbol = "AAPL", Type = TradeType.Buy, Quantity = 10, UnitPrice = 150m, TradedAt = DateTime.UtcNow }
+        };
+        _uow.Setup(u => u.Trades.GetByUserAndSymbolAsync(UserGuid, "AAPL", Ct)).ReturnsAsync(trades);
+
+        // Act
+        var result = await _sut.GetTradesBySymbolAsync("AAPL", UserId, Ct);
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.First().Symbol.Should().Be("AAPL");
+        result.First().Quantity.Should().Be(10);
+    }
+
+    [Fact]
+    public async Task RemovePositionAsync_DeletesTradesAndWatchlistItem_WhenNoActiveAlerts()
+    {
+        // Arrange
+        _uow.Setup(u => u.AlertRules.GetByUserIdAsync(UserId, Ct)).ReturnsAsync(new List<AlertRule>());
+        var watchItem = new WatchlistItem { UserId = UserGuid, TickerSymbol = "AAPL" };
+        _uow.Setup(u => u.WatchlistItems.GetByUserAndSymbolAsync(UserId, "AAPL", Ct)).ReturnsAsync(watchItem);
+        var trades = (IEnumerable<Trade>)new List<Trade> { new() { Id = Guid.NewGuid(), UserId = UserGuid, TickerSymbol = "AAPL" } };
+        _uow.Setup(u => u.Trades.GetByUserAndSymbolAsync(UserGuid, "AAPL", Ct)).ReturnsAsync(trades);
+
+        // Act
+        await _sut.RemovePositionAsync("AAPL", UserId, Ct);
+
+        // Assert
+        _uow.Verify(u => u.WatchlistItems.DeleteAsync(watchItem, Ct), Times.Once);
+        _uow.Verify(u => u.Trades.DeleteAsync(It.IsAny<Trade>(), Ct), Times.Once);
+    }
+
+    [Fact]
+    public async Task BulkImportPositionsAsync_InvokesOpenPositionForRequests()
+    {
+        // Arrange
+        var requests = new List<CreatePositionRequest>
+        {
+            new("INVALID", 10, 100m, null)
+        };
+
+        // Act
+        await _sut.BulkImportPositionsAsync(requests, UserId, Ct);
+
+        // Assert
+        _uow.Verify(u => u.ExecuteTransactionAsync(It.IsAny<Func<Task>>(), Ct), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetPositionBySymbolAsync_ReturnsNull_WhenNoTradesOrNoListing()
+    {
+        // Arrange
+        _uow.Setup(u => u.Trades.GetByUserAndSymbolAsync(UserGuid, "NOTRADES", Ct)).ReturnsAsync(new List<Trade>());
+
+        // Act
+        var res1 = await _sut.GetPositionBySymbolAsync("NOTRADES", UserId, Ct);
+
+        // Assert
+        res1.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetPortfolioAlertsAsync_HandlesPriceBelowAndUnbreached()
+    {
+        // Arrange
+        var rules = (IEnumerable<AlertRule>)new List<AlertRule>
+        {
+            new() { TickerSymbol = "AAPL", Condition = AlertCondition.PriceBelow, TargetValue = 200m, IsActive = true },
+            new() { TickerSymbol = "MSFT", Condition = AlertCondition.PriceAbove, TargetValue = 500m, IsActive = true },
+            new() { TickerSymbol = "NOQUOTE", Condition = AlertCondition.PriceAbove, TargetValue = 100m, IsActive = true }
+        };
+        _uow.Setup(u => u.ExecuteSynchronizedAsync(It.IsAny<Func<Task<IEnumerable<AlertRule>>>>(), Ct)).ReturnsAsync(rules);
+        _stockData.Setup(s => s.GetQuoteAsync("AAPL", Ct))
+            .ReturnsAsync(new StockQuoteResponse("AAPL", 150m, 0m, 0, 0m, 0m, 0m, 0m, DateTime.UtcNow));
+        _stockData.Setup(s => s.GetQuoteAsync("MSFT", Ct))
+            .ReturnsAsync(new StockQuoteResponse("MSFT", 400m, 0m, 0, 0m, 0m, 0m, 0m, DateTime.UtcNow));
+        _stockData.Setup(s => s.GetQuoteAsync("NOQUOTE", Ct)).ReturnsAsync((StockQuoteResponse?)null);
+
+        // Act
+        var alerts = await _sut.GetPortfolioAlertsAsync(UserId, Ct);
+
+        // Assert
+        alerts.Should().HaveCount(1);
+        alerts.First().Symbol.Should().Be("AAPL");
+    }
+
+    [Fact]
+    public async Task OpenPositionAsync_SuccessfullyOpensPosition_WhenProfileResolved()
+    {
+        // Arrange
+        var req = new CreatePositionRequest("AAPL", 10, 150m, DateTime.UtcNow);
+        var listing = new StockListing { Id = 1, TickerSymbol = "AAPL", Name = "Apple" };
+        _uow.Setup(u => u.StockListings.FindBySymbolAsync("AAPL", Ct)).ReturnsAsync(listing);
+        _uow.Setup(u => u.WatchlistItems.GetByUserAndSymbolAsync(UserId, "AAPL", Ct)).ReturnsAsync((WatchlistItem?)null);
+        _uow.Setup(u => u.Trades.GetByUserAndSymbolAsync(UserGuid, "AAPL", Ct)).ReturnsAsync(new List<Trade> { new() { TickerSymbol = "AAPL", Type = TradeType.Buy, Quantity = 10, UnitPrice = 150m } });
+        _stockData.Setup(s => s.GetQuoteAsync("AAPL", Ct)).ReturnsAsync(new StockQuoteResponse("AAPL", 160m, 0m, 0, 0m, 0m, 0m, 0m, DateTime.UtcNow));
+
+        // Act
+        var result = await _sut.OpenPositionAsync(req, UserId, Ct);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Symbol.Should().Be("AAPL");
+    }
+
+    [Fact]
+    public async Task RecordTradeAsync_SuccessfullyRecordsBuyTrade()
+    {
+        // Arrange
+        var req = new TradeRequest(TradeType.Buy, 5, 160m, "Buying more");
+        var listing = new StockListing { Id = 1, TickerSymbol = "AAPL", Name = "Apple" };
+        _uow.Setup(u => u.Trades.GetNetHoldingsAsync(UserGuid, "AAPL", Ct)).ReturnsAsync(10m);
+        _uow.Setup(u => u.StockListings.FindBySymbolAsync("AAPL", Ct)).ReturnsAsync(listing);
+        _uow.Setup(u => u.Trades.GetByUserAndSymbolAsync(UserGuid, "AAPL", Ct)).ReturnsAsync(new List<Trade> { new() { TickerSymbol = "AAPL", Type = TradeType.Buy, Quantity = 15, UnitPrice = 155m } });
+        _stockData.Setup(s => s.GetQuoteAsync("AAPL", Ct)).ReturnsAsync(new StockQuoteResponse("AAPL", 160m, 0m, 0, 0m, 0m, 0m, 0m, DateTime.UtcNow));
+
+        // Act
+        var result = await _sut.RecordTradeAsync("AAPL", req, UserId, Ct);
+
+        // Assert
+        result.Should().NotBeNull();
+        _uow.Verify(u => u.Trades.AddAsync(It.Is<Trade>(t => t.Notes == "Buying more"), Ct), Times.Once);
+    }
 }

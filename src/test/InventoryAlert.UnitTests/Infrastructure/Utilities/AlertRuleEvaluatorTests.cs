@@ -98,4 +98,50 @@ public class AlertRuleEvaluatorTests
         result.IsBreached.Should().BeTrue();
         result.Message.Should().Contain("dropped 15.00%");
     }
+
+    [Fact]
+    public async Task EvaluateAsync_ReturnsBreached_WhenPriceBelowTarget()
+    {
+        // Arrange
+        var rule = new AlertRule
+        {
+            Id = Guid.NewGuid(),
+            UserId = UserId,
+            TickerSymbol = "AAPL",
+            Condition = AlertCondition.PriceBelow,
+            TargetValue = 150m,
+            IsActive = true
+        };
+        _redis.Setup(r => r.KeyExistsAsync(It.IsAny<string>(), Ct)).ReturnsAsync(false);
+
+        // Act
+        var result = await _sut.EvaluateAsync(rule, 140m, Ct);
+
+        // Assert
+        result.IsBreached.Should().BeTrue();
+        result.Message.Should().Contain("below your target");
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_ReturnsBreached_WhenPriceTargetReached()
+    {
+        // Arrange
+        var rule = new AlertRule
+        {
+            Id = Guid.NewGuid(),
+            UserId = UserId,
+            TickerSymbol = "AAPL",
+            Condition = AlertCondition.PriceTargetReached,
+            TargetValue = 150m,
+            IsActive = true
+        };
+        _redis.Setup(r => r.KeyExistsAsync(It.IsAny<string>(), Ct)).ReturnsAsync(false);
+
+        // Act
+        var result = await _sut.EvaluateAsync(rule, 150.005m, Ct);
+
+        // Assert
+        result.IsBreached.Should().BeTrue();
+        result.Message.Should().Contain("reached your target");
+    }
 }

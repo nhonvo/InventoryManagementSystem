@@ -12,19 +12,19 @@ namespace InventoryAlert.UnitTests.Web.Controllers;
 
 public class WatchlistControllerTests
 {
-    private readonly Mock<IWatchlistService> _watchlistService = new();
+    private readonly Mock<IWatchlistService> _serviceMock = new();
     private readonly WatchlistController _sut;
+    private static readonly string TestUserId = Guid.NewGuid().ToString();
     private static readonly CancellationToken Ct = CancellationToken.None;
-    private const string UserId = "00000000-0000-0000-0000-000000000001";
 
     public WatchlistControllerTests()
     {
-        _sut = new WatchlistController(_watchlistService.Object);
+        _sut = new WatchlistController(_serviceMock.Object);
 
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, UserId)
-        }));
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+        [
+            new Claim(ClaimTypes.NameIdentifier, TestUserId)
+        ], "TestAuth"));
 
         _sut.ControllerContext = new ControllerContext
         {
@@ -33,53 +33,87 @@ public class WatchlistControllerTests
     }
 
     [Fact]
-    public async Task GetWatchlist_ReturnsOk_WithItems()
+    public async Task GetWatchlist_ReturnsOkWithItems()
     {
         // Arrange
         var items = new List<PortfolioPositionResponse>
         {
-            new(1, "AAPL", "Apple", "NASDAQ", null, 0, 0, 150m, 0, 0, 0, 0.5, 1m, 0.5m, "Tech")
+            new(1, "AAPL", "Apple", "NASDAQ", null, 0, 0, 150m, 0, 0, 0, 0, 1m, 0.65m, "Tech")
         };
-        _watchlistService.Setup(s => s.GetWatchlistAsync(UserId, Ct)).ReturnsAsync(items);
+        _serviceMock.Setup(s => s.GetWatchlistAsync(TestUserId, Ct)).ReturnsAsync(items);
 
         // Act
         var result = await _sut.GetWatchlist(Ct);
 
         // Assert
-        var okResult = result.Result as OkObjectResult;
-        okResult.Should().NotBeNull();
-        okResult!.Value.Should().Be(items);
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().Be(items);
     }
 
     [Fact]
-    public async Task AddToWatchlist_ReturnsCreatedAt_WithResponse()
+    public async Task GetWatchlistItem_ReturnsOk_WhenExists()
     {
         // Arrange
-        var symbol = "AAPL";
-        var expectedRes = new PortfolioPositionResponse(1, symbol, "Apple", "NASDAQ", null, 0, 0, 150m, 0, 0, 0, 0.5, 1m, 0.5m, "Tech");
-        _watchlistService.Setup(s => s.AddToWatchlistAsync(symbol, UserId, Ct)).ReturnsAsync(expectedRes);
+        var item = new PortfolioPositionResponse(1, "AAPL", "Apple", "NASDAQ", null, 0, 0, 150m, 0, 0, 0, 0, 1m, 0.65m, "Tech");
+        _serviceMock.Setup(s => s.GetWatchlistItemAsync("AAPL", TestUserId, Ct)).ReturnsAsync(item);
 
         // Act
-        var result = await _sut.AddToWatchlist(symbol, Ct);
+        var result = await _sut.GetWatchlistItem("AAPL", Ct);
 
         // Assert
-        var crResult = result.Result as CreatedAtActionResult;
-        crResult.Should().NotBeNull();
-        crResult!.ActionName.Should().Be(nameof(WatchlistController.GetWatchlistItem));
-        crResult.Value.Should().Be(expectedRes);
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().Be(item);
+    }
+
+    [Fact]
+    public async Task GetWatchlistItem_ReturnsNotFound_WhenDoesNotExist()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.GetWatchlistItemAsync("UNKNOWN", TestUserId, Ct)).ReturnsAsync((PortfolioPositionResponse?)null);
+
+        // Act
+        var result = await _sut.GetWatchlistItem("UNKNOWN", Ct);
+
+        // Assert
+        result.Result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task AddToWatchlist_ReturnsCreatedAtAction_WhenAdded()
+    {
+        // Arrange
+        var item = new PortfolioPositionResponse(1, "AAPL", "Apple", "NASDAQ", null, 0, 0, 150m, 0, 0, 0, 0, 1m, 0.65m, "Tech");
+        _serviceMock.Setup(s => s.AddToWatchlistAsync("AAPL", TestUserId, Ct)).ReturnsAsync(item);
+
+        // Act
+        var result = await _sut.AddToWatchlist("AAPL", Ct);
+
+        // Assert
+        var createdResult = result.Result.Should().BeOfType<CreatedAtActionResult>().Subject;
+        createdResult.Value.Should().Be(item);
+    }
+
+    [Fact]
+    public async Task AddToWatchlist_ReturnsBadRequest_WhenAlreadyOnWatchlist()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.AddToWatchlistAsync("AAPL", TestUserId, Ct)).ReturnsAsync((PortfolioPositionResponse?)null);
+
+        // Act
+        var result = await _sut.AddToWatchlist("AAPL", Ct);
+
+        // Assert
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
     }
 
     [Fact]
     public async Task RemoveFromWatchlist_ReturnsOk()
     {
-        // Arrange
-        var symbol = "AAPL";
-
         // Act
-        var result = await _sut.RemoveFromWatchlist(symbol, Ct);
+        var result = await _sut.RemoveFromWatchlist("AAPL", Ct);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>();
-        _watchlistService.Verify(s => s.RemoveFromWatchlistAsync(symbol, UserId, Ct), Times.Once);
+        _serviceMock.Verify(s => s.RemoveFromWatchlistAsync("AAPL", TestUserId, Ct), Times.Once);
     }
 }

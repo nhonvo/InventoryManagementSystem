@@ -103,4 +103,39 @@ public class AuthControllerTests
         _sut.ControllerContext.HttpContext.Response.Headers.TryGetValue("Set-Cookie", out var setCookie).Should().BeTrue();
         setCookie.ToString().Should().Contain("refreshToken=");
     }
+
+    [Fact]
+    public async Task Refresh_ReturnsUnauthorized_WhenNoRefreshTokenFound()
+    {
+        // Arrange
+        _sut.ControllerContext.HttpContext = new DefaultHttpContext();
+
+        // Act
+        var result = await _sut.Refresh(Ct);
+
+        // Assert
+        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
+    }
+
+    [Fact]
+    public async Task Refresh_ReturnsOk_WhenAuthorizationHeaderPresent()
+    {
+        // Arrange
+        var token = "bearer_refresh_token";
+        var expectedAuth = new AuthResponse("new_access", DateTime.UtcNow.AddHours(1));
+        var expectedPair = new AuthTokenPair(expectedAuth, "new_refresh", DateTime.UtcNow.AddDays(7));
+        _authService.Setup(s => s.RefreshAsync(token, Ct)).ReturnsAsync(expectedPair);
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Headers.Authorization = $"Bearer {token}";
+        _sut.ControllerContext.HttpContext = httpContext;
+
+        // Act
+        var result = await _sut.Refresh(Ct);
+
+        // Assert
+        var ok = result.Result as OkObjectResult;
+        ok.Should().NotBeNull();
+        ok!.Value.Should().Be(expectedAuth);
+    }
 }

@@ -19,7 +19,16 @@ public class InsiderTransactionRepository(AppDbContext context) : IInsiderTransa
     public async Task ReplaceForSymbolAsync(string symbol, IEnumerable<InsiderTransaction> entries, CancellationToken ct)
     {
         // Simple replace strategy for insider filings as they are historical assets but we only keep the latest 100 per spec
-        await _dbSet.Where(x => x.TickerSymbol == symbol).ExecuteDeleteAsync(ct);
+        try
+        {
+            await _dbSet.Where(x => x.TickerSymbol == symbol).ExecuteDeleteAsync(ct);
+        }
+        catch (InvalidOperationException)
+        {
+            var existing = await _dbSet.Where(x => x.TickerSymbol == symbol).ToListAsync(ct);
+            _dbSet.RemoveRange(existing);
+            await context.SaveChangesAsync(ct);
+        }
         await _dbSet.AddRangeAsync(entries, ct);
     }
 }

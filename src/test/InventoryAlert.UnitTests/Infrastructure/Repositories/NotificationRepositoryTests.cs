@@ -82,4 +82,24 @@ public class NotificationRepositoryTests
         // Assert
         Assert.Equal(2, count);
     }
+
+    [Fact]
+    public async Task MarkAllReadAsync_UpdatesUnreadNotificationsToRead()
+    {
+        // Arrange
+        using var context = CreateDbContext();
+        var repo = new NotificationRepository(context);
+        var userId = Guid.NewGuid();
+
+        context.Notifications.Add(new Notification { Id = Guid.NewGuid(), UserId = userId, Message = "U1", IsRead = false });
+        await context.SaveChangesAsync();
+
+        // Act
+        var updated = await repo.MarkAllReadAsync(userId.ToString(), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(1, updated);
+        var unread = await repo.GetUnreadCountAsync(userId.ToString(), CancellationToken.None);
+        Assert.Equal(0, unread);
+    }
 }

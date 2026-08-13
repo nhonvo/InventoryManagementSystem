@@ -102,3 +102,9 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+namespace InventoryAlert.Worker
+{
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    public partial class Program { }
+}

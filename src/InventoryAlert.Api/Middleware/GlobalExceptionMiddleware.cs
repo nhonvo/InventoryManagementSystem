@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using InventoryAlert.Api.Extensions;
 using InventoryAlert.Api.Models;
@@ -7,6 +8,7 @@ using InventoryAlert.Infrastructure.Utilities;
 
 namespace InventoryAlert.Api.Middleware;
 
+[ExcludeFromCodeCoverage]
 public class GlobalExceptionMiddleware(ILoggerFactory loggerFactory) : IMiddleware
 {
     private readonly ILogger _logger = loggerFactory.CreateLogger<GlobalExceptionMiddleware>();

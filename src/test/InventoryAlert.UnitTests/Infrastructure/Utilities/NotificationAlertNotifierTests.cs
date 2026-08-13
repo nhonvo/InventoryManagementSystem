@@ -45,4 +45,20 @@ public class NotificationAlertNotifierTests
         // Assert
         _clientMock.Verify(c => c.ReceiveNotification(It.Is<NotificationResponse>(n => n.TickerSymbol == "AAPL" && n.Message == "Price Triggered")), Times.Once);
     }
+
+    [Fact]
+    public async Task NotifyAsync_CatchesAndLogsException_WhenSignalRFails()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        _hubContextMock.Setup(h => h.Clients).Throws(new InvalidOperationException("SignalR exception"));
+        var notifier = new NotificationAlertNotifier(_hubContextMock.Object, _loggerMock.Object);
+        var notification = new Notification { UserId = userId, Message = "Fail" };
+
+        // Act
+        await notifier.NotifyAsync(notification, CancellationToken.None);
+
+        // Assert - Exception is caught gracefully without rethrowing
+        _hubContextMock.Verify(h => h.Clients, Times.Once);
+    }
 }

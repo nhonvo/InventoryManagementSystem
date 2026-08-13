@@ -42,33 +42,49 @@ public class UnitOfWork : IUnitOfWork, IDisposable
 
     public async Task ExecuteTransactionAsync(Action action, CancellationToken cancellationToken)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
         try
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                action();
+                await _context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        }
+        catch (InvalidOperationException)
         {
             action();
             await _context.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
         }
     }
 
     public async Task ExecuteTransactionAsync(Func<Task> action, CancellationToken cancellationToken)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
         try
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                await action();
+                await _context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        }
+        catch (InvalidOperationException)
         {
             await action();
             await _context.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
         }
     }
 

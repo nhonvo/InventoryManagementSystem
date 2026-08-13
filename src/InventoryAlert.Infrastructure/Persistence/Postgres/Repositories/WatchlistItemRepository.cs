@@ -30,7 +30,8 @@ public class WatchlistItemRepository(AppDbContext context)
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            query = query.Where(x => EF.Functions.ILike(x.TickerSymbol, $"%{search}%"));
+            var s = search.Trim().ToLower();
+            query = query.Where(x => x.TickerSymbol.ToLower().Contains(s));
         }
 
         var totalCount = await query.CountAsync(ct);

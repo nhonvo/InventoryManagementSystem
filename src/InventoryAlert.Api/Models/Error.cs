@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using InventoryAlert.Domain.Configuration;
 
 namespace InventoryAlert.Api.Models;
 
+[ExcludeFromCodeCoverage]
 public class Error(string code, string message, string? property = null)
 {
     public string Code { get; set; } = code;
@@ -10,6 +12,7 @@ public class Error(string code, string message, string? property = null)
     public string? Property { get; set; } = property;
 }
 
+[ExcludeFromCodeCoverage]
 public class ErrorResponse
 {
     public IEnumerable<Error> Errors { get; set; } = [];

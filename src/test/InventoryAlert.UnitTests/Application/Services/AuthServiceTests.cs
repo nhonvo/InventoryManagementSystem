@@ -203,4 +203,49 @@ public class AuthServiceTests
         // Act & Assert
         await service.LogoutAsync();
     }
+
+    [Fact]
+    public async Task RefreshAsync_ThrowsUnauthorizedAccessException_WhenUserNoLongerExists()
+    {
+        // Arrange
+        var service = new AuthService(_unitOfWorkMock.Object, _settings, _loggerMock.Object);
+        var userId = Guid.NewGuid();
+
+        _userRepoMock.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Jwt.Key));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim("typ", "refresh")
+        };
+        var token = new JwtSecurityToken(_settings.Jwt.Issuer, _settings.Jwt.Audience, claims, expires: DateTime.UtcNow.AddDays(1), signingCredentials: creds);
+        var refreshTokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.RefreshAsync(refreshTokenString));
+    }
+
+    [Fact]
+    public async Task RefreshAsync_ThrowsUnauthorizedAccessException_WhenTokenTypeNotRefresh()
+    {
+        // Arrange
+        var service = new AuthService(_unitOfWorkMock.Object, _settings, _loggerMock.Object);
+        var userId = Guid.NewGuid();
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Jwt.Key));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim("typ", "access") // Wrong typ!
+        };
+        var token = new JwtSecurityToken(_settings.Jwt.Issuer, _settings.Jwt.Audience, claims, expires: DateTime.UtcNow.AddDays(1), signingCredentials: creds);
+        var refreshTokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.RefreshAsync(refreshTokenString));
+    }
 }

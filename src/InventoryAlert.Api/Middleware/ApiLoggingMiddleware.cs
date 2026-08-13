@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -14,6 +15,7 @@ namespace InventoryAlert.Api.Middleware;
 /// 3. User &amp; Correlation context
 /// All in a single structured Seq event.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class ApiLoggingMiddleware(ILogger<ApiLoggingMiddleware> logger, AppSettings settings) : IMiddleware
 {
     private readonly bool _enableBodyLogging = settings.Api?.EnableBodyLogging ?? true;

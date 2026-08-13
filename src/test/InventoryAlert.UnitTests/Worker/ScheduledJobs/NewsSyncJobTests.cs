@@ -77,4 +77,17 @@ public class NewsSyncJobTests
         result.Status.Should().Be(InventoryAlert.Worker.Models.JobStatus.Success);
         _companyNewsRepoMock.Verify(r => r.BatchSaveAsync(It.Is<IEnumerable<CompanyNewsDynamoEntry>>(e => e.Any(x => x.Symbol == "MSFT")), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsFailedStatus_WhenFatalErrorOccurs()
+    {
+        // Arrange
+        _uowMock.Setup(u => u.StockListings).Throws(new InvalidOperationException("Fatal error"));
+
+        // Act
+        var result = await _sut.ExecuteAsync(CancellationToken.None);
+
+        // Assert
+        result.Status.Should().Be(InventoryAlert.Worker.Models.JobStatus.Failed);
+    }
 }
