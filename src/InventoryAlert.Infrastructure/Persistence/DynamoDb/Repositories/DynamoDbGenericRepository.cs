@@ -8,10 +8,13 @@ namespace InventoryAlert.Infrastructure.Persistence.DynamoDb.Repositories;
 public class DynamoDbGenericRepository<T>(IAmazonDynamoDB dynamoDbClient, ILogger<DynamoDbGenericRepository<T>> logger)
     : IDynamoDbGenericRepository<T> where T : class
 {
-    protected readonly IDynamoDBContext _context = new DynamoDBContext(dynamoDbClient, new DynamoDBContextConfig
-    {
-        DisableFetchingTableMetadata = true
-    });
+    protected readonly IDynamoDBContext _context = new DynamoDBContextBuilder()
+        .WithDynamoDBClient(dynamoDbClient)
+        .WithConfig(new DynamoDBContextConfig
+        {
+            DisableFetchingTableMetadata = true
+        })
+        .Build();
     protected readonly ILogger<DynamoDbGenericRepository<T>> _logger = logger;
 
     public virtual async Task SaveAsync(T entity, CancellationToken ct = default)

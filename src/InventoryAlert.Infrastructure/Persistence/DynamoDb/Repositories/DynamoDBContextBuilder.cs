@@ -5,7 +5,8 @@ namespace InventoryAlert.Infrastructure.Persistence.DynamoDb.Repositories;
 
 public class DynamoDBContextBuilder
 {
-    private Func<IAmazonDynamoDB> _clientFactory = null!;
+    private Func<IAmazonDynamoDB>? _clientFactory;
+    private DynamoDBContextConfig _config = new();
 
     public DynamoDBContextBuilder WithDynamoDBClient(Func<IAmazonDynamoDB> clientFactory)
     {
@@ -13,11 +14,27 @@ public class DynamoDBContextBuilder
         return this;
     }
 
+    public DynamoDBContextBuilder WithDynamoDBClient(IAmazonDynamoDB client)
+    {
+        _clientFactory = () => client;
+        return this;
+    }
+
+    public DynamoDBContextBuilder WithConfig(DynamoDBContextConfig config)
+    {
+        _config = config;
+        return this;
+    }
+
     public IDynamoDBContext Build()
     {
+        if (_clientFactory == null)
+        {
+            throw new InvalidOperationException("DynamoDB client must be configured.");
+        }
+
 #pragma warning disable CS0618
-        return new DynamoDBContext(_clientFactory());
+        return new DynamoDBContext(_clientFactory(), _config);
 #pragma warning restore CS0618
     }
 }
-

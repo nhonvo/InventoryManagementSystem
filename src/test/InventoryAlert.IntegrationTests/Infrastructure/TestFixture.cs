@@ -86,10 +86,7 @@ public class TestFixture : WebApplicationFactory<InventoryAlert.Api.Program>, IA
                 services.AddScoped<ISqsHelper, SqsHelper>();
 
                 services.AddScoped<SyncPricesJob>();
-                services.AddScoped<SyncMetricsJob>();
-                services.AddScoped<SyncEarningsJob>();
-                services.AddScoped<SyncRecommendationsJob>();
-                services.AddScoped<SyncInsidersJob>();
+                services.AddScoped<SyncStockFundamentalsJob>();
                 services.AddScoped<NewsSyncJob>();
                 services.AddScoped<CleanupPriceHistoryJob>();
                 services.AddScoped<IProcessQueueJob, ProcessQueueJob>();
