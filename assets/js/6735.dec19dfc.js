@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkinventory_alert_wiki=self.webpackChunkinventory_alert_wiki||[]).push([[6735],{6735:(e,i,n)=>{n.d(i,{createEventModelingServices:()=>r.g});var r=n(2968);n(9302)}}]);

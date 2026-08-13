@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkinventory_alert_wiki=self.webpackChunkinventory_alert_wiki||[]).push([[4737],{4737:(e,i,r)=>{r.d(i,{createPieServices:()=>t.f});var t=r(532);r(9302)}}]);

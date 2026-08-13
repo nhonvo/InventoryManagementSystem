@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkinventory_alert_wiki=self.webpackChunkinventory_alert_wiki||[]).push([[7180],{7180:(e,i,r)=>{r.d(i,{createPacketServices:()=>t.$});var t=r(4824);r(9302)}}]);

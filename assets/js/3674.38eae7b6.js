@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkinventory_alert_wiki=self.webpackChunkinventory_alert_wiki||[]).push([[3674],{3674:(e,i,r)=>{r.d(i,{createTreeViewServices:()=>t.I});var t=r(5738);r(9302)}}]);
