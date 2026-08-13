@@ -1,25 +1,37 @@
-# User Authentication Flow
+---
+title: User Authentication & Remember Me Flow
+sidebar_position: 1
+description: Complete user authentication lifecycle covering Login, Registration, Token Refresh, and 30-Day Remember Me sessions.
+---
 
-> How users register, log in, refresh tokens, and access protected resources.
+# 🔐 User Authentication & Remember Me Flow
 
-## JWT Token Lifecycle
+How users register, log in with persistent "Remember Me" sessions, refresh tokens, and access protected resources.
 
-Access token TTL defaults to **60 minutes** (config: `Jwt:ExpiryMinutes`). Refresh token TTL defaults to **7 days** (config: `Jwt:RefreshExpiryDays`). Refresh token is stored as an `httpOnly` cookie; `Secure` is enabled only on HTTPS, and `SameSite` is `None` for HTTPS/localhost (otherwise `Lax`).
+## JWT Token Lifecycle & Remember Me
+
+Access token TTL defaults to **60 minutes** (config: `Jwt:ExpiryMinutes`). Refresh token TTL defaults to **7 days** (config: `Jwt:RefreshExpiryDays`).
+
+When a user enables **Remember Me** during login:
+- The backend extends the refresh token cookie lifespan to **30 days**.
+- The frontend stores `remembered_username` in `localStorage` to automatically pre-fill returning user credentials.
+- Refresh tokens are stored as `httpOnly` cookies (`Secure` on HTTPS, `SameSite=None` for HTTPS/localhost).
 
 ```mermaid
 sequenceDiagram
     participant User
-    participant UI as Next.js UI
+    participant UI as Next.js UI (/login)
     participant API as InventoryAlert.Api
     participant DB as PostgreSQL
 
-    User->>UI: Fills credentials (username + password)
-    UI->>API: POST /api/v1/auth/login
+    User->>UI: Input credentials & check "Remember Me"
+    UI->>API: POST /api/v1/auth/login { username, password, rememberMe: true }
     API->>DB: SELECT User WHERE Username = X
     DB-->>API: User entity (PasswordHash)
     API->>API: BCrypt.Verify(password, hash)
     API-->>UI: 200 { accessToken (JWT), expiresAt }
-    Note over API,UI: Refresh token set as httpOnly cookie
+    Note over API,UI: Refresh token set as httpOnly cookie (Expires in 30 days)
+    UI->>UI: Save JWT in localStorage & remembered_username
     UI->>API: GET /api/v1/portfolio/positions\n(Authorization: Bearer <token>)
     API->>API: Validate JWT (signature + expiry + issuer + audience)
     API-->>UI: 200 OK + PagedResult<PortfolioPositionResponse>
