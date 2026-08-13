@@ -166,19 +166,19 @@ Render free tier outbound networking relies on IPv4 addresses. **Neon (`neon.tec
    - `Redis__ConnectionString`: *[Your Upstash connection string]*
    - `Finnhub__ApiKey`: *[Your Finnhub key]*
    - `Jwt__Key`: *[Super_Secret_32_Char_Key]*
-4. Deploy! Endpoint will be live at `https://inventory-alert-api.onrender.com`.
+4. Deploy! Endpoint will be live at `https://inventorymanagementsystem-s55e.onrender.com`.
 
 ### 4. Frontend UI Deployment on Vercel
 1. Register at [vercel.com](https://vercel.com).
 2. Import repo, set root directory to `src/ui/InventoryAlert.UI`.
 3. Add Environment Variables:
-   - `NEXT_PUBLIC_API_URL`: `https://inventory-alert-api.onrender.com`
-   - `NEXT_PUBLIC_SIGNALR_URL`: `https://inventory-alert-api.onrender.com/hubs/notifications`
+   - `NEXT_PUBLIC_API_URL`: `https://inventorymanagementsystem-s55e.onrender.com`
+   - `NEXT_PUBLIC_SIGNALR_URL`: `https://inventorymanagementsystem-s55e.onrender.com/hubs/notifications`
 4. Deploy! Frontend live at `https://inventory-alert-ui.vercel.app`.
 
 ### 5. Prevent Render Free Tier Sleep (UptimeRobot Keep-Alive)
 - Render free web services sleep after 15 mins of inactivity.
-- Register a free monitor at [uptimerobot.com](https://uptimerobot.com) to HTTP ping `https://inventory-alert-api.onrender.com/healthz` every 10 minutes to keep your demo awake 24/7 at **$0 cost**!
+- Register a free monitor at [uptimerobot.com](https://uptimerobot.com) to HTTP ping `https://inventorymanagementsystem-s55e.onrender.com/healthz` every 10 minutes to keep your demo awake 24/7 at **$0 cost**!
 
 ---
 
@@ -197,7 +197,7 @@ dotnet test src/test/InventoryAlert.IntegrationTests/InventoryAlert.IntegrationT
 ### Health Check Endpoint
 Query your live running API:
 ```bash
-curl https://inventory-alert-api.onrender.com/healthz
+curl https://inventorymanagementsystem-s55e.onrender.com/healthz
 ```
 Expected Output: `Healthy`
 
@@ -223,7 +223,7 @@ Since Render free tier containers only expose port `8080` publicly, the API auto
 
 Run `dynamodb-admin` on your computer and point it to your live Render API proxy endpoint:
 ```bash
-DYNAMO_ENDPOINT=https://inventory-alert-api.onrender.com/aws npx dynamodb-admin
+DYNAMO_ENDPOINT=https://inventorymanagementsystem-s55e.onrender.com/aws npx dynamodb-admin
 ```
 Open `http://localhost:8001` in your local browser to query, scan, and manage DynamoDB tables hosted inside your Render container.
 
