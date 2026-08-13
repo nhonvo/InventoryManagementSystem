@@ -34,21 +34,35 @@ jobs:
           --no-restore --no-build --configuration Release \
           --verbosity normal \
           --collect:"XPlat Code Coverage" \
-          --results-directory ./coverage
-          
-    - name: Generate Coverage Report
+          --results-directory ./coverage \
+          --logger "trx;LogFileName=unittest-results.trx"
+
+    - name: Install Coverage Tools & Generate Report
       run: |
-        dotnet tool install --global dotnet-reportgenerator-globaltool
+        dotnet tool install --global dotnet-reportgenerator-globaltool || true
+        dotnet tool install --global coverlet.console || true
         reportgenerator \
           -reports:./coverage/**/coverage.cobertura.xml \
           -targetdir:./coverage/report \
-          -reporttypes:"Html;MarkdownSummary"
+          -reporttypes:"Html;MarkdownSummary;MarkdownSummaryGithub;TextSummary"
         
-        # Display summary in GitHub Action UI
-        echo "## Code Coverage Summary" >> $GITHUB_STEP_SUMMARY
-        cat ./coverage/report/Summary.md >> $GITHUB_STEP_SUMMARY
+        # Display Code Coverage & Test Report in GitHub Action Run Summary UI
+        echo "## 📊 Unit Test & Code Coverage Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ -f ./coverage/report/SummaryGithub.md ]; then
+          cat ./coverage/report/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+        elif [ -f ./coverage/report/Summary.md ]; then
+          cat ./coverage/report/Summary.md >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ -f ./coverage/report/Summary.txt ]; then
+          echo "### Coverage Metrics Text Breakdown" >> $GITHUB_STEP_SUMMARY
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          cat ./coverage/report/Summary.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        fi
 
-    - name: Upload Coverage Report
+    - name: Upload Coverage Report Artifact
       uses: actions/upload-artifact@v7
       with:
         name: code-coverage-report

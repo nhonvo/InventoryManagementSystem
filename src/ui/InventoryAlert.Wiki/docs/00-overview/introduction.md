@@ -48,6 +48,17 @@ Users who maintain a portfolio of stock positions need to know immediately when 
                                                :5341
 ```
 
+## 🌐 Production Environment & Endpoints
+
+| Service / Interface | Production URL | Description |
+|---|---|---|
+| 🌐 **Production API Host** | [https://inventorymanagementsystem-s55e.onrender.com](https://inventorymanagementsystem-s55e.onrender.com) | Main API ingress host on Render |
+| 📜 **Swagger OpenAPI UI** | [https://inventorymanagementsystem-s55e.onrender.com/swagger](https://inventorymanagementsystem-s55e.onrender.com/swagger) | Interactive API exploration and testing |
+| 💎 **Scalar API Reference** | [https://inventorymanagementsystem-s55e.onrender.com/scalar/v1](https://inventorymanagementsystem-s55e.onrender.com/scalar/v1) | Modern, searchable OpenAPI documentation |
+| 💓 **Production Health Check** | [https://inventorymanagementsystem-s55e.onrender.com/healthz](https://inventorymanagementsystem-s55e.onrender.com/healthz) | Live service status endpoint pinged by keep-alive |
+| 🗄️ **DynamoDB Admin Proxy** | [https://inventorymanagementsystem-s55e.onrender.com/aws](https://inventorymanagementsystem-s55e.onrender.com/aws) | Moto proxy endpoint for local `dynamodb-admin` GUI |
+| 🔍 **Production Monitoring & Bug Tracing** | [Production Monitoring & Tracing Guide](../07-dev-maintenance/production-monitoring-and-tracing) | Operational runbook for production logs, correlation IDs, and error debugging |
+
 ## Seed Accounts
 
 | Username | Password | Role |
@@ -58,6 +69,7 @@ Users who maintain a portfolio of stock positions need to know immediately when 
 ## Quick Links
 
 - [Getting Started →](../07-dev-maintenance/getting-started)
+- [Production Monitoring & Bug Tracing →](../07-dev-maintenance/production-monitoring-and-tracing)
 - [Architecture Overview →](../02-architecture-techstack/architecture-overview)
 - [Data Model →](../03-data-model/data-model)
 - [API Reference →](../05-api-services/internal-api)

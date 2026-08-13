@@ -50,6 +50,7 @@ How the system talks to the outside world and background workloads.
 Everything you need to run, build, and maintain the platform.
 
 - **[Getting Started](./07-dev-maintenance/getting-started.md)** — Docker commands, seed credentials, service URLs.
+- **[Production Monitoring & Bug Tracing](./07-dev-maintenance/production-monitoring-and-tracing.md)** — Operational runbook for production logs, correlation IDs, and error debugging.
 - **[.NET CLI Reference](./07-dev-maintenance/dotnet-commands.md)** — Migrations, test commands, publish guide.
 - **[Testing & Standards](./07-dev-maintenance/testing-and-standards.md)** — C# 12 rules, primary constructors, and common patterns.
 - **[Test Structure & App Quality](./07-dev-maintenance/test-strategy.md)** — Test project architecture, CI/CD gates, and runtime observability.
