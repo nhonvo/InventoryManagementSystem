@@ -4,6 +4,8 @@ import ThemeProvider from '@/components/ThemeProvider'
 import NavbarWrapper from '@/components/NavbarWrapper'
 import { NotificationProvider } from '@/components/NotificationProvider'
 
+import MobileBottomNav from '@/components/MobileBottomNav'
+
 // System font stack — avoids network requests during Docker builds
 const fontStyle = {
   fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -45,9 +47,10 @@ export default function RootLayout({
           <NotificationProvider>
             {/* NavbarWrapper is a client component that owns searchOpen state */}
             <NavbarWrapper />
-            <main className="flex-1 overflow-auto max-w-screen-2xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+            <main className="flex-1 overflow-auto max-w-screen-2xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 lg:pb-12">
               {children}
             </main>
+            <MobileBottomNav />
           </NotificationProvider>
         </ThemeProvider>
       </body>

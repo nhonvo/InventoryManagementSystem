@@ -98,8 +98,8 @@ export default function Navbar({ onSearchOpen }: NavbarProps) {
               </kbd>
             </button>
 
-            {/* User menu (desktop) */}
-            <div className="hidden sm:block">
+            {/* User menu */}
+            <div className="flex items-center">
               <UserNav />
             </div>
 
