@@ -50,12 +50,20 @@ export default function UserNav() {
       </button>
 
       {!token ? (
-        <Link 
-          href="/login" 
-          className="text-sm font-bold bg-zinc-900 dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl hover:opacity-90 transition-all shadow-lg"
-        >
-          Sign In
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link 
+            href="/login" 
+            className="text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white px-3 py-2 transition-colors"
+          >
+            Sign In
+          </Link>
+          <Link 
+            href="/register" 
+            className="text-xs font-bold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-4 py-2 rounded-xl shadow-lg shadow-blue-500/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Register
+          </Link>
+        </div>
       ) : (
         <div className="flex items-center gap-4">
           <NotificationBell />

@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { fetchApi } from '@/lib/api'
@@ -10,11 +10,25 @@ import { fetchApi } from '@/lib/api'
 function LoginForm() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const registered = searchParams.get('registered')
+  const paramUsername = searchParams.get('username')
+
+  useEffect(() => {
+    if (paramUsername) {
+      setUsername(paramUsername)
+    } else {
+      const savedUser = localStorage.getItem('remembered_username')
+      if (savedUser) {
+        setUsername(savedUser)
+        setRememberMe(true)
+      }
+    }
+  }, [paramUsername])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,12 +38,19 @@ function LoginForm() {
     try {
       const data = await fetchApi('/api/v1/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, rememberMe }),
       })
       
-      const token = data.accessToken;
+      const token = data.accessToken
       if (token) {
         localStorage.setItem('auth_token', token)
+
+        if (rememberMe) {
+          localStorage.setItem('remembered_username', username)
+        } else {
+          localStorage.removeItem('remembered_username')
+        }
+
         window.location.href = '/' // Force hard redirect to sync all components
       }
     } catch (err: any) {
@@ -40,17 +61,21 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh]">
+    <div className="flex flex-col items-center justify-center min-h-[75vh]">
       <div className="w-full max-w-md p-10 space-y-8 bg-white/60 dark:bg-black/60 backdrop-blur-3xl border border-white/40 dark:border-white/10 rounded-[2.5rem] shadow-2xl dark:shadow-black/50 relative overflow-hidden group">
         <div className="absolute -top-32 -left-32 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full group-hover:bg-blue-500/20 transition-all duration-1000"></div>
         <div className="text-center relative z-10">
           <h2 className="text-4xl font-semibold text-zinc-900 dark:text-white tracking-tight">Welcome Back</h2>
-          <p className="mt-2 text-zinc-500 dark:text-zinc-400 font-medium">Log in to your account</p>
+          <p className="mt-2 text-zinc-500 dark:text-zinc-400 font-medium">Log in to your InventoryAlert account</p>
         </div>
 
         {registered && (
-          <div className="p-3 text-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg">
-            Registration successful! Please log in.
+          <div className="p-4 text-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl flex items-center gap-3">
+            <span className="text-xl">✅</span>
+            <div>
+              <p className="font-bold">Registration Successful!</p>
+              <p className="text-xs text-emerald-400/80">Please log in with your credentials.</p>
+            </div>
           </div>
         )}
         
@@ -78,10 +103,24 @@ function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
+
+            <div className="flex items-center justify-between pt-1 px-1">
+              <label className="flex items-center gap-3 cursor-pointer select-none group">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-5 h-5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 transition-all cursor-pointer"
+                />
+                <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+                  Remember me for 30 days
+                </span>
+              </label>
+            </div>
           </div>
 
           {error && (
-            <div className="p-3 text-sm bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg">
+            <div className="p-4 text-sm bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl">
               {error}
             </div>
           )}
@@ -94,10 +133,10 @@ function LoginForm() {
             {loading ? 'AUTHENTICATING...' : 'SIGN IN SECURELY'}
           </button>
 
-          <div className="text-center text-sm">
+          <div className="text-center text-sm pt-2">
             <span className="text-zinc-500">Don't have an account? </span>
-            <Link href="/register" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
-              Register
+            <Link href="/register" className="text-blue-500 hover:text-blue-400 font-bold transition-colors">
+              Create New Account
             </Link>
           </div>
         </form>
@@ -108,7 +147,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="text-white">Loading...</div>}>
+    <Suspense fallback={<div className="text-white text-center py-20">Loading login session...</div>}>
       <LoginForm />
     </Suspense>
   )

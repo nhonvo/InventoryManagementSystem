@@ -1,6 +1,6 @@
 namespace InventoryAlert.Domain.DTOs;
 
-public record LoginRequest(string Username, string Password);
+public record LoginRequest(string Username, string Password, bool RememberMe = false);
 
 public record RegisterRequest(string Username, string Password, string Email);
 

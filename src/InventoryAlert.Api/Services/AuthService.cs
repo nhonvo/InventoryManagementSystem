@@ -31,7 +31,8 @@ public class AuthService(
         var expiresAt = DateTime.UtcNow.AddMinutes(_settings.Jwt.ExpiryMinutes > 0 ? _settings.Jwt.ExpiryMinutes : 60);
         var token = GenerateAccessToken(user, expiresAt);
 
-        var refreshExpiresAt = DateTime.UtcNow.AddDays(_settings.Jwt.RefreshExpiryDays > 0 ? _settings.Jwt.RefreshExpiryDays : 7);
+        var refreshExpiryDays = request.RememberMe ? 30 : (_settings.Jwt.RefreshExpiryDays > 0 ? _settings.Jwt.RefreshExpiryDays : 7);
+        var refreshExpiresAt = DateTime.UtcNow.AddDays(refreshExpiryDays);
         var refreshToken = GenerateRefreshToken(user, refreshExpiresAt);
 
         _logger.LogInformation("[Auth] User {Username} authenticated successfully.", user.Username);
