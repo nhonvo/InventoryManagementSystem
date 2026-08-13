@@ -41,8 +41,7 @@ public class NewsSyncJobTests
         _finnhubMock.Setup(f => f.GetMarketNewsAsync("general", It.IsAny<CancellationToken>())).ReturnsAsync(generalNews);
         _finnhubMock.Setup(f => f.GetMarketNewsAsync(It.Is<string>(s => s != "general"), It.IsAny<CancellationToken>())).ReturnsAsync(new List<FinnhubNewsItem>());
 
-        var listing = new StockListing { TickerSymbol = "AAPL" };
-        _uowMock.Setup(u => u.StockListings.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<StockListing> { listing });
+        _uowMock.Setup(u => u.StockListings.GetActiveSymbolsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<string> { "AAPL" });
 
         var companyNews = new List<FinnhubNewsItem> { new() { Id = 3, Headline = "Apple News", Datetime = 1712217602 } };
         _finnhubMock.Setup(f => f.GetCompanyNewsAsync("AAPL", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -63,12 +62,7 @@ public class NewsSyncJobTests
         // Arrange
         _finnhubMock.Setup(f => f.GetMarketNewsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(new List<FinnhubNewsItem>());
 
-        var listings = new List<StockListing>
-        {
-            new() { TickerSymbol = "AAPL" },
-            new() { TickerSymbol = "MSFT" }
-        };
-        _uowMock.Setup(u => u.StockListings.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(listings);
+        _uowMock.Setup(u => u.StockListings.GetActiveSymbolsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<string> { "AAPL", "MSFT" });
 
         _finnhubMock.Setup(f => f.GetCompanyNewsAsync("AAPL", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("API Error"));

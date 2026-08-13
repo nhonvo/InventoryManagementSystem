@@ -85,28 +85,28 @@ public class NewsSyncJob(
 
     private async Task<int> SyncCompanyNewsInternalAsync(CancellationToken ct)
     {
-        var listings = await _unitOfWork.StockListings.GetAllAsync(ct);
+        var activeSymbols = await _unitOfWork.StockListings.GetActiveSymbolsAsync(ct);
         var to = DateTime.UtcNow.ToString("yyyy-MM-dd");
         var from = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-dd");
         int totalSaved = 0;
 
-        // Using Parallel fetching for company news to speed up execution for many symbols
-        var options = new ParallelOptions { MaxDegreeOfParallelism = _settings.MaxDegreeOfParallelism, CancellationToken = ct };
+        // Using Parallel fetching for company news to speed up execution for active symbols
+        var options = new ParallelOptions { MaxDegreeOfParallelism = Math.Min(_settings.MaxDegreeOfParallelism, 4), CancellationToken = ct };
 
-        await Parallel.ForEachAsync(listings, options, async (listing, token) =>
+        await Parallel.ForEachAsync(activeSymbols, options, async (symbol, token) =>
         {
             try
             {
-                var articles = await _finnhub.GetCompanyNewsAsync(listing.TickerSymbol, from, to, token);
+                var articles = await _finnhub.GetCompanyNewsAsync(symbol, from, to, token);
                 if (articles.Count == 0) return;
 
                 var entries = articles
                     .DistinctBy(a => a.Id)
                     .Select(a => new CompanyNewsDynamoEntry
                     {
-                        PK = $"SYMBOL#{listing.TickerSymbol.ToUpperInvariant()}",
+                        PK = $"SYMBOL#{symbol.ToUpperInvariant()}",
                         SK = $"TS#{a.Datetime}#ID#{a.Id}",
-                        Symbol = listing.TickerSymbol,
+                        Symbol = symbol,
                         Timestamp = a.Datetime,
                         Headline = a.Headline ?? "No Headline",
                         Summary = a.Summary ?? string.Empty,
@@ -122,7 +122,7 @@ public class NewsSyncJob(
             }
             catch (Exception ex)
             {
-                _logger.LogWarning("[NewsSync] Failed to fetch company news for {Symbol}: {Msg}", listing.TickerSymbol, ex.Message);
+                _logger.LogWarning("[NewsSync] Failed to fetch company news for {Symbol}: {Msg}", symbol, ex.Message);
             }
         });
 

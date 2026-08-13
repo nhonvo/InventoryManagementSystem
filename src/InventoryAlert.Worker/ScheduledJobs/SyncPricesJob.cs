@@ -32,26 +32,25 @@ public class SyncPricesJob(
         {
             _logger.LogInformation("[SyncPrices] Starting price synchronization...");
 
-            var listings = await _unitOfWork.StockListings.GetAllAsync(ct);
+            var activeSymbols = await _unitOfWork.StockListings.GetActiveSymbolsAsync(ct);
             int success = 0;
 
             var fetchedQuotes = new ConcurrentDictionary<string, decimal>();
             var newPriceHistories = new ConcurrentBag<PriceHistory>();
             var pendingNotifications = new List<Notification>();
 
-            // PART 1: Sync Price (Enhanced with Parallelism)
-            // Using a concurrency limit to prevent hitting API rate limits too hard
-            var options = new ParallelOptions { MaxDegreeOfParallelism = _settings.MaxDegreeOfParallelism, CancellationToken = ct };
-            await Parallel.ForEachAsync(listings, options, async (listing, token) =>
+            // PART 1: Sync Price (Scoped to Active User Symbols & Throttled)
+            var options = new ParallelOptions { MaxDegreeOfParallelism = Math.Min(_settings.MaxDegreeOfParallelism, 4), CancellationToken = ct };
+            await Parallel.ForEachAsync(activeSymbols, options, async (symbol, token) =>
             {
                 try
                 {
-                    var quote = await _finnhub.GetQuoteAsync(listing.TickerSymbol, token);
+                    var quote = await _finnhub.GetQuoteAsync(symbol, token);
                     if (quote?.CurrentPrice is null or 0) return;
 
                     newPriceHistories.Add(new PriceHistory
                     {
-                        TickerSymbol = listing.TickerSymbol,
+                        TickerSymbol = symbol,
                         RecordedAt = DateTime.UtcNow,
                         Open = quote.OpenPrice ?? 0,
                         High = quote.HighPrice ?? 0,
@@ -59,12 +58,12 @@ public class SyncPricesJob(
                         Price = quote.CurrentPrice.Value
                     });
 
-                    fetchedQuotes[listing.TickerSymbol] = quote.CurrentPrice.Value;
+                    fetchedQuotes[symbol] = quote.CurrentPrice.Value;
                     Interlocked.Increment(ref success);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning("[SyncPrices] Failed to fetch quote for {Symbol}: {Msg}", listing.TickerSymbol, ex.Message);
+                    _logger.LogWarning("[SyncPrices] Failed to fetch quote for {Symbol}: {Msg}", symbol, ex.Message);
                 }
             });
 

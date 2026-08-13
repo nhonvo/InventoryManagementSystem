@@ -30,4 +30,24 @@ public class StockListingRepository(AppDbContext context)
                         EF.Functions.ILike(x.TickerSymbol, $"%{query}%"))
             .ToListAsync(ct);
     }
+
+    public async Task<IEnumerable<string>> GetActiveSymbolsAsync(CancellationToken ct)
+    {
+        var watchlistSymbols = await _context.WatchlistItems.AsNoTracking().Select(x => x.TickerSymbol).Distinct().ToListAsync(ct);
+        var tradeSymbols = await _context.Trades.AsNoTracking().Select(x => x.TickerSymbol).Distinct().ToListAsync(ct);
+        var alertSymbols = await _context.AlertRules.AsNoTracking().Where(r => r.IsActive).Select(x => x.TickerSymbol).Distinct().ToListAsync(ct);
+
+        var activeSymbols = watchlistSymbols
+            .Concat(tradeSymbols)
+            .Concat(alertSymbols)
+            .Distinct()
+            .ToList();
+
+        if (activeSymbols.Count == 0)
+        {
+            activeSymbols = await _dbSet.AsNoTracking().Select(x => x.TickerSymbol).Distinct().ToListAsync(ct);
+        }
+
+        return activeSymbols;
+    }
 }

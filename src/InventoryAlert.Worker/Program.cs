@@ -68,10 +68,7 @@ try
 
     // Scheduled Jobs
     builder.Services.AddScoped<SyncPricesJob>();
-    builder.Services.AddScoped<SyncMetricsJob>();
-    builder.Services.AddScoped<SyncEarningsJob>();
-    builder.Services.AddScoped<SyncRecommendationsJob>();
-    builder.Services.AddScoped<SyncInsidersJob>();
+    builder.Services.AddScoped<SyncStockFundamentalsJob>();
     builder.Services.AddScoped<NewsSyncJob>();
     builder.Services.AddScoped<CleanupPriceHistoryJob>();
     builder.Services.AddScoped<KeepAliveJob>();

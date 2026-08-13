@@ -34,8 +34,7 @@ public class SyncPricesJobTests
     public async Task Execute_RecordsPriceHistory_ForActiveListings()
     {
         // Arrange
-        var listing = new StockListing { TickerSymbol = "AAPL" };
-        _uow.Setup(u => u.StockListings.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<StockListing> { listing });
+        _uow.Setup(u => u.StockListings.GetActiveSymbolsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<string> { "AAPL" });
         _finnhub.Setup(f => f.GetQuoteAsync("AAPL", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new InventoryAlert.Domain.External.Finnhub.FinnhubQuoteResponse { CurrentPrice = 150m });
 
@@ -66,7 +65,7 @@ public class SyncPricesJobTests
             IsActive = true
         };
 
-        _uow.Setup(u => u.StockListings.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<StockListing> { listing });
+        _uow.Setup(u => u.StockListings.GetActiveSymbolsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<string> { "TSLA" });
         _finnhub.Setup(f => f.GetQuoteAsync("TSLA", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new InventoryAlert.Domain.External.Finnhub.FinnhubQuoteResponse { CurrentPrice = 210m });
 

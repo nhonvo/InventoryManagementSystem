@@ -22,25 +22,10 @@ public sealed class JobSchedulerService(
             x => x.ExecuteAsync(CancellationToken.None),
             s.SyncPrices);
 
-        _recurringJobs.AddOrUpdate<SyncMetricsJob>(
-            "sync-metrics",
+        _recurringJobs.AddOrUpdate<SyncStockFundamentalsJob>(
+            "sync-fundamentals",
             x => x.ExecuteAsync(CancellationToken.None),
-            s.SyncMetrics);
-
-        _recurringJobs.AddOrUpdate<SyncEarningsJob>(
-            "sync-earnings",
-            x => x.ExecuteAsync(CancellationToken.None),
-            s.SyncEarnings);
-
-        _recurringJobs.AddOrUpdate<SyncRecommendationsJob>(
-            "sync-recommendations",
-            x => x.ExecuteAsync(CancellationToken.None),
-            s.SyncRecommendations);
-
-        _recurringJobs.AddOrUpdate<SyncInsidersJob>(
-            "sync-insiders",
-            x => x.ExecuteAsync(CancellationToken.None),
-            s.SyncInsiders);
+            "10 6 * * *");
 
         _recurringJobs.AddOrUpdate<NewsSyncJob>(
             "news-sync",
@@ -50,7 +35,7 @@ public sealed class JobSchedulerService(
         _recurringJobs.AddOrUpdate<CleanupPriceHistoryJob>(
             "cleanup-prices",
             x => x.ExecuteAsync(CancellationToken.None),
-            s.CleanupPrices);
+            "20 2 * * *");
 
         _recurringJobs.AddOrUpdate<KeepAliveJob>(
             "keep-alive",
