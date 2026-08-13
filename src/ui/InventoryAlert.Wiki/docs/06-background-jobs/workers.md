@@ -36,7 +36,7 @@ Running inside `InventoryAlert.Worker`, driven by Hangfire cron schedules.
 
 Schedules are configurable via `WorkerSettings.Schedules.*` (with sensible defaults in code and environment overrides via `appsettings*.json`).
 
-InventoryAlert uses a total of **8 background jobs** (7 recurring via Hangfire + 1 continuous SQS listener).
+InventoryAlert uses a total of **9 background jobs** (8 recurring via Hangfire + 1 continuous SQS listener).
 
 | Job | Schedule setting | Finnhub Endpoint | Key duty |
 |---|---|---|---|
@@ -48,6 +48,7 @@ InventoryAlert uses a total of **8 background jobs** (7 recurring via Hangfire +
 | **NewsSyncJob** | `Schedules.MarketNews` | `/news` & `/company-news` | Consolidated market + company news sync (DynamoDB read-model) |
 | **CleanupPriceHistoryJob** | `Schedules.CleanupPrices` | — | Deletes `PriceHistory` rows older than 1 year |
 | **ProcessQueueJob** | Continuous | — | Native SQS poller + router + idempotency |
+| **KeepAliveJob** | `*/10 * * * *` | — | Self-pings `http://127.0.0.1:8080/healthz` to prevent Render container sleep |
 
 ---
 

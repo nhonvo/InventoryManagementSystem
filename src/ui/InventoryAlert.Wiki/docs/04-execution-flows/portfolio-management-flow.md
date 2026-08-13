@@ -22,7 +22,6 @@ sequenceDiagram
     User->>API: POST /api/v1/portfolio/positions
     API->>Service: OpenPositionAsync(request, userId)
     Service->>DB: BEGIN Transaction
-    Service->>DB: INSERT INTO WatchlistItems (Ensure tracked)
     Service->>DB: INSERT INTO Trades (Type=Buy, Qty, Price)
     Service->>DB: COMMIT Transaction
     
@@ -38,7 +37,7 @@ sequenceDiagram
     
     Note over User,SDS: Part 3: Performance Calculation
     Service->>SDS: GetQuoteAsync(symbol)
-    Service->>Service: Compute AvgPrice, MarketValue, TotalReturn
+    Service->>Service: Compute AvgPrice, MarketValue, TotalReturn from Trades
     Service-->>API: PortfolioPositionResponse
     API-->>User: 201 Created / 200 OK
 ```
@@ -47,7 +46,7 @@ sequenceDiagram
 
 ## Performance Calculation Logic
 
-The system computes performance metrics on-the-fly to ensure accuracy:
+The system computes performance metrics on-the-fly directly from the immutable **`Trades`** ledger:
 
 1.  **Net Holdings**: `SUM(BuyQuantity) - SUM(SellQuantity)`
 2.  **Total Buy Cost**: `SUM(BuyQuantity * BuyPrice)`
@@ -57,13 +56,15 @@ The system computes performance metrics on-the-fly to ensure accuracy:
 6.  **Total Return**: `MarketValue - TotalCost`
 7.  **Total Return %**: `(TotalReturn / TotalCost) * 100`
 
+> **Note**: Portfolio positions are derived exclusively from the immutable `Trade` ledger (`Trades` table). Watchlist entries (`WatchlistItems`) are observation-only and do NOT create portfolio positions.
+
 ---
 
 ## Removal Constraints
 
 To maintain data integrity, a position can only be removed if:
 - It has **no active Alert Rules**.
-- The removal operation deletes the `WatchlistItem` and **all associated `Trade` records** in a single transaction.
+- The removal operation deletes the `WatchlistItem` (if present) and **all associated `Trade` records** in a single transaction.
 
 ---
 
@@ -71,7 +72,8 @@ To maintain data integrity, a position can only be removed if:
 
 | Feature | Detail |
 |---|---|
-| **Transaction Safety** | Uses `ExecuteTransactionAsync` to ensure trades and watchlist entries are in sync. |
+| **Trade-Driven Positions** | Positions are queried via `_unitOfWork.Trades.GetTradedSymbolsPagedAsync`. Un-traded watchlist symbols are excluded. |
+| **Transaction Safety** | Uses `ExecuteTransactionAsync` to ensure trades are executed safely. |
 | **Validation** | Prevents "Short Selling" by validating net holdings before a `Sell` trade is recorded. |
 | **Bulk Import** | Supports importing multiple positions via `BulkImportPositionsAsync` for easy migration. |
 | **Real-Time Enrichment** | Integrates with `IStockDataService` to provide live P&L (Profit and Loss) metrics. |

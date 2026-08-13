@@ -56,6 +56,8 @@ When a user views their watchlist, the system:
 3. Sets `HoldingsCount`, `MarketValue`, and `TotalReturn` to **0** (since it is a watchlist-only item).
 4. Fetches the latest price via `IStockDataService` (which uses internal Redis caching).
 
+> **Architectural Guarantee**: Watchlist items are strictly observation-only. Adding a ticker to your Watchlist does NOT create a portfolio position or appear in `GET /api/v1/portfolio/positions`.
+
 ---
 
 ## Removal Flow

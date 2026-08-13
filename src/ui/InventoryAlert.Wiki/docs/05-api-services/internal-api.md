@@ -185,14 +185,22 @@ In-app notification delivery. UI polls every 30 seconds.
 
 ---
 
-## Events — `/api/v1/events` `[Admin]`
+## Events & Diagnostics — `/api/v1/events` `[Admin]`
 
-Internal event publishing for SQS integration.
+Internal event publishing for SQS integration and AWS Moto proxy endpoints.
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/` | Publish an integration event to SQS. Returns `202 Accepted`. |
-| GET | `/types` | List all supported event type strings. |
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/api/v1/events` | JWT | Publish an integration event to SQS. Returns `202 Accepted`. |
+| GET | `/api/v1/events/types` | JWT | List all supported event type strings. |
+| ANY | `/aws/{*catch-all}` | Public | Reverse-proxies HTTP requests to internal Moto emulator on port `5000` (allows remote `dynamodb-admin` or AWS CLI access). |
+
+---
+
+## 📖 API Documentation Interfaces
+
+- **Swagger UI**: `https://inventorymanagementsystem-s55e.onrender.com/swagger/index.html`
+- **Scalar API Reference**: `https://inventorymanagementsystem-s55e.onrender.com/scalar/v1`
 
 ---
 

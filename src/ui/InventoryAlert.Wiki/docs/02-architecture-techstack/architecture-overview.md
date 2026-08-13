@@ -66,14 +66,28 @@ To improve maintainability and reduce project-reference overhead, the solution u
 | Notifications | In-App `Notification` table | Replaces legacy Telegram integration |
 | Cache | Redis 7 | Dedup + quote + alert cooldown |
 
-## Docker Services Summary
+## Docker Services & Cloud Topology
+
+### Local Development Containers (`docker-compose.yml`)
 
 | Container | Image | Port | Role |
 |---|---|---|---|
-| `inventory-api` | Custom .NET 10 | `8080` | REST API |
+| `inventory-api` | Custom .NET 10 | `8080` | REST API Host |
 | `inventory-worker` | Custom .NET 10 | `8081` | Background jobs |
 | `inventory-db` | postgres:17-alpine | `5433` | PostgreSQL |
 | `inventory-cache` | redis:7.2-alpine | `6379` | Redis |
 | `inventory-seq` | datalust/seq | `5341` | Structured log viewer |
 | `inventory-moto` | motoserver/moto | `5000` | DynamoDB + SQS emulator |
 | `inventory-ui` | Custom Next.js | `3000` | Frontend |
+
+---
+
+### ☁️ Production Cloud Deployment ($0/Month Topology)
+
+- **Backend Web Service (Render)**: Single container running API (Port `8080`), Worker (Port `8081`), and Moto emulator (Port `5000`).
+  - Live Endpoint: `https://inventorymanagementsystem-s55e.onrender.com`
+  - `/aws` Proxy Route: Reverse-proxies traffic to Moto on port `5000` for remote `dynamodb-admin` and AWS CLI management.
+- **Relational DB (Neon.tech)**: PostgreSQL Managed Instance (IPv4 pooled connection string).
+- **Cache (Upstash)**: Managed Redis with TLS.
+- **Frontend UI (Vercel)**: Next.js 15 App Router deployed to global CDN.
+- **Uptime Keep-Alive**: `KeepAliveJob` self-pings `http://127.0.0.1:8080/healthz` every 10 minutes to prevent Render free-tier sleep.
