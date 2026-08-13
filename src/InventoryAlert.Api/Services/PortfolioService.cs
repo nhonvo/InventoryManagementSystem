@@ -17,11 +17,11 @@ public class PortfolioService(
     {
         var userGuid = Guid.Parse(userId);
 
-        var (pagedItems, totalItems) = await _unitOfWork.WatchlistItems.GetPagedByUserIdAsync(
-            userId, query.PageNumber, query.PageSize, query.Search, ct);
+        var (tradedSymbols, totalItems) = await _unitOfWork.Trades.GetTradedSymbolsPagedAsync(
+            userGuid, query.PageNumber, query.PageSize, query.Search, ct);
 
         var positions = new List<PortfolioPositionResponse>();
-        var symbols = pagedItems.Select(x => x.TickerSymbol).Distinct().ToList();
+        var symbols = tradedSymbols.ToList();
 
         if (symbols.Any())
         {
@@ -39,9 +39,8 @@ public class PortfolioService(
             var tradesBySymbol = tradesList.GroupBy(t => t.TickerSymbol).ToDictionary(g => g.Key, g => g.ToList());
             var listingsDict = listingsList.ToDictionary(l => l.TickerSymbol, l => l);
 
-            foreach (var item in pagedItems)
+            foreach (var symbol in symbols)
             {
-                var symbol = item.TickerSymbol;
                 if (!listingsDict.TryGetValue(symbol, out var listing)) continue;
 
                 var quote = quotesDict.GetValueOrDefault(symbol);
@@ -104,9 +103,7 @@ public class PortfolioService(
 
         if (!trades.Any())
         {
-            var watchlist = await _unitOfWork.ExecuteSynchronizedAsync(
-                () => _unitOfWork.WatchlistItems.GetByUserAndSymbolAsync(userId, symbol, ct), ct);
-            if (watchlist == null) return null;
+            return null;
         }
 
         var listing = await _unitOfWork.ExecuteSynchronizedAsync(
@@ -226,8 +223,12 @@ public class PortfolioService(
         var listing = await _unitOfWork.StockListings.FindBySymbolAsync(symbol, ct);
         if (listing == null)
         {
-            await _stockDataService.GetProfileAsync(symbol, ct);
+            var profile = await _stockDataService.GetProfileAsync(symbol, ct);
             listing = await _unitOfWork.StockListings.FindBySymbolAsync(symbol, ct);
+            if (listing == null && profile == null)
+            {
+                throw new InvalidOperationException($"Symbol '{symbol}' must be resolved before opening a position.");
+            }
         }
 
         if (listing == null)

@@ -120,4 +120,36 @@ public class PortfolioServiceTests
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("Cannot remove a position with active alert rules.*");
     }
+
+    [Fact]
+    public async Task GetPositionsPagedAsync_ReturnsOnlyTradedSymbols()
+    {
+        // Arrange
+        var query = new PortfolioQueryParams { PageNumber = 1, PageSize = 10 };
+        var tradedSymbols = (IEnumerable<string>)new List<string> { "AAPL" };
+        var listing = new StockListing { Id = 1, TickerSymbol = "AAPL", Name = "Apple Inc" };
+        var trades = (IEnumerable<Trade>)new List<Trade>
+        {
+            new() { Type = TradeType.Buy, Quantity = 5, UnitPrice = 150m, TickerSymbol = "AAPL" }
+        };
+
+        _uow.Setup(u => u.Trades.GetTradedSymbolsPagedAsync(UserGuid, 1, 10, null, Ct))
+            .ReturnsAsync((tradedSymbols, 1));
+        _uow.Setup(u => u.ExecuteSynchronizedAsync(It.IsAny<Func<Task<IEnumerable<Trade>>>>(), Ct))
+            .ReturnsAsync(trades);
+        _uow.Setup(u => u.ExecuteSynchronizedAsync(It.IsAny<Func<Task<IEnumerable<StockListing>>>>(), Ct))
+            .ReturnsAsync(new List<StockListing> { listing });
+        _stockData.Setup(s => s.GetQuoteAsync("AAPL", Ct))
+            .ReturnsAsync(new StockQuoteResponse("AAPL", 170m, 2m, 1.2, 172m, 168m, 169m, 168m, DateTime.UtcNow));
+
+        // Act
+        var result = await _sut.GetPositionsPagedAsync(query, UserId, Ct);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.TotalItems.Should().Be(1);
+        result.Items.Should().HaveCount(1);
+        result.Items.First().Symbol.Should().Be("AAPL");
+        result.Items.First().HoldingsCount.Should().Be(5);
+    }
 }
