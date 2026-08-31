@@ -71,7 +71,6 @@ try
     builder.Services.AddScoped<SyncStockFundamentalsJob>();
     builder.Services.AddScoped<NewsSyncJob>();
     builder.Services.AddScoped<CleanupPriceHistoryJob>();
-    builder.Services.AddScoped<KeepAliveJob>();
     builder.Services.AddScoped<IProcessQueueJob, ProcessQueueJob>();
 
     // Integration Event Handlers
