@@ -59,6 +59,19 @@ else
 fi
 QUEUE_ARN="arn:aws:sqs:${REGION}:${ACCOUNT_ID}:event-queue"
 
+# Optional alias queue: inventory-event-queue
+echo "Checking inventory-event-queue..."
+if aws sqs get-queue-url --queue-name inventory-event-queue --endpoint-url "$ENDPOINT_URL" > /dev/null 2>&1; then
+    echo "  [SKIP] inventory-event-queue already exists."
+else
+    echo "  [CREATE] inventory-event-queue..."
+    aws sqs create-queue \
+        --queue-name inventory-event-queue \
+        --attributes "{\"VisibilityTimeout\":\"30\",\"ReceiveMessageWaitTimeSeconds\":\"5\",\"RedrivePolicy\":\"{\\\"deadLetterTargetArn\\\":\\\"$DLQ_ARN\\\",\\\"maxReceiveCount\\\":\\\"3\\\"}\"}" \
+        --endpoint-url "$ENDPOINT_URL"
+fi
+INV_QUEUE_ARN="arn:aws:sqs:${REGION}:${ACCOUNT_ID}:inventory-event-queue"
+
 # --------------------------------------------------
 # 2. SNS initialization
 # --------------------------------------------------
@@ -86,6 +99,13 @@ else
         --topic-arn "$TOPIC_ARN" \
         --protocol sqs \
         --notification-endpoint "$QUEUE_ARN" \
+        --endpoint-url "$ENDPOINT_URL"
+
+    echo "  Subscribing inventory-event-queue to inventory-events..."
+    aws sns subscribe \
+        --topic-arn "$TOPIC_ARN" \
+        --protocol sqs \
+        --notification-endpoint "$INV_QUEUE_ARN" \
         --endpoint-url "$ENDPOINT_URL"
 fi
 

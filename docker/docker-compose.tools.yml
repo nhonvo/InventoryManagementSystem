@@ -1,0 +1,46 @@
+name: inventory-alert-tools
+
+# ==============================================================================
+# DATABASE MANAGEMENT TOOLS
+# ==============================================================================
+# 🐘 pgAdmin (http://localhost:5050)
+#   - Email: admin@inventoryalert.com
+#   - Password: admin
+#   - Pre-configured connections (auto-loaded with zero password prompt):
+#       1. Inventory DB (DEV - Local): inventory-db-dev:5432 / inventory_alert_db
+#       2. Inventory DB (PROD - Neon): ep-late-mode-azygp34n.c-3.ap-southeast-1.aws.neon.tech / neondb
+# ==============================================================================
+
+services:
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: inventory_pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@inventoryalert.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+      - PGADMIN_SERVER_JSON_FILE=/pgadmin4/servers.json
+      - PGPASSFILE=/pgpassfile
+    ports:
+      - "${PGADMIN_PORT:-5051}:80"
+    volumes:
+      - pgadmin_tools_data:/var/lib/pgadmin
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - ./docker/pgadmin/pgpassfile:/pgpassfile:ro
+    networks:
+      - default
+      - inventory-dev-net
+      - inventory-prod-net
+    restart: unless-stopped
+
+volumes:
+  pgadmin_tools_data:
+
+networks:
+  inventory-dev-net:
+    name: inventory-dev-net
+    external: true
+  inventory-prod-net:
+    name: inventory-prod-net
+    external: true

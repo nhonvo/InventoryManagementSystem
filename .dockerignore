@@ -1,0 +1,32 @@
+# Git & IDEs
+**/.git/
+**/.github/
+**/.vs/
+**/.vscode/
+**/.idea/
+*.user
+*.suo
+
+# Agent and temporary data
+**/.agents/
+**/artifacts/
+**/coverage/
+
+# Build outputs & node packages
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/build/
+**/.next/
+
+# Documentation source
+**/InventoryAlert.Wiki/
+
+# Logs & Environment secrets
+*.log
+msbuild.log
+.env
+.env.*
+!.env.example
+pgadmin/pgpassfile

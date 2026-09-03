@@ -10,6 +10,11 @@
 .env.production
 .env.render
 !.env.example
+deploy/render/.env.render
+pgadmin/pgpassfile
+pgadmin/pgpassfile.local
+docker/pgadmin/pgpassfile
+docker/pgadmin/pgpassfile.local
 
 # User-specific files
 *.rsuser

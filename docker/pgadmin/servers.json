@@ -1,0 +1,24 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Inventory DB (DEV - Local)",
+      "Group": "Inventory Alert",
+      "Host": "inventory-db-dev",
+      "Port": 5432,
+      "MaintenanceDB": "inventory_alert_db",
+      "Username": "postgres",
+      "SSLMode": "prefer",
+      "PassFile": "/pgpassfile"
+    },
+    "2": {
+      "Name": "Inventory DB (PROD - Neon Serverless)",
+      "Group": "Inventory Alert",
+      "Host": "ep-late-mode-azygp34n.c-3.ap-southeast-1.aws.neon.tech",
+      "Port": 5432,
+      "MaintenanceDB": "neondb",
+      "Username": "neondb_owner",
+      "SSLMode": "require",
+      "PassFile": "/pgpassfile"
+    }
+  }
+}
