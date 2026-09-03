@@ -502,3 +502,4 @@ artifacts/
 .agents/scripts/core/data/*.bin
 .agents/scripts/core/data/*.csv
 
+src/cloudflared.deb
