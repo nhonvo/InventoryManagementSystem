@@ -508,3 +508,6 @@ artifacts/
 .agents/scripts/core/data/*.csv
 
 src/cloudflared.deb
+
+# agyreview audit reports
+doc/audit/
