@@ -51,7 +51,8 @@ function LoginForm() {
           localStorage.removeItem('remembered_username')
         }
 
-        window.location.href = '/' // Force hard redirect to sync all components
+        const targetUrl = searchParams.get('returnUrl') || '/'
+        window.location.href = targetUrl // Force hard redirect to sync all components
       }
     } catch (err: any) {
       setError(err.message || 'Login failed')

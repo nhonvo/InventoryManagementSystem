@@ -14,29 +14,11 @@ tags: [workflow, planning, spec, clarification, inventoryalert, ddd]
 
 ---
 
-## Phase 0: Retrieve Context (BM25)
+## Phase 0: Retrieve Context
 
-// turbo
-
-1. **Search for related existing work**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "<feature keyword> domain service repository" -n 5
-   ```
-
-2. **Check architecture constraints**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "ddd layer rules application infrastructure" -n 3
-   ```
-
-3. **Search for related tests**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "<feature keyword> test mock xunit" -n 3
-   ```
-
-4. **Check known tech debt** (avoid repeating bugs):
-   ```bash
-   python .agents/scripts/core/bm25_search.py "tech debt blank entity transaction ExecuteTransactionAsync" -n 3
-   ```
+1. **Review existing work**: Check Domain entities, Application services, and repositories.
+2. **Check architecture constraints**: Follow DDD layer rules (`.agents/skills/ddd-architecture/SKILL.md`).
+3. **Review existing tests**: Check existing mock and xUnit tests.
 
 ---
 
@@ -84,19 +66,14 @@ Ask the user these questions (or proceed with defaults if they say "go"):
 
 ---
 
-## Phase 3: Freeze & Index
+## Phase 3: Freeze Spec
 
 1. Save spec to `doc/`:
    ```
    doc/<feature-id>_spec.md
    ```
 
-2. Re-index so BM25 finds the new spec immediately:
-   ```bash
-   python .agents/scripts/core/bm25_indexer.py
-   ```
-
-3. Update `doc/ROADMAP.md` with the new feature entry.
+2. Update `doc/ROADMAP.md` with the new feature entry.
 
 ---
 

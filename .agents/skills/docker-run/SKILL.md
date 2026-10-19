@@ -14,19 +14,9 @@ tags: [workflow, docker, postgresql, compose, local, inventoryalert]
 
 ---
 
-## Phase 0: Retrieve Config Context (BM25)
+## Phase 0: Review Docker Config
 
-// turbo
-
-1. **Find Docker config files**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "docker-compose postgresql api compose" -n 3
-   ```
-
-2. **Find appsettings docker config**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "appsettings Docker ConnectionStrings Finnhub" -n 3
-   ```
+Check `docker-compose.yml` and `appsettings.json` for environment and service configurations.
 
 ---
 

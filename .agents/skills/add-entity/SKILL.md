@@ -16,24 +16,10 @@ tags: [workflow, entity, ddd, domain, application, infrastructure, web, inventor
 
 ---
 
-## Phase 0: Retrieve Context (BM25)
+## Phase 0: Review Rules & Context
 
-// turbo
-
-1. **Find layout and architecture rules from skills**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "ddd-architecture clean-architecture domain entity" -n 3 -f ".agents/skills"
-   ```
-
-2. **Find Postgres and EF Core definitions from skills**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "inventoryalert-efcore postgresql-table-design postgresql-optimization" -n 3 -f ".agents/skills"
-   ```
-
-3. **Find DI registration patterns**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "ServiceExtensions AddScoped repository service" -n 3
-   ```
+1. **Review architecture rules**: Check `.agents/skills/ddd-architecture/SKILL.md`.
+2. **Review Postgres and EF Core definitions**: Check `.agents/skills/inventoryalert-efcore/SKILL.md`.
 
 ---
 
@@ -228,13 +214,10 @@ tags: [spec, ddd, <entity>]
 (Route map of active endpoints)
 ```
 
-Verify build and re-index:
+Verify build:
 ```bash
 dotnet build InventoryManagementSystem
 dotnet test InventoryManagementSystem --no-build
-
-# Re-index
-python .agents/scripts/core/bm25_indexer.py
 ```
 
 ---

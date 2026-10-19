@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { fetchApi } from "@/lib/api";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
+import { TradeModal } from "@/components/TradeModal";
+import { Toast } from "@/components/Toast";
+import { getErrorMessage } from "@/lib/error-utils";
 import Link from "next/link";
 import Pagination from "@/components/ui/Pagination";
 
@@ -104,9 +107,12 @@ export default function StockDetailPage() {
   const [earningsLoaded, setEarningsLoaded] = useState(false);
   const [earningsError, setEarningsError] = useState<string>("");
   const [recommendations, setRecommendations] = useState<RecommendationTrend[]>([]);
+  const [recommendationsLoaded, setRecommendationsLoaded] = useState(false);
   const [insiders, setInsiders] = useState<InsiderTransaction[]>([]);
+  const [insidersLoaded, setInsidersLoaded] = useState(false);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [peers, setPeers] = useState<string[]>([]);
+  const [peersLoaded, setPeersLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
@@ -115,6 +121,8 @@ export default function StockDetailPage() {
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [updatingWatchlist, setUpdatingWatchlist] = useState(false);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const checkWatchlistStatus = async () => {
     try {
@@ -133,12 +141,14 @@ export default function StockDetailPage() {
       if (isInWatchlist) {
         await fetchApi(`/api/v1/watchlist/${symbol}`, { method: 'DELETE' });
         setIsInWatchlist(false);
+        setToast({ message: `Removed ${symbol} from watchlist`, type: 'success' });
       } else {
         await fetchApi(`/api/v1/watchlist/${symbol}`, { method: 'POST' });
         setIsInWatchlist(true);
+        setToast({ message: `Added ${symbol} to watchlist`, type: 'success' });
       }
     } catch (err: any) {
-      alert(err.message || "Failed to update watchlist");
+      setToast({ message: getErrorMessage(err) || "Failed to update watchlist", type: 'error' });
     } finally {
       setUpdatingWatchlist(false);
     }
@@ -175,9 +185,12 @@ export default function StockDetailPage() {
     setEarningsLoaded(false);
     setEarningsError("");
     setRecommendations([]);
+    setRecommendationsLoaded(false);
     setInsiders([]);
+    setInsidersLoaded(false);
     setNews([]);
     setPeers([]);
+    setPeersLoaded(false);
     setNewsPage(1);
   }, [symbol]);
 
@@ -200,36 +213,39 @@ export default function StockDetailPage() {
         })
         .finally(() => setEarningsLoading(false));
     }
-    if (activeTab === "Recommendations" && recommendations.length === 0) {
+    if (activeTab === "Recommendations" && !recommendationsLoaded) {
       fetchApi(`/api/v1/stocks/${symbol}/recommendation`)
         .then((data) => setRecommendations(data || []))
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => setRecommendationsLoaded(true));
     }
-    if (activeTab === "Insiders" && insiders.length === 0) {
+    if (activeTab === "Insiders" && !insidersLoaded) {
       fetchApi(`/api/v1/stocks/${symbol}/insiders`)
         .then((data) => setInsiders(data || []))
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => setInsidersLoaded(true));
     }
     if (activeTab === "News") {
       fetchApi(`/api/v1/stocks/${symbol}/news?page=${newsPage}&pageSize=${newsPageSize}`)
         .then((data) => setNews(data || []))
         .catch(console.error);
     }
-    if (activeTab === "Peers" && peers.length === 0) {
+    if (activeTab === "Peers" && !peersLoaded) {
       fetchApi(`/api/v1/stocks/${symbol}/peers`)
         .then((data: PeersResponse) => setPeers(data?.peers || []))
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => setPeersLoaded(true));
     }
-  }, [activeTab, symbol, newsPage]);
+  }, [activeTab, symbol, newsPage, earningsLoaded, earningsLoading, recommendationsLoaded, insidersLoaded, peersLoaded]);
 
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto space-y-8 animate-pulse">
-        <div className="h-16 bg-zinc-900 rounded-2xl w-1/3"></div>
-        <div className="h-[400px] bg-zinc-900 rounded-2xl"></div>
+        <div className="h-16 bg-zinc-200 dark:bg-zinc-800 rounded-2xl w-1/3"></div>
+        <div className="h-[400px] bg-zinc-200 dark:bg-zinc-800 rounded-2xl"></div>
         <div className="grid grid-cols-3 gap-6">
-          <div className="col-span-2 h-64 bg-zinc-900 rounded-2xl"></div>
-          <div className="h-64 bg-zinc-900 rounded-2xl"></div>
+          <div className="col-span-2 h-64 bg-zinc-200 dark:bg-zinc-800 rounded-2xl"></div>
+          <div className="h-64 bg-zinc-200 dark:bg-zinc-800 rounded-2xl"></div>
         </div>
       </div>
     );
@@ -237,7 +253,7 @@ export default function StockDetailPage() {
 
   if (error) {
     return (
-      <div className="max-w-6xl mx-auto p-12 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-center">
+      <div className="max-w-6xl mx-auto p-12 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl text-center">
         <h3 className="text-xl font-bold mb-2">Error Loading Stock</h3>
         <p>{error}</p>
       </div>
@@ -246,47 +262,54 @@ export default function StockDetailPage() {
 
   return (
     <>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <PriceAlertModal
         isOpen={isAlertModalOpen}
         onClose={() => setIsAlertModalOpen(false)}
         symbol={symbol}
         currentPrice={quote?.price || 0}
       />
+      <TradeModal
+        isOpen={isTradeModalOpen}
+        onClose={() => setIsTradeModalOpen(false)}
+        symbol={symbol}
+        onSuccess={() => setToast({ message: `Trade recorded for ${symbol}`, type: 'success' })}
+      />
       <div className="flex flex-col gap-8 max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col md:flex-row items-start justify-between gap-6 pb-8 border-b border-white/10">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-6 pb-8 border-b border-zinc-200 dark:border-white/10">
           <div className="flex items-center gap-6">
             {profile?.logo && (
-              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center overflow-hidden p-2">
+              <div className="w-16 h-16 bg-white dark:bg-zinc-800 rounded-2xl flex items-center justify-center overflow-hidden p-2 border border-zinc-200 dark:border-white/10 shadow-sm">
                 <img src={profile.logo} alt={profile.name} className="max-w-full max-h-full object-contain" />
               </div>
             )}
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-5xl font-semibold tracking-tight uppercase">{symbol}</h1>
-                <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-xs font-bold rounded uppercase tracking-wider">
+                <h1 className="text-5xl font-semibold tracking-tight uppercase text-zinc-900 dark:text-white">{symbol}</h1>
+                <span className="px-2 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold rounded uppercase tracking-wider">
                   {profile?.industry}
                 </span>
               </div>
-              <p className="text-zinc-400 text-xl font-medium mt-1">{profile?.name}</p>
+              <p className="text-zinc-500 dark:text-zinc-400 text-xl font-medium mt-1">{profile?.name}</p>
             </div>
           </div>
           <div className="text-left md:text-right">
-            <p className="text-5xl font-semibold tracking-tight">${(quote?.price || 0).toFixed(2)}</p>
-            <p className={`text-xl font-bold mt-1 ${(quote?.change || 0) >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+            <p className="text-5xl font-semibold tracking-tight text-zinc-900 dark:text-white">${(quote?.price || 0).toFixed(2)}</p>
+            <p className={`text-xl font-bold mt-1 ${(quote?.change || 0) >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
               {(quote?.change || 0) >= 0 ? "+" : ""}{(quote?.change || 0).toFixed(2)} ({(quote?.changePercent || 0).toFixed(2)}%) Today
             </p>
           </div>
         </div>
 
         {/* Tab bar */}
-        <div className="flex gap-1 p-1 bg-zinc-900 rounded-2xl w-fit flex-wrap">
+        <div className="flex gap-1 p-1 bg-zinc-100 dark:bg-zinc-900 rounded-2xl w-fit flex-wrap border border-zinc-200/50 dark:border-transparent">
           {TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
-                activeTab === tab ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white"
+                activeTab === tab ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
               }`}
             >
               {tab}
@@ -298,25 +321,25 @@ export default function StockDetailPage() {
           {/* Main content area */}
           <div className="lg:col-span-2 space-y-8">
             {/* Chart placeholder */}
-            <div className="bg-zinc-900 border border-white/5 rounded-3xl p-8 h-[300px] flex flex-col items-center justify-center relative overflow-hidden group">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 rounded-3xl p-8 h-[300px] flex flex-col items-center justify-center relative overflow-hidden group shadow-sm dark:shadow-none">
               <div className="absolute inset-0 bg-linear-to-br from-blue-500/5 to-transparent"></div>
               <div className="text-center relative z-10">
-                <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400 mx-auto mb-6 group-hover:scale-110 transition-transform">
+                <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-500 mx-auto mb-6 group-hover:scale-110 transition-transform">
                   📈
                 </div>
-                <p className="text-xl font-bold text-white">Interactive Chart</p>
-                <p className="text-zinc-500 text-sm mt-2 max-w-xs">Connecting to real-time market stream for dynamic price visualization.</p>
+                <p className="text-xl font-bold text-zinc-900 dark:text-white">Interactive Chart</p>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-2 max-w-xs">Connecting to real-time market stream for dynamic price visualization.</p>
               </div>
             </div>
 
             {/* Tab content */}
-            <div className="bg-zinc-900 border border-white/5 rounded-3xl p-8">
-              <h3 className="font-bold text-2xl mb-6 tracking-tight">{activeTab}</h3>
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 rounded-3xl p-8 shadow-sm dark:shadow-none">
+              <h3 className="font-bold text-2xl mb-6 tracking-tight text-zinc-900 dark:text-white">{activeTab}</h3>
 
               {/* Overview */}
               {activeTab === "Overview" && (
                 <>
-                  <p className="text-zinc-400 leading-relaxed text-lg">
+                  <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed text-lg">
                     {profile?.name} is a leading company in the {profile?.industry} sector.
                     Based in {profile?.country}, trading in {profile?.currency} on {profile?.exchange}.
                     Market cap: ${((profile?.marketCap || 0) / 1_000_000_000).toFixed(2)}B.
@@ -325,12 +348,12 @@ export default function StockDetailPage() {
                     {[
                       { label: "Open", value: `$${(quote?.open || 0).toFixed(2)}` },
                       { label: "Prev Close", value: `$${(quote?.prevClose || 0).toFixed(2)}` },
-                      { label: "Day High", value: `$${(quote?.high || 0).toFixed(2)}`, color: "text-emerald-400" },
-                      { label: "Day Low", value: `$${(quote?.low || 0).toFixed(2)}`, color: "text-rose-400" },
+                      { label: "Day High", value: `$${(quote?.high || 0).toFixed(2)}`, color: "text-emerald-500" },
+                      { label: "Day Low", value: `$${(quote?.low || 0).toFixed(2)}`, color: "text-rose-500" },
                     ].map(({ label, value, color }) => (
-                      <div key={label} className="space-y-1">
+                      <div key={label} className="space-y-1 p-4 bg-zinc-50 dark:bg-zinc-800/30 rounded-2xl border border-zinc-100 dark:border-white/5">
                         <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider">{label}</p>
-                        <p className={`text-xl font-bold ${color ?? ""}`}>{value}</p>
+                        <p className={`text-xl font-bold text-zinc-900 dark:text-white ${color ?? ""}`}>{value}</p>
                       </div>
                     ))}
                   </div>
@@ -345,13 +368,13 @@ export default function StockDetailPage() {
                       { label: "P/E Ratio", value: metrics.peRatio?.toFixed(2) || "N/A" },
                       { label: "P/B Ratio", value: metrics.pbRatio?.toFixed(2) || "N/A" },
                       { label: "EPS (TTM)", value: metrics.epsBasicTtm != null ? `$${metrics.epsBasicTtm.toFixed(2)}` : "N/A" },
-                      { label: "Div Yield", value: `${metrics.dividendYield?.toFixed(2) || "0.00"}%`, color: "text-emerald-400" },
-                      { label: "52w High", value: metrics.week52High != null ? `$${metrics.week52High.toFixed(2)}` : "N/A", color: "text-emerald-400" },
-                      { label: "52w Low", value: metrics.week52Low != null ? `$${metrics.week52Low.toFixed(2)}` : "N/A", color: "text-rose-400" },
-                      { label: "Net Margin", value: `${metrics.marginNet?.toFixed(2) || "N/A"}%`, color: "text-blue-400" },
+                      { label: "Div Yield", value: `${metrics.dividendYield?.toFixed(2) || "0.00"}%`, color: "text-emerald-500" },
+                      { label: "52w High", value: metrics.week52High != null ? `$${metrics.week52High.toFixed(2)}` : "N/A", color: "text-emerald-500" },
+                      { label: "52w Low", value: metrics.week52Low != null ? `$${metrics.week52Low.toFixed(2)}` : "N/A", color: "text-rose-500" },
+                      { label: "Net Margin", value: `${metrics.marginNet?.toFixed(2) || "N/A"}%`, color: "text-blue-500" },
                       { label: "Rev Growth", value: `${metrics.revenueGrowthTtm?.toFixed(2) || "N/A"}%` },
                     ].map(({ label, value, color }) => (
-                      <div key={label} className="p-5 bg-zinc-800/20 rounded-2xl border border-white/5">
+                      <div key={label} className="p-5 bg-zinc-50 dark:bg-zinc-800/30 rounded-2xl border border-zinc-200 dark:border-white/5">
                         <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">{label}</p>
                         <p className={`text-2xl font-semibold ${color ?? "text-white"}`}>{value}</p>
                       </div>
@@ -367,14 +390,14 @@ export default function StockDetailPage() {
                 earningsLoading ? (
                   <p className="text-zinc-500 italic">Loading earnings…</p>
                 ) : earningsError ? (
-                  <p className="text-rose-400 italic">{earningsError}</p>
+                  <p className="text-rose-500 italic">{earningsError}</p>
                 ) : earningsLoaded && earnings.length === 0 ? (
                   <p className="text-zinc-500 italic">No earnings data available.</p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead>
-                        <tr className="text-xs font-semibold uppercase tracking-wider text-zinc-500 border-b border-white/5">
+                        <tr className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-white/5">
                           <th className="py-3 pr-6">Period</th>
                           <th className="py-3 pr-6">Report Date</th>
                           <th className="py-3 pr-6 text-right">Actual EPS</th>
@@ -383,31 +406,31 @@ export default function StockDetailPage() {
                           <th className="py-3 pl-6 text-right">Result</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-white/5">
+                      <tbody className="divide-y divide-zinc-100 dark:divide-white/5">
                         {earnings.map((e) => {
                           const hasActual = e.actualEps != null;
                           const hasEstimate = e.estimateEps != null;
                           const result =
                             hasActual && hasEstimate
                               ? e.actualEps! > e.estimateEps!
-                                ? { label: "Beat", cls: "bg-emerald-500/10 text-emerald-400" }
+                                ? { label: "Beat", cls: "bg-emerald-500/10 text-emerald-500" }
                                 : e.actualEps! < e.estimateEps!
-                                  ? { label: "Miss", cls: "bg-rose-500/10 text-rose-400" }
-                                  : { label: "Meet", cls: "bg-zinc-500/10 text-zinc-300" }
+                                  ? { label: "Miss", cls: "bg-rose-500/10 text-rose-500" }
+                                  : { label: "Meet", cls: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-300" }
                               : null;
                           return (
-                            <tr key={e.period} className="hover:bg-white/5 transition-colors">
-                              <td className="py-4 pr-6 font-bold text-zinc-300">{e.period}</td>
-                              <td className="py-4 pr-6 font-medium text-zinc-400">{e.reportDate ?? "—"}</td>
-                              <td className="py-4 pr-6 text-right font-semibold text-white">
+                            <tr key={e.period} className="hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">
+                              <td className="py-4 pr-6 font-bold text-zinc-800 dark:text-zinc-300">{e.period}</td>
+                              <td className="py-4 pr-6 font-medium text-zinc-600 dark:text-zinc-400">{e.reportDate ?? "—"}</td>
+                              <td className="py-4 pr-6 text-right font-semibold text-zinc-900 dark:text-white">
                                 {e.actualEps != null ? `$${e.actualEps.toFixed(2)}` : "—"}
                               </td>
-                              <td className="py-4 pr-6 text-right font-medium text-zinc-400">
+                              <td className="py-4 pr-6 text-right font-medium text-zinc-600 dark:text-zinc-400">
                                 {e.estimateEps != null ? `$${e.estimateEps.toFixed(2)}` : "—"}
                               </td>
                               <td className="py-4 text-right">
                                 {e.surprisePercent != null ? (
-                                  <span className={`px-2 py-1 rounded-lg text-xs font-semibold ${(e.surprisePercent ?? 0) >= 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"}`}>
+                                  <span className={`px-2 py-1 rounded-lg text-xs font-semibold ${(e.surprisePercent ?? 0) >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"}`}>
                                     {(e.surprisePercent ?? 0) >= 0 ? "+" : ""}{e.surprisePercent.toFixed(2)}%
                                   </span>
                                 ) : "—"}
@@ -437,7 +460,7 @@ export default function StockDetailPage() {
                     {recommendations.slice(0, 3).map((r) => {
                       const total = r.strongBuy + r.buy + r.hold + r.sell + r.strongSell || 1;
                       return (
-                        <div key={r.period} className="p-5 bg-zinc-800/30 rounded-2xl border border-white/5">
+                        <div key={r.period} className="p-5 bg-zinc-50 dark:bg-zinc-800/30 rounded-2xl border border-zinc-200 dark:border-white/5">
                           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-4">{r.period}</p>
                           <div className="flex gap-1 h-8 rounded-lg overflow-hidden mb-4">
                             {r.strongBuy > 0 && <div className="bg-emerald-600" style={{ width: `${(r.strongBuy / total) * 100}%` }} title={`Strong Buy: ${r.strongBuy}`} />}
@@ -448,9 +471,9 @@ export default function StockDetailPage() {
                           </div>
                           <div className="flex gap-4 text-xs font-semibold uppercase tracking-wider">
                             <span className="text-emerald-600">SB: {r.strongBuy}</span>
-                            <span className="text-emerald-400">B: {r.buy}</span>
-                            <span className="text-zinc-400">H: {r.hold}</span>
-                            <span className="text-rose-400">S: {r.sell}</span>
+                            <span className="text-emerald-500">B: {r.buy}</span>
+                            <span className="text-zinc-600 dark:text-zinc-400">H: {r.hold}</span>
+                            <span className="text-rose-500">S: {r.sell}</span>
                             <span className="text-rose-600">SS: {r.strongSell}</span>
                           </div>
                         </div>
@@ -468,7 +491,7 @@ export default function StockDetailPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead>
-                        <tr className="text-xs font-semibold uppercase tracking-wider text-zinc-500 border-b border-white/5">
+                        <tr className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-white/5">
                           <th className="py-3 pr-6">Name</th>
                           <th className="py-3 pr-6 text-right">Shares</th>
                           <th className="py-3 pr-6 text-right">Value</th>
@@ -476,20 +499,20 @@ export default function StockDetailPage() {
                           <th className="py-3 text-right">Date</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-white/5">
+                      <tbody className="divide-y divide-zinc-100 dark:divide-white/5">
                         {insiders.slice(0, 20).map((t, i) => {
                           const isBuy = (t.share ?? 0) > 0;
                           return (
-                            <tr key={i} className="hover:bg-white/5 transition-colors">
-                              <td className="py-3 pr-6 font-bold text-zinc-300 text-sm">{t.name || "—"}</td>
-                              <td className={`py-3 pr-6 text-right font-semibold text-sm ${isBuy ? "text-emerald-400" : "text-rose-400"}`}>
+                            <tr key={i} className="hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">
+                              <td className="py-3 pr-6 font-bold text-zinc-800 dark:text-zinc-300 text-sm">{t.name || "—"}</td>
+                              <td className={`py-3 pr-6 text-right font-semibold text-sm ${isBuy ? "text-emerald-500" : "text-rose-500"}`}>
                                 {t.share != null ? (isBuy ? "+" : "") + t.share.toLocaleString() : "—"}
                               </td>
-                              <td className="py-3 pr-6 text-right font-medium text-zinc-400 text-sm">
+                              <td className="py-3 pr-6 text-right font-medium text-zinc-600 dark:text-zinc-400 text-sm">
                                 {t.value != null ? `$${t.value.toLocaleString()}` : "—"}
                               </td>
                               <td className="py-3 pr-4">
-                                <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${isBuy ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"}`}>
+                                <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${isBuy ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"}`}>
                                   {t.transactionCode || "—"}
                                 </span>
                               </td>
@@ -506,7 +529,7 @@ export default function StockDetailPage() {
               {/* News — spec §5.3 GET /stocks/{symbol}/news */}
               {activeTab === "News" && (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                  <div className="flex items-center justify-between border-b border-zinc-200 dark:border-white/5 pb-4">
                      <h4 className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Recent Activity</h4>
                      <button
                         onClick={async () => {
@@ -519,12 +542,12 @@ export default function StockDetailPage() {
                                         payload: { symbol: symbol } 
                                     })
                                 });
-                                alert("News sync requested for " + symbol);
+                                setToast({ message: `News sync requested for ${symbol}`, type: 'success' });
                             } catch (err: any) {
-                                alert("Failed to trigger sync: " + err.message);
+                                setToast({ message: getErrorMessage(err) || "Failed to trigger sync", type: 'error' });
                             }
                         }}
-                        className="flex items-center gap-2 px-3 py-1 bg-zinc-800 border border-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white hover:border-white/10 transition-all active:scale-95"
+                        className="flex items-center gap-2 px-3 py-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/5 rounded-lg text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-white/10 transition-all active:scale-95"
                     >
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -542,17 +565,17 @@ export default function StockDetailPage() {
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex gap-4 group pb-4 border-b border-white/5 last:border-0 hover:border-blue-500/20 transition-colors"
+                        className="flex gap-4 group pb-4 border-b border-zinc-100 dark:border-white/5 last:border-0 hover:border-blue-500/20 transition-colors"
                       >
-                        <div className="w-20 h-20 bg-zinc-800 rounded-xl shrink-0 overflow-hidden">
+                        <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-800 rounded-xl shrink-0 overflow-hidden">
                           {item.image ? (
                             <img src={item.image} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-zinc-600 text-xs font-bold">NEWS</div>
+                            <div className="w-full h-full flex items-center justify-center text-zinc-500 dark:text-zinc-600 text-xs font-bold">NEWS</div>
                           )}
                         </div>
                         <div className="flex flex-col justify-center gap-1">
-                          <p className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-blue-400 transition-colors">{item.headline}</p>
+                          <p className="font-semibold text-sm leading-snug line-clamp-2 text-zinc-900 dark:text-white group-hover:text-blue-500 transition-colors">{item.headline}</p>
                           <p className="text-xs text-zinc-500 line-clamp-1">{item.summary}</p>
                           <div className="flex gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
                             <span className="text-blue-500">{item.source}</span>
@@ -565,7 +588,7 @@ export default function StockDetailPage() {
                       </a>
                     ))}
                     
-                    <div className="pt-4 border-t border-white/5">
+                    <div className="pt-4 border-t border-zinc-200 dark:border-white/5">
                       <Pagination
                         currentPage={newsPage}
                         hasNextPage={news.length === newsPageSize}
@@ -589,7 +612,7 @@ export default function StockDetailPage() {
                         <Link
                           key={peer}
                           href={`/stocks/${peer.toLowerCase()}`}
-                          className="px-5 py-3 bg-zinc-800 hover:bg-blue-600 border border-white/10 hover:border-blue-500 rounded-2xl font-semibold text-sm uppercase tracking-tight transition-all"
+                          className="px-5 py-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-blue-600 hover:text-white border border-zinc-200 dark:border-white/10 rounded-2xl font-semibold text-sm uppercase tracking-tight text-zinc-900 dark:text-zinc-200 transition-all"
                         >
                           {peer}
                         </Link>
@@ -603,31 +626,37 @@ export default function StockDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-8">
-            <div className="bg-zinc-900 border border-white/5 rounded-3xl p-8">
-              <h3 className="font-bold text-xl mb-6 tracking-tight">Quick Actions</h3>
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 rounded-3xl p-8 shadow-sm dark:shadow-none">
+              <h3 className="font-bold text-xl mb-6 tracking-tight text-zinc-900 dark:text-white">Quick Actions</h3>
               <div className="space-y-4">
+                <button
+                  onClick={() => setIsTradeModalOpen(true)}
+                  className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] uppercase tracking-wider text-xs"
+                >
+                  🏦 TRADE / OPEN POSITION
+                </button>
                 <button
                   onClick={toggleWatchlist}
                   disabled={updatingWatchlist}
-                  className={`w-full py-4 font-semibold rounded-2xl transition-all active:scale-[0.98] ${
+                  className={`w-full py-4 font-semibold rounded-2xl transition-all active:scale-[0.98] uppercase tracking-wider text-xs ${
                     isInWatchlist
-                      ? "bg-zinc-800 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white"
-                      : "bg-white text-black hover:bg-zinc-200"
+                      ? "bg-zinc-100 dark:bg-zinc-800 border border-rose-500/30 text-rose-500 dark:text-rose-400 hover:bg-rose-500 hover:text-white"
+                      : "bg-zinc-900 text-white dark:bg-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200"
                   }`}
                 >
                   {updatingWatchlist ? "UPDATING..." : isInWatchlist ? "REMOVE FROM WATCHLIST" : "ADD TO WATCHLIST"}
                 </button>
                 <button
                   onClick={() => setIsAlertModalOpen(true)}
-                  className="w-full py-4 bg-zinc-800 border border-white/5 text-white font-semibold rounded-2xl hover:bg-zinc-700 transition-all active:scale-[0.98]"
+                  className="w-full py-4 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/5 text-zinc-900 dark:text-white font-semibold rounded-2xl hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all active:scale-[0.98] uppercase tracking-wider text-xs"
                 >
                   SET PRICE ALERT
                 </button>
               </div>
             </div>
 
-            <div className="bg-zinc-900 border border-white/5 rounded-3xl p-8">
-              <h3 className="font-bold text-xl mb-4 tracking-tight">Company Info</h3>
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 rounded-3xl p-8 shadow-sm dark:shadow-none">
+              <h3 className="font-bold text-xl mb-4 tracking-tight text-zinc-900 dark:text-white">Company Info</h3>
               <div className="space-y-3 text-sm">
                 {[
                   { label: "Exchange", value: profile?.exchange },
@@ -637,7 +666,7 @@ export default function StockDetailPage() {
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between">
                     <span className="text-zinc-500 font-medium">{label}</span>
-                    <span className="font-bold text-zinc-200 uppercase text-sm tracking-wider">{value || "—"}</span>
+                    <span className="font-bold text-zinc-800 dark:text-zinc-200 uppercase text-sm tracking-wider">{value || "—"}</span>
                   </div>
                 ))}
               </div>
@@ -646,9 +675,9 @@ export default function StockDetailPage() {
                   href={profile.webUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-6 flex items-center justify-between p-4 bg-zinc-800/50 rounded-2xl hover:bg-zinc-800 transition-colors group"
+                  className="mt-6 flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-white/5 transition-colors group"
                 >
-                  <span className="font-bold text-zinc-300 group-hover:text-white text-sm">Official Website</span>
+                  <span className="font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white text-sm">Official Website</span>
                   <span className="text-blue-500">↗</span>
                 </a>
               )}

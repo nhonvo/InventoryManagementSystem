@@ -34,7 +34,7 @@ export function MarketStatusBanner() {
   return (
     <div className={`hidden sm:flex items-center gap-2.5 text-xs font-semibold uppercase tracking-wider border border-zinc-200 dark:border-white/5 rounded-full px-4 py-1.5 bg-zinc-100 dark:bg-zinc-900/50 shadow-sm transition-all ${status?.isOpen ? 'text-emerald-500' : 'text-rose-500'}`}>
         <span className={`w-1.5 h-1.5 rounded-full ${status?.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'}`}></span>
-        {status?.exchange.replace(" EQUITIES", "") || "MARKET"}: {status?.isOpen ? 'OPEN' : 'CLOSED'}
+        {(status?.exchange ? status.exchange.replace(" EQUITIES", "") : "MARKET")}: {status?.isOpen ? 'OPEN' : 'CLOSED'}
     </div>
   );
 }

@@ -36,16 +36,45 @@ export default function PortfolioPage() {
 
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [summary, setSummary] = useState({
+    totalMarketValue: 0,
+    totalCost: 0,
+    totalGainLoss: 0,
+    totalGainLossPercent: 0,
+  });
   const pageSize = 10;
+
+  const loadSummary = async () => {
+    try {
+      const data = await fetchApi('/api/v1/portfolio/positions?pageNumber=1&pageSize=1000');
+      const all: PortfolioPosition[] = data.items || [];
+      const totalMVal = all.reduce((acc, p) => acc + (p.marketValue || 0), 0);
+      const totalC = all.reduce((acc, p) => acc + (p.totalCost || 0), 0);
+      const totalGL = totalMVal - totalC;
+      const totalGLPercent = totalC > 0 ? (totalGL / totalC) * 100 : 0;
+      setSummary({
+        totalMarketValue: totalMVal,
+        totalCost: totalC,
+        totalGainLoss: totalGL,
+        totalGainLossPercent: totalGLPercent,
+      });
+      setTotalItems(data.totalItems ?? all.length);
+    } catch {
+      // Summary error handled gracefully
+    }
+  };
 
   const loadPortfolio = async (targetPage: number) => {
     try {
       setLoading(true);
       const data = await fetchApi(`/api/v1/portfolio/positions?pageNumber=${targetPage}&pageSize=${pageSize}`);
-      // The API returns PagedResult<PortfolioPositionResponse>
       setPositions(data.items || []);
       setTotalPages(data.totalPages || 1);
       setPage(data.pageNumber || targetPage);
+      if (data.totalItems !== undefined) {
+        setTotalItems(data.totalItems);
+      }
     } catch (err: any) {
       setError(getErrorMessage(err));
     } finally {
@@ -55,6 +84,7 @@ export default function PortfolioPage() {
 
   useEffect(() => {
     loadPortfolio(1);
+    loadSummary();
   }, []);
 
   const handleDelete = async (symbol: string) => {
@@ -62,6 +92,7 @@ export default function PortfolioPage() {
       await fetchApi(`/api/v1/portfolio/positions/${symbol}`, { method: 'DELETE' });
       setToast({ message: `Position for ${symbol} removed`, type: 'success' });
       loadPortfolio(page);
+      loadSummary();
     } catch (err: any) {
       setToast({ message: getErrorMessage(err), type: 'error' });
     } finally {
@@ -72,12 +103,8 @@ export default function PortfolioPage() {
   const handleTradeSuccess = () => {
     setToast({ message: "Trade recorded successfully", type: 'success' });
     loadPortfolio(page);
+    loadSummary();
   };
-
-  const totalMarketValue = positions.reduce((acc, p) => acc + p.marketValue, 0);
-  const totalCost = positions.reduce((acc, p) => acc + p.totalCost, 0);
-  const totalGainLoss = totalMarketValue - totalCost;
-  const totalGainLossPercent = totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0;
 
   return (
     <div className="max-w-7xl mx-auto space-y-10">
@@ -122,22 +149,22 @@ export default function PortfolioPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 p-8 rounded-3xl shadow-sm dark:shadow-none">
           <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-2">Total Market Value</p>
-          <p className="text-4xl font-semibold text-zinc-900 dark:text-white">${totalMarketValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+          <p className="text-4xl font-semibold text-zinc-900 dark:text-white">${summary.totalMarketValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 p-8 rounded-3xl shadow-sm dark:shadow-none">
           <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-2">Total Return</p>
           <div className="flex items-baseline gap-3">
-            <p className={`text-4xl font-semibold ${totalGainLoss >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-              {totalGainLoss >= 0 ? "+" : ""}${Math.abs(totalGainLoss).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <p className={`text-4xl font-semibold ${summary.totalGainLoss >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+              {summary.totalGainLoss >= 0 ? "+" : ""}${Math.abs(summary.totalGainLoss).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            <p className={`text-lg font-bold ${totalGainLoss >= 0 ? "text-emerald-500/70" : "text-rose-500/70"}`}>
-              ({totalGainLossPercent.toFixed(2)}%)
+            <p className={`text-lg font-bold ${summary.totalGainLoss >= 0 ? "text-emerald-500/70" : "text-rose-500/70"}`}>
+              ({summary.totalGainLossPercent.toFixed(2)}%)
             </p>
           </div>
         </div>
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 p-8 rounded-3xl shadow-sm dark:shadow-none">
           <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-2">Active Positions</p>
-          <p className="text-4xl font-semibold text-zinc-900 dark:text-white">{positions.length}</p>
+          <p className="text-4xl font-semibold text-zinc-900 dark:text-white">{totalItems}</p>
         </div>
       </div>
 

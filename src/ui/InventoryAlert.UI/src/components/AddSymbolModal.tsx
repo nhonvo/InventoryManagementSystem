@@ -34,7 +34,7 @@ export function AddSymbolModal({ isOpen, onClose, onSuccess }: AddSymbolModalPro
         onSuccess()
         onClose()
         setSuccess(false)
-      }, 1500)
+      }, 1000)
     } catch (err: any) {
       setError(err.message || 'Failed to add symbol')
     } finally {
@@ -49,10 +49,10 @@ export function AddSymbolModal({ isOpen, onClose, onSuccess }: AddSymbolModalPro
         onClick={onClose}
       />
       
-      <div className="relative w-full max-w-md bg-zinc-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden p-8">
+      <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden p-8 text-zinc-900 dark:text-white">
         <div className="mb-6 text-center">
           <h2 className="text-2xl font-bold mb-2">Add New Symbol</h2>
-          <p className="text-zinc-500 text-sm">Enter a stock ticker to start tracking it.</p>
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm">Enter a stock ticker to start tracking it.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -66,13 +66,13 @@ export function AddSymbolModal({ isOpen, onClose, onSuccess }: AddSymbolModalPro
               autoFocus
               value={symbol}
               onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-              placeholder="e.g. TSLA, AAPL, BTC-USD"
-              className="w-full bg-black border border-white/10 rounded-2xl p-4 text-white placeholder:text-zinc-700 outline-hidden focus:border-blue-500/50 transition-all font-mono uppercase"
+              placeholder="e.g. TSLA, AAPL, MSFT"
+              className="w-full bg-zinc-100 dark:bg-black border border-zinc-200 dark:border-white/10 rounded-2xl p-4 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-700 outline-hidden focus:border-blue-500/50 transition-all font-mono uppercase"
             />
           </div>
 
           {error && (
-            <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-xs">
+            <div className="bg-rose-500/10 border border-rose-500/20 text-rose-500 dark:text-rose-400 p-4 rounded-xl text-xs">
               {error}
             </div>
           )}
@@ -81,7 +81,7 @@ export function AddSymbolModal({ isOpen, onClose, onSuccess }: AddSymbolModalPro
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl py-4 font-bold text-sm transition-all active:scale-95 px-4"
+              className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white rounded-2xl py-4 font-bold text-sm transition-all active:scale-95 px-4"
             >
               Cancel
             </button>

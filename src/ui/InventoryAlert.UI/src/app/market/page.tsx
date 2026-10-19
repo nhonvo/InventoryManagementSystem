@@ -75,40 +75,73 @@ export default function MarketOverview() {
     }
   }, [toast]);
 
-  const loadMarketData = async (category = "general") => {
+  const [newsLoading, setNewsLoading] = useState(true);
+
+  const loadMarketStatusAndCalendar = async () => {
     try {
       const now = new Date();
       const monthAhead = new Date(now);
       monthAhead.setDate(now.getDate() + 30);
 
-      const [newsData, statusData, earningsData] = await Promise.all([
-        fetchApi(`/api/v1/market/news?category=${category}&page=${newsPage}&pageSize=${newsPageSize}`),
-        fetchApi("/api/v1/market/status"),
-        // Spec §5.4: GET /market/calendar/earnings — free tier limited to 1-month
+      const [statusData, earningsData] = await Promise.all([
+        fetchApi("/api/v1/market/status").catch(() => []),
         fetchApi(
           `/api/v1/market/calendar/earnings?from=${formatDateParam(now)}&to=${formatDateParam(monthAhead)}`
         ).catch(() => []),
       ]);
 
-      const items = (newsData?.items ?? newsData ?? []) as any;
-      setNews(Array.isArray(items) ? items : []);
       setStatuses(statusData ?? []);
       setEarningsCalendar(earningsData ?? []);
     } catch (err) {
-      console.error("Failed to load market data", err);
-    } finally {
-      setLoading(false);
+      console.error("Failed to load market status and calendar", err);
     }
   };
 
-  useEffect(() => {
-    loadMarketData(newsCategory);
-  }, [newsCategory, newsPage]);
+  const loadNewsData = async (category: string, page: number) => {
+    setNewsLoading(true);
+    try {
+      const newsData = await fetchApi(`/api/v1/market/news?category=${category}&page=${page}&pageSize=${newsPageSize}`);
+      const items = (newsData?.items ?? newsData ?? []) as any;
+      setNews(Array.isArray(items) ? items : []);
+    } catch (err) {
+      console.error("Failed to load news", err);
+    } finally {
+      setNewsLoading(false);
+    }
+  };
 
-  // Reset page when category changes
+  const handleRefreshAll = async () => {
+    setLoading(true);
+    await Promise.all([
+      loadMarketStatusAndCalendar(),
+      loadNewsData(newsCategory, newsPage)
+    ]);
+    setLoading(false);
+  };
+
   useEffect(() => {
+    const init = async () => {
+      setLoading(true);
+      await Promise.all([
+        loadMarketStatusAndCalendar(),
+        loadNewsData("general", 1)
+      ]);
+      setLoading(false);
+    };
+    init();
+  }, []);
+
+  const handleCategoryChange = (cat: string) => {
+    if (cat === newsCategory) return;
+    setNewsCategory(cat);
     setNewsPage(1);
-  }, [newsCategory]);
+    loadNewsData(cat, 1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setNewsPage(newPage);
+    loadNewsData(newsCategory, newPage);
+  };
 
   // Primary US market status
   const usStatus = statuses.find(
@@ -127,7 +160,7 @@ export default function MarketOverview() {
         </div>
         <div className="flex gap-4">
           <button
-            onClick={() => loadMarketData(newsCategory)}
+            onClick={handleRefreshAll}
             className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 rounded-2xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-white/10 transition-all active:scale-95 shadow-sm dark:shadow-none"
             title="Refresh View"
           >
@@ -225,7 +258,7 @@ export default function MarketOverview() {
               {NEWS_CATEGORIES.map((cat) => (
                 <button
                   key={cat}
-                  onClick={() => setNewsCategory(cat)}
+                  onClick={() => handleCategoryChange(cat)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
                     newsCategory === cat ? "bg-blue-600 text-white" : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
                   }`}
@@ -236,7 +269,7 @@ export default function MarketOverview() {
             </div>
           </div>
           <div className="p-2 flex-1 overflow-auto">
-            {loading ? (
+            {newsLoading ? (
               <div className="p-6 space-y-6">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="h-24 bg-zinc-100 dark:bg-zinc-800/50 animate-pulse rounded-2xl" />
@@ -290,8 +323,8 @@ export default function MarketOverview() {
               <Pagination
                 currentPage={newsPage}
                 hasNextPage={news.length === newsPageSize}
-                onPageChange={setNewsPage}
-                isLoading={loading}
+                onPageChange={handlePageChange}
+                isLoading={newsLoading}
               />
             </div>
           )}

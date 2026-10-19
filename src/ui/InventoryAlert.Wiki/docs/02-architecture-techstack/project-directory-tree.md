@@ -14,11 +14,10 @@ This document outlines the codebase layout of the InventoryAlert solution, organ
 
 ```
 InventoryManagementSystem/
-├── .agents/                                ← AI Customization Root (skills, workflows, BM25 scripts)
+├── .agents/                                ← AI Customization Root (skills, workflows, rules)
 │   ├── GEMINI.md                           ← Master AI cold-start briefing
 │   ├── rules/                              ← Project coding guidelines
-│   ├── skills/                             ← Deep domain skills (DDD, EF Core, Finnhub, testing)
-│   └── scripts/core/                       ← BM25 indexer & search engine
+│   └── skills/                             ← Deep domain skills (DDD, EF Core, Finnhub, testing)
 ├── src/
 │   ├── InventoryAlert.Api/                 ← Web API Layer (Controllers, Middlewares, Program.cs)
 │   ├── InventoryAlert.Domain/              ← Core Domain Layer (Entities, DTOs, Interfaces)

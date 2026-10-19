@@ -16,10 +16,7 @@ tags: [workflow, refinement, stabilization, documentation, gemini]
 
 ## Phase 1: Audit & Discovery
 
-1. **Context Mapping**: Use BM25 to find the source code AND the specific review docs/wiki pages.
-   ```powershell
-   python .agents/scripts/core/bm25_search.py "feature name review spec implementation" -n 8
-   ```
+1. **Context Mapping**: Locate the source code and related review docs/wiki pages.
 2. **Identify Drift**: Compare the current code implementation against the `InventoryAlert.Wiki/docs/` and `doc/` review files.
 3. **Analyze Issues**: Look for tech debt, inconsistent naming, or broken delivery paths (e.g., SignalR 404s).
 
@@ -69,10 +66,6 @@ tags: [workflow, refinement, stabilization, documentation, gemini]
 
 ## Phase 5: Finalization
 
-1. **Re-index Context**:
-   ```powershell
-   python .agents/scripts/core/bm25_indexer.py
-   ```
-2. **Git Commit**: Propose a commit message summarizing the refinement across all layers.
+1. **Git Commit**: Propose a commit message summarizing the refinement across all layers.
 
 **Keywords**: `refine`, `stabilize`, `sync-docs`, `taxonomy`, `hybrid-evaluation`

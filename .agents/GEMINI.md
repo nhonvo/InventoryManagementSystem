@@ -18,7 +18,7 @@ last_updated: 2026-05-01
 ---
 
 > **Read this file first.** This is the AI cold-start briefing for this codebase.
-> Run `/init` on every new session to re-index BM25 and sync context.
+> Run `/init` on every new session to sync context.
 
 ---
 
@@ -26,7 +26,7 @@ last_updated: 2026-05-01
 
 - Always follow Clean Architecture and Clean Code principles.
 - Prefer readability over cleverness.
-- Explore codebase before implementing changes (use BM25 search first).
+- Explore codebase before implementing changes.
 - Plan before coding on complex tasks.
 - Run targeted tests after changes (prefer single-scope test runs before full suite).
 - Never commit sensitive data (API keys, credentials).
@@ -101,7 +101,6 @@ Real-time inventory management system with portfolio + watchlist + alerting.
 | Documentation    | Swashbuckle / Swagger                 |
 | Tests            | xUnit + Moq + FluentAssertions        |
 | Containerization | Docker + Docker Compose               |
-| Search/Memory    | BM25+ (`.agents/scripts/core/`)       |
 
 ---
 
@@ -113,8 +112,7 @@ ojt-training/
 │   ├── GEMINI.md                      ← AI cold-start briefing (this file)
 │   ├── rules/project-rules.md         ← project coding standards
 │   ├── workflows/                     ← slash-command workflows
-│   ├── skills/                        ← deep knowledge documents
-│   └── scripts/core/                  ← BM25 indexer + search engine
+│   └── skills/                        ← deep knowledge documents
 ├── doc/                               ← active feature specs and guides
 │   ├── README.md                      ← doc index
 │   ├── ROADMAP.md
@@ -229,7 +227,7 @@ ojt-training/
 
 | Command         | When to use                                                                 |
 | :-------------- | :-------------------------------------------------------------------------- |
-| `/init`         | Start of every session — re-index BM25, sync context                        |
+| `/init`         | Start of every session — sync context                                       |
 | `/plan`         | Design a feature before implementation                                      |
 | `/feature-flow` | Master dev lifecycle: requirement → Domain → App → Infra → Web → Tests → PR |
 | `/add-feature`  | Adding a new method/endpoint to an existing entity                          |
@@ -240,26 +238,6 @@ ojt-training/
 | `/code-review`  | Pre-merge checklist                                                         |
 | `/fix-build`    | Diagnosing build/test failures                                              |
 | `/doc`          | Sync documentation after implementing a feature                             |
-| `/search`       | BM25 search for context without reading full files                          |
-
----
-
-## BM25 Search Quick Reference
-
-```bash
-
-# From project root — re-index
-python .agents/scripts/core/bm25_indexer.py
-
-# Search for context
-python .agents/scripts/core/bm25_search.py "your query" -n 5
-
-# Scope to a folder
-python .agents/scripts/core/bm25_search.py "ExecuteTransactionAsync" -n 3 -f ".agents"
-
-# Verify reliability score
-python .agents/scripts/core/bm25_search.py "StockDataService GetQuoteAsync" --verify
-```
 
 ---
 
@@ -271,7 +249,6 @@ python .agents/scripts/core/bm25_search.py "StockDataService GetQuoteAsync" --ve
 - [ ] `appsettings.Development.json` created from `appsettings.Example.json`
 - [ ] Finnhub API key set in `appsettings.Development.json`
 - [ ] PostgreSQL reachable: `docker-compose up postgres -d`
-- [ ] BM25 indexed: `python .agents/scripts/core/bm25_indexer.py`
 
 ---
 
@@ -290,15 +267,10 @@ Seeded users (development/docker) via `InventoryManagementSystem/InventoryAlert.
 
 > These settings help Antigravity give you the best responses for this project.
 
-**Always run `/init` at the start of a new session** — it re-indexes BM25 so search results reflect the latest code.
-
-**Use BM25 before reading full files** — saves tokens and finds the most relevant section:
-```bash
-python .agents/scripts/core/bm25_search.py "your question about the code" -n 5
-```
+**Always run `/init` at the start of a new session** — it syncs context.
 
 **Preferred workflow order**:
-1. `/init` → re-index
+1. `/init` → sync context
 2. `/plan` → design + spec
 3. `/feature-flow` or `/add-feature` → implement
 4. `/run-tests` → verify

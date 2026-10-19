@@ -86,7 +86,9 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}, _isR
         const isAuthPage = path === "/login" || path === "/register";
         
         if (!isAuthPage) {
-          window.location.href = "/login";
+          const currentUrl = window.location.pathname + window.location.search;
+          const returnParam = currentUrl && currentUrl !== "/" ? `?returnUrl=${encodeURIComponent(currentUrl)}` : "";
+          window.location.href = `/login${returnParam}`;
         }
       }
     }

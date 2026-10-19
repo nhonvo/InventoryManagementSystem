@@ -29,7 +29,7 @@ export default function UserNav() {
         });
       }
     } catch (e) {
-      console.error('Logout failed', e);
+      console.warn('Logout endpoint unreachable, proceeding with client logout:', e);
     } finally {
       localStorage.removeItem('auth_token');
       // The NotificationProvider will pick up the removal via interval/storage event

@@ -14,19 +14,9 @@ tags: [workflow, migration, efcore, database, postgresql, inventoryalert]
 
 ---
 
-## Phase 0: Retrieve Context (BM25)
+## Phase 0: Review Postgres & EF Core Rules
 
-// turbo
-
-1. **Pull Postgres optimization & table design rules**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "inventoryalert-efcore postgresql-optimization postgresql-table-design" -n 3 -f ".agents/skills"
-   ```
-
-2. **Find AppDbContext configuration & migration drift**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "AppDbContext DbSet migration" -n 2
-   ```
+1. **Review Postgres rules**: Check `.agents/skills/inventoryalert-efcore/SKILL.md`.
 
 ---
 

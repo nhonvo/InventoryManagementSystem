@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { fetchApi } from "@/lib/api";
+import { Toast } from "@/components/Toast";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { getErrorMessage } from "@/lib/error-utils";
 
 // Spec §4.3 DTOs
 interface AlertRule {
@@ -50,6 +53,8 @@ export default function AlertsManager() {
   const [alerts, setAlerts] = useState<AlertRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AlertRule | null>(null);
 
   // Form / modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -120,9 +125,10 @@ export default function AlertsManager() {
         });
       }
       setModalOpen(false);
+      setToast({ message: editingId ? "Alert rule updated" : "Alert rule created", type: 'success' });
       loadAlerts();
     } catch (err: any) {
-      setFormError(err.message || "Failed to save alert");
+      setFormError(getErrorMessage(err));
     } finally {
       setSaving(false);
     }
@@ -136,24 +142,40 @@ export default function AlertsManager() {
         body: JSON.stringify({ isActive: !currentStatus }),
       });
       setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, isActive: !currentStatus } : a)));
+      setToast({ message: `Alert ${!currentStatus ? 'activated' : 'paused'}`, type: 'info' });
     } catch (err: any) {
-      alert(err.message || "Failed to toggle alert");
+      setToast({ message: getErrorMessage(err), type: 'error' });
     }
   };
 
-  const deleteAlert = async (alert: AlertRule) => {
-    if (!confirm(`Delete alert for ${alert.tickerSymbol}?`)) return;
+  const confirmDeleteAlert = async () => {
+    if (!deleteTarget) return;
     try {
       // Spec §5.6: DELETE /api/v1/alerts/{ruleId}
-      await fetchApi(`/api/v1/alertrules/${alert.id}`, { method: "DELETE" });
+      await fetchApi(`/api/v1/alertrules/${deleteTarget.id}`, { method: "DELETE" });
+      setToast({ message: `Alert for ${deleteTarget.tickerSymbol} deleted`, type: 'success' });
       loadAlerts();
     } catch (err: any) {
-      alert(err.message || "Failed to delete alert");
+      setToast({ message: getErrorMessage(err), type: 'error' });
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col gap-8">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        title="Delete Alert Rule"
+        message={`Are you sure you want to delete the alert rule for ${deleteTarget?.tickerSymbol}?`}
+        confirmText="Delete"
+        type="danger"
+        onConfirm={confirmDeleteAlert}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-semibold tracking-tight uppercase text-zinc-900 dark:text-white">Alert Center</h1>
@@ -334,7 +356,7 @@ export default function AlertsManager() {
                           ✎
                         </button>
                         <button
-                          onClick={() => deleteAlert(alert)}
+                          onClick={() => setDeleteTarget(alert)}
                           className="w-9 h-9 flex items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800 text-rose-500 dark:text-rose-400 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 transition-all shadow-sm"
                           title="Delete rule"
                         >

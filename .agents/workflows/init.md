@@ -3,39 +3,25 @@ description: initialize project context and guide on search/docs
 type: workflow
 status: active
 version: 2.0
-tags: [workflow, init, bm25, context, onboarding]
+tags: [workflow, init, context, onboarding]
 ---
 
 // turbo-all
 
 # /init — Project Initialization & Context Sync
 
-**Objective**: Rapidly sync with `InventoryAlert.Api` current state, re-index knowledge, and locate critical technical docs before starting any work session.
+**Objective**: Rapidly sync with `InventoryAlert.Api` current state and locate critical technical docs before starting any work session.
 
 **Tech Stack**: .NET 10 · EF Core 10 · PostgreSQL · Finnhub API · xUnit + Moq + FluentAssertions
 
 ---
 
-## Phase 0: Re-index (BM25)
+## Phase 0: Project Tree Inspection
 
-// turbo
+1. **Map project tree**:
 
-1. **Re-index all project knowledge** (run from project root):
-
-   ```bash
-   python .agents/scripts/core/bm25_indexer.py
-   ```
-
-2. **Verify core architecture is indexed**:
-
-   ```bash
-   python .agents/scripts/core/bm25_search.py "ddd layer architecture domain application infrastructure" -n 3
-   ```
-
-3. **Map project tree**:
-
-   ```bash
-   tree.com /f | Select-Object -First 60
+   ```powershell
+   Get-ChildItem -Directory | Select-Object Name
    ```
 
 ---
@@ -57,34 +43,6 @@ Core knowledge locations for this project:
 
 ---
 
-## Phase 2: BM25 Search Reference
-
-Use BM25 to retrieve focused context without reading full files:
-
-```bash
-# Find context about a specific topic
-python .agents/scripts/core/bm25_search.py "your query" -n 5
-
-# Search only documentation files
-python .agents/scripts/core/bm25_search.py "ExecuteTransactionAsync transaction capture pattern" -n 5
-
-# Search with mode filter
-python .agents/scripts/core/bm25_search.py "repository pattern EF Core" -n 3 --mode doc
-
-# Limit to a specific folder
-python .agents/scripts/core/bm25_search.py "migration" -n 3 -f ".agents/workflows"
-```
-
-**Domain-specific queries to know**:
-```bash
-python .agents/scripts/core/bm25_search.py "PortfolioService OpenPositionAsync"
-python .agents/scripts/core/bm25_search.py "ExecuteTransactionAsync unit of work"
-python .agents/scripts/core/bm25_search.py "FinnhubClient GetQuoteAsync"
-python .agents/scripts/core/bm25_search.py "StockDataService cache Redis"
-```
-
----
-
 **Parent Context**: `GEMINI.md`
 **Next Action**: `/feature-flow` or `/plan`
-**Keywords**: `init`, `bm25`, `index`, `context`, `onboarding`, `inventoryalert`
+**Keywords**: `init`, `context`, `onboarding`, `inventoryalert`

@@ -16,24 +16,10 @@ tags: [workflow, feature, application, service, controller, inventoryalert]
 
 ---
 
-## Phase 0: Retrieve Context (BM25)
+## Phase 0: Review Rules & Context
 
-// turbo
-
-1. **Pull async execution & testing skills**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "testing-patterns csharp-xunit inventoryalert-async-patterns csharp-async" -n 3 -f ".agents/skills"
-   ```
-
-2. **Find existing service methods** for the target entity:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "<entity> service method async" -n 5
-   ```
-
-3. **Check tech debt** — avoid blank-entity capture bug:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "ExecuteTransactionAsync blank entity capture bug" -n 2
-   ```
+1. **Review async execution & testing skills**: Check `.agents/skills/testing-patterns/SKILL.md` and `.agents/skills/csharp-async/SKILL.md`.
+2. **Review transaction patterns**: Check transaction capture rules in `.agents/rules/project-rules.md`.
 
 ---
 
@@ -195,9 +181,6 @@ tags: [spec, feature, <entity>]
 ```bash
 # Run tests for this feature
 dotnet test InventoryManagementSystem --no-build --filter "FullyQualifiedName~<EntityName>"
-
-# Re-index docs
-python .agents/scripts/core/bm25_indexer.py
 ```
 
 Then run `/code-review` before pushing.

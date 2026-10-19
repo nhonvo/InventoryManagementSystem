@@ -146,7 +146,12 @@ export function TradeModal({ isOpen, onClose, symbol, onSuccess }: TradeModalPro
                 placeholder="e.g. AAPL"
                 value={formData.tickerSymbol}
                 onChange={(e) => setFormData({ ...formData, tickerSymbol: e.target.value.toUpperCase() })}
-                onBlur={() => formData.tickerSymbol && fetchCurrentPrice(formData.tickerSymbol)}
+                onBlur={() => {
+                  if (formData.tickerSymbol) {
+                    checkExistingPosition(formData.tickerSymbol);
+                    fetchCurrentPrice(formData.tickerSymbol);
+                  }
+                }}
                 className="w-full bg-zinc-100 dark:bg-zinc-800 border-none rounded-2xl px-5 py-4 font-bold text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:ring-2 focus:ring-blue-500 transition-all uppercase"
               />
             </div>

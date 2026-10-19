@@ -14,7 +14,6 @@
 | `/code-review` | Pre-merge checklist for code quality |
 | `/doc` | Scaffold and sync documentation |
 | `/plan` | Design feature + freeze context (FSD spec) |
-| `/search` | BM25 search across codebase (token saver) |
 
 ---
 

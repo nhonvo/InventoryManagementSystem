@@ -14,19 +14,10 @@ tags: [workflow, code-review, quality, checklist, inventoryalert]
 
 ---
 
-## Phase 0: Retrieve Standards (BM25)
+## Phase 0: Review Architecture & Coding Standards
 
-// turbo
-
-1. **Pull clean architecture and framework rules**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "ddd-architecture clean-architecture csharp-async" -n 3 -f ".agents/skills"
-   ```
-
-2. **Pull Postgres design & optimization standards**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "inventoryalert-efcore postgresql-optimization postgresql-table-design" -n 3 -f ".agents/skills"
-   ```
+1. **Review architecture rules**: Check `.agents/skills/ddd-architecture/SKILL.md` and `.agents/rules/project-rules.md`.
+2. **Review Postgres design standards**: Check `.agents/skills/inventoryalert-efcore/SKILL.md`.
 
 ---
 
@@ -107,13 +98,6 @@ tags: [workflow, code-review, quality, checklist, inventoryalert]
   ```
 
 ---
-
-## Phase 7: Brain Freeze
-
-```bash
-# Re-index with new code
-python .agents/scripts/core/bm25_indexer.py
-```
 
 Sign off in PR description: `✅ /code-review Complete`
 

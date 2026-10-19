@@ -18,24 +18,10 @@ Requirement → Domain → Application → Infrastructure → Web → Tests → 
 
 ---
 
-## Phase 0: Context Retrieval (BM25)
+## Phase 0: Review Rules & Context
 
-// turbo
-
-1. **Pull DDD architecture rules**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "ddd-architecture clean-architecture boundaries" -n 2 -f ".agents/skills"
-   ```
-
-2. **Pull async execution & background worker rules**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "inventoryalert-async-patterns csharp-async" -n 2 -f ".agents/skills"
-   ```
-
-3. **Find tech debt + related service logic**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "<feature keyword> service tech debt bug" -n 3
-   ```
+1. **Review DDD architecture rules**: Check `.agents/skills/ddd-architecture/SKILL.md`.
+2. **Review async execution & background worker rules**: Check `.agents/skills/inventoryalert-async-patterns/SKILL.md`.
 
 ---
 
@@ -161,13 +147,6 @@ status: active
 version: 1.0
 tags: [spec, <feature_tags>]
 ---
-```
-
-```bash
-# Re-index
-python .agents/scripts/core/bm25_indexer.py
-```
-
 ---
 
 ## Phase 9: Commit & Push

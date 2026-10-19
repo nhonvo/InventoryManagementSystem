@@ -56,7 +56,7 @@ These rules apply to **every** code change in this repository. They are the proj
 
 ## Workflow
 
-- Explore the codebase before implementing changes (BM25 search is preferred).
+- Explore the codebase before implementing changes.
 - Plan before coding on complex tasks.
 - Run tests after making code changes (prefer the smallest relevant test selection first).
 

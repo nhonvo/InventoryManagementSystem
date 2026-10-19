@@ -10,19 +10,15 @@ tags: [workflow, maintenance, feature, implementation, ddd, context]
 
 # /maintenance-flow — Full Implementation Lifecycle
 
-**Objective**: Execute a task end-to-end, starting from chat requirements, gathering context via BM25, implementing logic, and finishing with stabilization/push.
+**Objective**: Execute a task end-to-end, starting from chat requirements, implementing logic, and finishing with stabilization/push.
 
 ---
 
 ## Phase 0: Requirement & Context Retrieval
 
 1. **Analyze Input**: Capture the core requirement from the USER's recent request.
-2. **Retrieve Context (BM25)**:
-   ```bash
-   # Search for related code and existing wiki documentation
-   python .agents/scripts/core/bm25_search.py "<requirement_keywords> wiki controller service" -n 5
-   ```
-3. **Review Findings**: Parse the retrieved snippets and cross-reference with `InventoryAlert.Wiki/docs/` to ensure architectural alignment.
+2. **Retrieve Context**: Review related code and existing wiki documentation across `InventoryAlert.Wiki/docs/`.
+3. **Review Findings**: Ensure architectural alignment.
 
 ---
 
@@ -97,11 +93,4 @@ tags: [workflow, maintenance, feature, implementation, ddd, context]
 
 ---
 
-## Phase 5: Brain Freeze
-
-1. **Re-index Search Context**:
-   ```powershell
-   python .agents/scripts/core/bm25_indexer.py
-   ```
-
-**Keywords**: `maintenance`, `implementation`, `bm25-context`, `wiki-sync`, `git-lifecycle`
+**Keywords**: `maintenance`, `implementation`, `wiki-sync`, `git-lifecycle`

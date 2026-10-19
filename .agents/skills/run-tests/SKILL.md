@@ -14,19 +14,9 @@ tags: [workflow, tests, xunit, coverage, inventoryalert]
 
 ---
 
-## Phase 0: Retrieve Test Context (BM25)
+## Phase 0: Review Test Guidelines
 
-// turbo
-
-1. **Pull explicit testing architecture skills**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "testing-patterns csharp-xunit" -n 2 -f ".agents/skills"
-   ```
-
-2. **Find relevant test files**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "xunit moq fluent assertion test service controller" -n 5
-   ```
+Review testing recipes and mock rules in `.agents/skills/testing-patterns/SKILL.md`.
 
 ---
 

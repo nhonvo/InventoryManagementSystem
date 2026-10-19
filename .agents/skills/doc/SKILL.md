@@ -1,37 +1,23 @@
 ---
-description: Scaffold and synchronize documentation from templates using BM25 and code audits.
+description: Scaffold and synchronize documentation from templates and code audits.
 type: workflow
 status: active
 version: 3.0
-tags: [workflow, documentation, bm25, atomic-docs, sync, inventoryalert]
+tags: [workflow, documentation, atomic-docs, sync, inventoryalert]
 ---
 
 // turbo-all
 
-# /doc — Documentation Sync & Brain Freeze
+# /doc — Documentation Sync
 
-**Objective**: After implementing a feature, synchronize the `doc/` folder with the actual code state using BM25 retrieval and a structured audit. Persist knowledge so future sessions start fast.
+**Objective**: After implementing a feature, synchronize the `doc/` folder with the actual code state using a structured audit. Persist knowledge so future sessions start fast.
 
 ---
 
-## Phase 0: Retrieve Existing Docs (BM25)
+## Phase 0: Locate Existing Docs
 
-// turbo
-
-1. **Find existing docs for the topic**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "<topic> documentation spec plan" -n 5
-   ```
-
-2. **Find related implementation files**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "<topic> service repository controller" -n 3
-   ```
-
-3. **Check if a spec file already exists**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "<feature-id> spec requirements" -n 3 -f "doc"
-   ```
+1. Check existing docs in `doc/`.
+2. Check existing wiki documentation in `src/ui/InventoryAlert.Wiki/docs/`.
 
 ---
 
@@ -64,16 +50,11 @@ last_updated: YYYY-MM-DD
 
 ## Phase 2: Code Audit & Sync
 
-1. **Verify the implementation matches the spec**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "<feature> service method" --check-file doc/<feature-id>_spec.md
-   ```
-
+1. **Verify the implementation matches the spec**.
 2. **Confirm test coverage**:
    ```bash
    dotnet test InventoryManagementSystem --no-build --filter "FullyQualifiedName~<EntityName>"
    ```
-
 3. **Update `GEMINI.md`** if:
    - A new service method was added → update the Key Service table
    - A new tech debt was identified → add to Known Tech Debt table
@@ -81,21 +62,9 @@ last_updated: YYYY-MM-DD
 
 ---
 
-## Phase 3: Brain Freeze (Index & Commit)
+## Phase 3: Commit
 
-// turbo
-
-1. **Re-index** so BM25 picks up all new/changed docs:
-   ```bash
-   python .agents/scripts/core/bm25_indexer.py
-   ```
-
-2. **Verify index**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "<feature keyword>" -n 3
-   ```
-
-3. **Commit** when implementation and docs are stable:
+1. **Commit** when implementation and docs are stable:
    ```bash
    git add .
    git commit -m "docs(<scope>): sync <feature> documentation"
@@ -105,4 +74,4 @@ last_updated: YYYY-MM-DD
 
 **Parent Context**: `GEMINI.md`
 **Next Action**: `/run-tests` → `/code-review` → push PR
-**Keywords**: `doc`, `scaffold`, `sync`, `bm25`, `atomic-docs`, `inventoryalert`, `knowledge`
+**Keywords**: `doc`, `scaffold`, `sync`, `atomic-docs`, `inventoryalert`, `knowledge`

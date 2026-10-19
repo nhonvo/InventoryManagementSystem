@@ -14,19 +14,9 @@ tags: [workflow, fix-build, diagnostics, errors, inventoryalert, dotnet]
 
 ---
 
-## Phase 0: Retrieve Error Context (BM25)
+## Phase 0: Identify Error
 
-// turbo
-
-1. **Search for the error message**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "<error code or message>" -n 5
-   ```
-
-2. **Find known package issues**:
-   ```bash
-   python .agents/scripts/core/bm25_search.py "NuGet package version conflict EntityFrameworkCore" -n 3
-   ```
+Review compiler and build output messages.
 
 ---
 

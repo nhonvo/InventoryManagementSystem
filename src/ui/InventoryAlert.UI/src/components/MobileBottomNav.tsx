@@ -23,6 +23,15 @@ const NAV_TABS = [
     ),
   },
   {
+    href: '/stocks',
+    label: 'Stocks',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+  },
+  {
     href: '/portfolio',
     label: 'Portfolio',
     icon: (
@@ -55,19 +64,24 @@ const NAV_TABS = [
 export default function MobileBottomNav() {
   const pathname = usePathname()
 
+  // Hide on auth pages
+  if (pathname === '/login' || pathname === '/register') {
+    return null
+  }
+
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname?.startsWith(href)
 
   return (
-    <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-2xl border-t border-zinc-200 dark:border-white/10 px-3 py-2 pb-safe">
-      <nav className="flex items-center justify-around max-w-md mx-auto" aria-label="Mobile Bottom Navigation">
+    <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-2xl border-t border-zinc-200 dark:border-white/10 px-2 py-2 pb-safe">
+      <nav className="flex items-center justify-around max-w-lg mx-auto" aria-label="Mobile Bottom Navigation">
         {NAV_TABS.map(({ href, label, icon }) => {
           const active = isActive(href)
           return (
             <Link
               key={href}
               href={href}
-              className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl transition-all duration-300 ${
+              className={`flex flex-col items-center gap-1 px-2.5 py-1 rounded-2xl transition-all duration-300 ${
                 active
                   ? 'text-blue-600 dark:text-blue-400 font-bold scale-105'
                   : 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 font-medium'
@@ -82,7 +96,7 @@ export default function MobileBottomNav() {
               >
                 {icon}
               </div>
-              <span className="text-[10px] tracking-tight uppercase font-semibold">{label}</span>
+              <span className="text-[9px] tracking-tight uppercase font-semibold">{label}</span>
             </Link>
           )
         })}
